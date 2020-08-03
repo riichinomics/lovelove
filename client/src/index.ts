@@ -15,3 +15,4 @@ webSocket.onerror = function (event) {
 webSocket.onmessage = function (event) {
     console.log(event);
 }
+

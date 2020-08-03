@@ -1,5 +1,3 @@
-muhjong*
-
 # Binaries for programs and plugins
 *.exe
 *.exe~
@@ -15,3 +13,5 @@ muhjong*
 
 # Dependency directories (remove the comment below to include it)
 # vendor/
+
+proto/*.pb.go

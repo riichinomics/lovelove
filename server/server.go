@@ -42,5 +42,8 @@ func main() {
 	flag.Parse()
 	log.SetFlags(0)
 	http.HandleFunc("/echo", echo)
+	http.HandleFunc("", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, r.URL.Path)
+	})
 	log.Fatal(http.ListenAndServe(*addr, nil))
 }
