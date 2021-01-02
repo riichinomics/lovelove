@@ -11,7 +11,7 @@ import (
 
 	"github.com/gorilla/websocket"
 	"google.golang.org/grpc"
-	muhjong "riichi.moe/muhjong/proto"
+	lovelove "hanafuda.moe/lovelove/proto"
 )
 
 var addr = flag.String("addr", "localhost:6482", "http service address")
@@ -44,13 +44,13 @@ func echo(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-type MuhjongRpcServer struct {
-	muhjong.UnimplementedMuhjongServer
+type LoveLoveRpcServer struct {
+	lovelove.UnimplementedLoveLoveServer
 }
 
-func (MuhjongRpcServer) SayHello(context context.Context, request *muhjong.HelloRequest) (*muhjong.HelloReply, error) {
+func (LoveLoveRpcServer) SayHello(context context.Context, request *lovelove.HelloRequest) (*lovelove.HelloReply, error) {
 	log.Print(request.Name)
-	return &muhjong.HelloReply{Message: "Hello " + request.Name}, nil
+	return &lovelove.HelloReply{Message: "Hello " + request.Name}, nil
 }
 
 type WebSocketListener struct {
@@ -133,9 +133,11 @@ func main() {
 		http.ServeFile(w, r, r.URL.Path[1:])
 	})
 
+	log.Print("starting")
+
 	log.Fatal(http.ListenAndServe(*addr, nil))
 
 	server := grpc.NewServer()
-	muhjong.RegisterMuhjongServer(server, &MuhjongRpcServer{})
+	lovelove.RegisterLoveLoveServer(server, &LoveLoveRpcServer{})
 	server.Serve(listener)
 }

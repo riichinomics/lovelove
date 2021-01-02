@@ -1,7 +1,7 @@
 syntax = "proto3";
-package muhjong;
+package lovelove;
 
-service Muhjong {
+service LoveLove {
   rpc SayHello (HelloRequest) returns (HelloReply) {}
 }
 

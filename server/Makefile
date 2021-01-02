@@ -1,7 +1,7 @@
 build: proto
 	go build .
 
-proto: proto/muhjong.pb.go
+proto: proto/lovelove.pb.go
 
 %_grpc.pb.go %.pb.go: %.proto
 	protoc \
