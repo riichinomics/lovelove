@@ -28,8 +28,13 @@ export class Connection {
 		return new Promise((resolve) => {
 			this.socket = new WebSocket(this.server);
 			this.socket.onmessage = (event: MessageEvent) => {
-				console.log(event.data);
-				this.messagesSubject.next(this.Wrapper.create(event.data));
+				event.data.arrayBuffer().then((data: Uint8Array) => {
+					const array = new Uint8Array(data);
+					console.log(array);
+					const wrapper = this.Wrapper.decode(array);
+					console.log(wrapper);
+					this.messagesSubject.next(wrapper);
+				})
 			};
 
 			this.socket.onerror = (event: any) => {
