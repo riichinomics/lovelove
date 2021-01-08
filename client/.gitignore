@@ -1,4 +1,3 @@
 node_modules/
 dist/
-src/rpc/proto/
-!src/rpc/proto/.gitkeep
+src/rpc/proto/*.d.ts
