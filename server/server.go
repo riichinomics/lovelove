@@ -7,7 +7,10 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"strings"
 	"time"
+
+	"github.com/golang/protobuf/proto"
 
 	"github.com/gorilla/websocket"
 	"google.golang.org/grpc"
@@ -30,6 +33,7 @@ func echo(w http.ResponseWriter, r *http.Request) {
 	}
 	defer c.Close()
 	for {
+		log.Print("Reading")
 		mt, message, err := c.ReadMessage()
 		if err != nil {
 			log.Println("read:", err)
@@ -42,6 +46,7 @@ func echo(w http.ResponseWriter, r *http.Request) {
 			break
 		}
 	}
+	log.Print("Closed")
 }
 
 type LoveLoveRpcServer struct {
@@ -90,6 +95,7 @@ func (conn *WebSocketConn) SetDeadline(t time.Time) error {
 
 func (listener WebSocketListener) Accept() (net.Conn, error) {
 	conn := <-listener.websocketOpened
+	log.Print("Accepted")
 	return &WebSocketConn{
 		Conn:   conn,
 		reader: websocket.JoinMessages(conn, ""),
@@ -97,6 +103,7 @@ func (listener WebSocketListener) Accept() (net.Conn, error) {
 }
 
 func (WebSocketListener) Close() error {
+	log.Print("Close")
 	return nil
 }
 
@@ -113,11 +120,55 @@ func (WebSocketListener) Addr() net.Addr {
 	return nil
 }
 
+type serviceInfo struct {
+	// Contains the implementation for the methods in this service.
+	serviceImpl interface{}
+	methods     map[string]*grpc.MethodDesc
+	streams     map[string]*grpc.StreamDesc
+	mdata       interface{}
+}
+
+type WebSocketRpcServer struct {
+	// lis      map[net.Listener]bool
+	// conns    map[transport.ServerTransport]bool
+	serve    bool
+	services map[string]*serviceInfo
+}
+
+func (server *WebSocketRpcServer) RegisterService(serviceDesc *grpc.ServiceDesc, ss interface{}) {
+	// if server.serve {
+	// 	logger.Fatalf("grpc: Server.RegisterService after Server.Serve for %q", serviceDesc.ServiceName)
+	// }
+
+	if _, ok := server.services[serviceDesc.ServiceName]; ok {
+		log.Fatalf("grpc: Server.RegisterService found duplicate service registration for %q", serviceDesc.ServiceName)
+	}
+
+	info := &serviceInfo{
+		serviceImpl: ss,
+		methods:     make(map[string]*grpc.MethodDesc),
+		streams:     make(map[string]*grpc.StreamDesc),
+		mdata:       serviceDesc.Metadata,
+	}
+	for i := range serviceDesc.Methods {
+		d := &serviceDesc.Methods[i]
+		info.methods[d.MethodName] = d
+	}
+	for i := range serviceDesc.Streams {
+		d := &serviceDesc.Streams[i]
+		info.streams[d.StreamName] = d
+	}
+	server.services[serviceDesc.ServiceName] = info
+}
+
 func main() {
 	flag.Parse()
 	log.SetFlags(0)
 
-	listener := NewWebSocketListener()
+	server := &WebSocketRpcServer{
+		services: make(map[string]*serviceInfo),
+	}
+	lovelove.RegisterLoveLoveServer(server, &LoveLoveRpcServer{})
 
 	http.HandleFunc("/echo", func(w http.ResponseWriter, r *http.Request) {
 		c, err := upgrader.Upgrade(w, r, nil)
@@ -125,7 +176,8 @@ func main() {
 			log.Print("upgrade:", err)
 			return
 		}
-		listener.websocketOpened <- c
+		log.Print("Connected")
+		server.Connect(c)
 	})
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
@@ -134,10 +186,52 @@ func main() {
 	})
 
 	log.Print("starting")
-
 	log.Fatal(http.ListenAndServe(*addr, nil))
+}
 
-	server := grpc.NewServer()
-	lovelove.RegisterLoveLoveServer(server, &LoveLoveRpcServer{})
-	server.Serve(listener)
+func (server *WebSocketRpcServer) Connect(connection *websocket.Conn) {
+	go func(conn *websocket.Conn) {
+		for {
+			messageType, data, err := conn.ReadMessage()
+			if err != nil {
+				log.Print(err)
+				break
+			}
+			log.Print(messageType)
+			log.Print(data)
+			wrapper := new(lovelove.Wrapper)
+			proto.Unmarshal(data, wrapper)
+			log.Print(wrapper.Sequence, wrapper.Type, wrapper.Data)
+
+			method := wrapper.Type
+			if method != "" && method[0] == '.' {
+				method = method[1:]
+			}
+
+			lastDotPosition := strings.LastIndex(method, ".")
+
+			if lastDotPosition == -1 {
+				log.Print("Malformed method ", wrapper.Type)
+				continue
+			}
+
+			serviceName := method[:lastDotPosition]
+			methodName := method[lastDotPosition+1:]
+
+			serviceInfo, serviceIsKnown := server.services[serviceName]
+			if serviceIsKnown {
+				if methodInfo, ok := serviceInfo.methods[methodName]; ok {
+					methodInfo.Handler(
+						serviceInfo.serviceImpl,
+						context.TODO(),
+						func(message interface{}) error {
+							return proto.Unmarshal(wrapper.Data, message.(proto.Message))
+						},
+						nil,
+					)
+					return
+				}
+			}
+		}
+	}(connection)
 }

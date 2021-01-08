@@ -1,6 +1,5 @@
 import { Root, Method, RPCImplCallback, Type, rpc } from "protobufjs";
 import { Subscription } from 'rxjs';
-import { Codec } from "./Codec";
 import { Connection } from "./Connection";
 
 export class RpcImplementation {
@@ -13,17 +12,16 @@ export class RpcImplementation {
 
 	constructor(private readonly connection: Connection, private readonly protobufRoot: Root) {
 		this.dataSubscription = connection.messages.subscribe((message) => {
-			if (!message.index) {
+			if (!message.sequence) {
 				return;
 			}
-			const { index, data } = message;
 
-			const callback = this.transactionMap[index];
-			delete this.transactionMap[index];
+			const callback = this.transactionMap[message.sequence];
+			delete this.transactionMap[message.sequence];
 			if (!callback) {
 				return;
 			}
-			callback(null, data);
+			callback(null, message.data);
 		});
 	}
 
@@ -34,6 +32,6 @@ export class RpcImplementation {
 	private rpcCall(method: Method, requestData: Uint8Array, callback: RPCImplCallback) {
 		const index = this.index++ % 60006 + 1;
 		this.transactionMap[index] = callback;
-		this.connection.send(Codec.addIndex(index, requestData));
+		this.connection.send(index, method.fullName, requestData);
 	}
 }

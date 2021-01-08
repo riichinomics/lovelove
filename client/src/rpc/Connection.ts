@@ -1,16 +1,16 @@
 import { Subject, Observable } from 'rxjs';
-import { Codec } from "./Codec";
+import { lovelove } from './proto/lovelove';
 
 export class Connection {
-	private readonly messagesSubject = new Subject<any>();
+	private readonly messagesSubject = new Subject<lovelove.Wrapper>();
 	private socket: WebSocket;
 
-	constructor(private readonly server: string) {}
+	constructor(
+		private readonly server: string,
+		private readonly Wrapper: typeof lovelove.Wrapper,
+	) {}
 
-	public get messages(): Observable<{
-		index: number;
-		data: Buffer;
-	}> {
+	public get messages(): Observable<lovelove.Wrapper> {
 		return this.messagesSubject;
 	}
 
@@ -29,28 +29,29 @@ export class Connection {
 			this.socket = new WebSocket(this.server);
 			this.socket.onmessage = (event: MessageEvent) => {
 				console.log(event.data);
-				const message = Codec.stripIndex(event.data);
-				this.messagesSubject.next(message);
+				this.messagesSubject.next(this.Wrapper.create(event.data));
 			};
 
 			this.socket.onerror = (event: any) => {
 				console.log(`websocker onerror`, event);
-				process.exit(1);
 			}
 			this.socket.onclose = (event: any) => {
 				console.log(`websocker onclose`, event);
-				process.exit(1);
 			}
 			this.socket.onopen = () => resolve();
 		});
 	}
 
-	public send(data: Uint8Array): void {
+	public send(sequence: number, type: string, data: Uint8Array): void {
 		if(this.socket.readyState !== WebSocket.OPEN) {
 			throw new Error("Connection is not opened");
 		}
 
-		this.socket.send(data);
+		this.socket.send(this.Wrapper.encode({
+			type,
+			sequence,
+			data
+		}).finish());
 	}
 
 	public close() {

@@ -47,6 +47,108 @@ export namespace lovelove {
         type SayHelloCallback = (error: (Error|null), response?: lovelove.HelloReply) => void;
     }
 
+    /** Properties of a Wrapper. */
+    interface IWrapper {
+
+        /** Wrapper sequence */
+        sequence?: (number|null);
+
+        /** Wrapper type */
+        type?: (string|null);
+
+        /** Wrapper data */
+        data?: (Uint8Array|null);
+    }
+
+    /** Represents a Wrapper. */
+    class Wrapper implements IWrapper {
+
+        /**
+         * Constructs a new Wrapper.
+         * @param [properties] Properties to set
+         */
+        constructor(properties?: lovelove.IWrapper);
+
+        /** Wrapper sequence. */
+        public sequence: number;
+
+        /** Wrapper type. */
+        public type: string;
+
+        /** Wrapper data. */
+        public data: Uint8Array;
+
+        /**
+         * Creates a new Wrapper instance using the specified properties.
+         * @param [properties] Properties to set
+         * @returns Wrapper instance
+         */
+        public static create(properties?: lovelove.IWrapper): lovelove.Wrapper;
+
+        /**
+         * Encodes the specified Wrapper message. Does not implicitly {@link lovelove.Wrapper.verify|verify} messages.
+         * @param message Wrapper message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encode(message: lovelove.IWrapper, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Encodes the specified Wrapper message, length delimited. Does not implicitly {@link lovelove.Wrapper.verify|verify} messages.
+         * @param message Wrapper message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encodeDelimited(message: lovelove.IWrapper, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Decodes a Wrapper message from the specified reader or buffer.
+         * @param reader Reader or buffer to decode from
+         * @param [length] Message length if known beforehand
+         * @returns Wrapper
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): lovelove.Wrapper;
+
+        /**
+         * Decodes a Wrapper message from the specified reader or buffer, length delimited.
+         * @param reader Reader or buffer to decode from
+         * @returns Wrapper
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): lovelove.Wrapper;
+
+        /**
+         * Verifies a Wrapper message.
+         * @param message Plain object to verify
+         * @returns `null` if valid, otherwise the reason why it is not
+         */
+        public static verify(message: { [k: string]: any }): (string|null);
+
+        /**
+         * Creates a Wrapper message from a plain object. Also converts values to their respective internal types.
+         * @param object Plain object
+         * @returns Wrapper
+         */
+        public static fromObject(object: { [k: string]: any }): lovelove.Wrapper;
+
+        /**
+         * Creates a plain object from a Wrapper message. Also converts values to other types if specified.
+         * @param message Wrapper
+         * @param [options] Conversion options
+         * @returns Plain object
+         */
+        public static toObject(message: lovelove.Wrapper, options?: $protobuf.IConversionOptions): { [k: string]: any };
+
+        /**
+         * Converts this Wrapper to JSON.
+         * @returns JSON object
+         */
+        public toJSON(): { [k: string]: any };
+    }
+
     /** Properties of a HelloRequest. */
     interface IHelloRequest {
 

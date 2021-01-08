@@ -5,6 +5,12 @@ service LoveLove {
   rpc SayHello (HelloRequest) returns (HelloReply) {}
 }
 
+message Wrapper {
+  int32 sequence = 1;
+  string type = 2;
+  bytes data = 3;
+}
+
 message HelloRequest {
   string name = 1;
 }
