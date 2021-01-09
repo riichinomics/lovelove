@@ -6,19 +6,19 @@ module.exports = env => {
 		env = {}
 	}
 	return {
-		entry: ["./src/index.ts"],
+		entry: ["./src/index.tsx"],
 		mode: env.production ? 'production' : 'development',
 		devtool: "source-map",
 		devServer: {
 			historyApiFallback: true
 		},
 		resolve: {
-			extensions: [".ts", ".js", ".json"]
+			extensions: [".ts", ".tsx", ".js", ".json"]
 		},
 		module: {
 			rules: [
 				{
-					test: /\.ts$/,
+					test: /\.tsx?$/,
 					exclude: /node_modules/,
 					use: [
 						{
@@ -69,7 +69,7 @@ module.exports = env => {
 		plugins: [
 			new HtmlWebpackPlugin({
 				base: "/",
-				title: "MUHJONG"
+				title: "Hanafuda"
 			})
 		]
 	};
