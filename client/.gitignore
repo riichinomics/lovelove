@@ -1,3 +1,4 @@
 node_modules/
 dist/
 src/rpc/proto/*.d.ts
+*.sass.d.ts

@@ -3,6 +3,7 @@ import * as React from "react";
 import * as ReactDOM from "react-dom";
 import { createStore, compose, Action } from "redux";
 import { Provider } from "react-redux";
+import { Play } from "./components/play";
 
 enum ActionType {
 
@@ -14,11 +15,11 @@ interface IState {
 
 const api = new Api({url: "localhost:6482"});
 api.init().then(() => {
-    api.lovelove.sayHello({
-        name: "test"
-    }).then((response) => {
-        console.log("test", response)
-    });
+	api.lovelove.sayHello({
+		name: "test"
+	}).then((response) => {
+		console.log("test", response)
+	});
 });
 
 function mainReducer(state: IState, action: Action<ActionType>): IState {
@@ -31,7 +32,7 @@ function mainReducer(state: IState, action: Action<ActionType>): IState {
 const composeEnhancers = (window as any).__REDUX_DEVTOOLS_EXTENSION_COMPOSE__ || compose;
 
 const store = createStore(
-    mainReducer,
+	mainReducer,
 	{
 		contestsByMajsoulFriendlyId: {},
 		musicPlayer: {
@@ -39,11 +40,13 @@ const store = createStore(
 			videoId: null
 		},
 	} as IState,
-)
+	composeEnhancers()
+);
+
 
 ReactDOM.render(
 	<Provider store={store}>
-        Hello World
+		<Play.Table/>
 	</Provider>,
 	document.getElementsByTagName("body")[0]
 );

@@ -6,14 +6,14 @@ module.exports = env => {
 		env = {}
 	}
 	return {
-		entry: ["./src/index.tsx"],
+		entry: ["./src/global.sass", "./src/index.tsx"],
 		mode: env.production ? 'production' : 'development',
 		devtool: "source-map",
 		devServer: {
 			historyApiFallback: true
 		},
 		resolve: {
-			extensions: [".ts", ".tsx", ".js", ".json"]
+			extensions: [".ts", ".tsx", ".js", ".json", ".sass"]
 		},
 		module: {
 			rules: [
