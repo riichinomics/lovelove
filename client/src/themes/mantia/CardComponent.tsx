@@ -1,3 +1,5 @@
+/* eslint-disable sort-imports */
+
 import * as React from "react";
 import { CardNumber } from "../CardNumber";
 import { CardProps } from "../CardProps";
@@ -137,7 +139,7 @@ const SVG_MAP: Record<Season, Record<CardNumber, string>> = {
 		[CardNumber.Third]: yanagi3,
 		[CardNumber.Fourth]: yanagi4,
 	}
-}
+};
 
 const styles = stylesheet`
 	.card {
@@ -148,5 +150,5 @@ const styles = stylesheet`
 export const CardComponent: React.FC<CardProps> = (props) => {
 	return <div className={styles.card}>
 		<img src={SVG_MAP[props.season][props.card]} />
-	</div>
-}
+	</div>;
+};

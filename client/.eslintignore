@@ -1,0 +1,4 @@
+src/rpc/proto/
+**/*.scss.d.ts
+webpack.config.js
+dist/

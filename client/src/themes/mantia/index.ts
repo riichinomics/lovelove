@@ -1,5 +1,5 @@
-import { ITheme } from "../ITheme";
 import { CardComponent } from "./CardComponent";
+import { ITheme } from "../ITheme";
 
 const theme = {
 	CardComponent

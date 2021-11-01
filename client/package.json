@@ -6,6 +6,7 @@
 	"license": "MIT",
 	"scripts": {
 		"build": "pbjs -t static-module ../server/proto/lovelove.proto | pbts -o src/rpc/proto/lovelove.d.ts -",
+		"lint": "eslint --fix **/*.ts --fix **/*.tsx",
 		"dev": "webpack-dev-server"
 	},
 	"devDependencies": {
@@ -18,8 +19,10 @@
 		"@types/redux": "^3.6.0",
 		"@typescript-eslint/eslint-plugin": "^5.1.0",
 		"@typescript-eslint/parser": "^5.1.0",
+		"astroturf": "^1.0.0-beta.22",
 		"css-loader": "^6.4.0",
 		"eslint": "^8.1.0",
+		"eslint-plugin-react": "^7.26.1",
 		"file-loader": "^6.2.0",
 		"html-webpack-plugin": "^5.4.0",
 		"protobufjs": "^6.11.2",
@@ -35,12 +38,11 @@
 		"sass-loader": "^12.2.0",
 		"source-map-loader": "^3.0.0",
 		"style-loader": "^3.3.1",
+		"ts-loader": "^9.2.6",
 		"typescript": "^4.4.4",
 		"url-loader": "^4.1.1",
 		"webpack": "^5.59.1",
 		"webpack-cli": "^4.9.1",
-		"webpack-dev-server": "^4.3.1",
-		"astroturf": "^1.0.0-beta.22",
-		"ts-loader": "^9.2.6"
+		"webpack-dev-server": "^4.3.1"
 	}
 }

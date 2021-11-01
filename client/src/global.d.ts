@@ -1,4 +1,4 @@
-declare module '*.sass' {
+declare module "*.sass" {
 	interface IClassNames {
 		[className: string]: string
 	}
@@ -6,7 +6,7 @@ declare module '*.sass' {
 	export = classNames;
 }
 
-declare module '*.svg' {
+declare module "*.svg" {
 	const ReactComponent: React.FC<React.SVGProps<SVGSVGElement>>;
 	const content: string;
 

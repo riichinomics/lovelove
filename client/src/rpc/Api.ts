@@ -1,6 +1,4 @@
-import { Root, load, rpc } from "protobufjs";
-import { Observable, merge } from 'rxjs';
-import { filter, map } from 'rxjs/operators';
+import { Root, load } from "protobufjs";
 import { Connection } from "./Connection";
 import { RpcImplementation } from "./RpcImplementation";
 import { lovelove } from "./proto/lovelove";
@@ -24,17 +22,17 @@ export class Api {
 					response => response.text()
 						.then(data => {
 							console.log(data);
-							callback(null, data)
+							callback(null, data);
 						}),
 					error => callback(error)
 				);
-		}
+		};
 		// this.notifications = this.connection.messages.pipe(filter(message => message.index !== 0), map(message => this.codec.decode(message.data)));
 	}
 
 	public async init(): Promise<void> {
 		this.protobufRoot = await load("/proto/lovelove.proto");
-		const Wrapper = this.protobufRoot.lookupType('Wrapper') as unknown as typeof lovelove.Wrapper;
+		const Wrapper = this.protobufRoot.lookupType("Wrapper") as unknown as typeof lovelove.Wrapper;
 		this.connection = new Connection(`ws://${this.options.url}/echo`, Wrapper);
 		this.rpc = new RpcImplementation(this.connection, this.protobufRoot);
 		this.lovelove = this.rpc.createService<lovelove.LoveLove>("lovelove.LoveLove");

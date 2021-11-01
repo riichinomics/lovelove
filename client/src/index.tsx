@@ -1,9 +1,9 @@
-import { Api } from "./rpc/Api";
 import * as React from "react";
 import * as ReactDOM from "react-dom";
-import { createStore, compose, Action } from "redux";
+import { Action, compose, createStore } from "redux";
+import { Api } from "./rpc/Api";
 import { Provider } from "react-redux";
-import { Play } from "./components/play";
+import { Table } from "./components/Play/Table";
 import { ThemeContext } from "./themes/ThemeContext";
 import mantia from "./themes/mantia";
 
@@ -11,6 +11,7 @@ enum ActionType {
 
 }
 
+// eslint-disable-next-line @typescript-eslint/no-empty-interface
 interface IState {
 
 }
@@ -20,17 +21,19 @@ api.init().then(() => {
 	api.lovelove.sayHello({
 		name: "test"
 	}).then((response) => {
-		console.log("test", response)
+		console.log("test", response);
 	});
 });
 
 function mainReducer(state: IState, action: Action<ActionType>): IState {
+	// eslint-disable-next-line no-empty
 	switch (action.type) {
 	}
 
 	return state;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const composeEnhancers = (window as any).__REDUX_DEVTOOLS_EXTENSION_COMPOSE__ || compose;
 
 const store = createStore(
@@ -50,8 +53,9 @@ ReactDOM.render(
 	<Provider store={store}>
 		<ThemeContext.Provider value={{
 			theme: mantia
-		}}>
-			<Play.Table/>
+		}}
+		>
+			<Table />
 		</ThemeContext.Provider>
 	</Provider>,
 	document.getElementsByTagName("body")[0]

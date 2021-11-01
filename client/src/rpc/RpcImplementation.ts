@@ -1,6 +1,6 @@
-import { Root, Method, RPCImplCallback, Type, rpc } from "protobufjs";
-import { Subscription } from 'rxjs';
+import { Method, RPCImplCallback, Root, Type, rpc } from "protobufjs";
 import { Connection } from "./Connection";
+import { Subscription } from "rxjs";
 
 export class RpcImplementation {
 	private readonly transactionMap: {

@@ -1,5 +1,5 @@
-import { Subject, Observable } from 'rxjs';
-import { lovelove } from './proto/lovelove';
+import { Observable, Subject } from "rxjs";
+import { lovelove } from "./proto/lovelove";
 
 export class Connection {
 	private readonly messagesSubject = new Subject<lovelove.Wrapper>();
@@ -34,15 +34,15 @@ export class Connection {
 					const wrapper = this.Wrapper.decode(array);
 					console.log(wrapper);
 					this.messagesSubject.next(wrapper);
-				})
+				});
 			};
 
 			this.socket.onerror = (event: any) => {
-				console.log(`websocker onerror`, event);
-			}
+				console.log("websocker onerror", event);
+			};
 			this.socket.onclose = (event: any) => {
-				console.log(`websocker onclose`, event);
-			}
+				console.log("websocker onclose", event);
+			};
 			this.socket.onopen = () => resolve();
 		});
 	}
@@ -60,6 +60,6 @@ export class Connection {
 	}
 
 	public close() {
-		this.socket.close()
+		this.socket.close();
 	}
 }

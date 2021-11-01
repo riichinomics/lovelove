@@ -1,13 +1,13 @@
-var HtmlWebpackPlugin = require('html-webpack-plugin');
-const path = require('path');
+var HtmlWebpackPlugin = require("html-webpack-plugin");
+const path = require("path");
 
 module.exports = env => {
 	if (!env) {
-		env = {}
+		env = {};
 	}
 	return {
 		entry: ["./src/global.sass", "./src/index.tsx"],
-		mode: env.production ? 'production' : 'development',
+		mode: env.production ? "production" : "development",
 		devtool: "source-map",
 		devServer: {
 			historyApiFallback: true
@@ -25,8 +25,8 @@ module.exports = env => {
 							loader: "ts-loader"
 						},
 						{
-							loader: 'astroturf/loader',
-							options: { extension: '.module.scss' },
+							loader: "astroturf/loader",
+							options: { extension: ".module.scss" },
 						},
 					]
 				},
@@ -44,14 +44,14 @@ module.exports = env => {
 							loader: "css-loader",
 							options: { modules: true }
 						},
-						'sass-loader'
+						"sass-loader"
 					],
 				},
 				{
 					test: /\.(mp3)$/i,
 					use: [
 						{
-							loader: 'file-loader',
+							loader: "file-loader",
 						},
 					],
 				},
@@ -59,7 +59,7 @@ module.exports = env => {
 					test: /\.(png|jp(e*)g|svg)$/,
 					use: [
 						{
-							loader: 'url-loader',
+							loader: "url-loader",
 						}
 					]
 				},
@@ -67,7 +67,7 @@ module.exports = env => {
 		},
 		optimization: {
 			splitChunks: {
-				chunks: 'all'
+				chunks: "all"
 			}
 		},
 		plugins: [

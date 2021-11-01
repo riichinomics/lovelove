@@ -1,0 +1,90 @@
+env:
+  browser: true
+  es2021: true
+extends:
+  - eslint:recommended
+  - plugin:react/recommended
+  - plugin:@typescript-eslint/recommended
+parser: '@typescript-eslint/parser'
+parserOptions:
+  ecmaFeatures:
+    jsx: true
+  ecmaVersion: 13
+  sourceType: module
+plugins:
+  - react
+  - '@typescript-eslint'
+rules:
+  indent:
+    - error
+    - tab
+  linebreak-style:
+    - error
+    - windows
+  quotes:
+    - error
+    - double
+  semi:
+    - error
+    - always
+  sort-imports:
+    - error
+    - ignoreCase: false
+      ignoreDeclarationSort: false
+      ignoreMemberSort: false
+      memberSyntaxSortOrder:
+        - none
+        - all
+        - multiple
+        - single
+      allowSeparatedGroups: false
+  react/function-component-definition:
+    - error
+    - namedComponents: "arrow-function"
+      unnamedComponents: "function-expression"
+  react/prefer-read-only-props: error
+  react/self-closing-comp: error
+  react/jsx-no-useless-fragment: error
+  react/jsx-one-expression-per-line:
+    - error
+    - allow: single-child
+  react/jsx-boolean-value: error
+  react/jsx-closing-bracket-location:
+    - error
+    - nonEmpty: tag-aligned
+      selfClosing: tag-aligned
+  react/jsx-curly-brace-presence:
+    - error
+    - props: never
+      children: never
+  react/jsx-curly-newline: error
+  react/jsx-equals-spacing: error
+  react/jsx-curly-spacing: error
+  react/jsx-first-prop-new-line: error
+  react/jsx-fragments: error
+  react/jsx-indent:
+    - error
+    - tab
+  react/jsx-indent-props:
+    - error
+    - tab
+  # react/jsx-closing-tag-location: error
+  react/jsx-max-props-per-line:
+    - error
+    - maximum: 1
+      when: multiline
+  react/jsx-props-no-multi-spaces: error
+  react/jsx-sort-props:
+    - error
+    - callbacksLast: true
+      shorthandLast: true
+  react/jsx-space-before-closing: error
+  react/jsx-tag-spacing:
+    - error
+    - closingSlash: never
+      beforeSelfClosing: always
+      afterOpening: never
+      beforeClosing: never
+settings:
+  react:
+    version: detect
