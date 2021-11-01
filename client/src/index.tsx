@@ -4,6 +4,8 @@ import * as ReactDOM from "react-dom";
 import { createStore, compose, Action } from "redux";
 import { Provider } from "react-redux";
 import { Play } from "./components/play";
+import { ThemeContext } from "./themes/ThemeContext";
+import mantia from "./themes/mantia";
 
 enum ActionType {
 
@@ -46,7 +48,11 @@ const store = createStore(
 
 ReactDOM.render(
 	<Provider store={store}>
-		<Play.Table/>
+		<ThemeContext.Provider value={{
+			theme: mantia
+		}}>
+			<Play.Table/>
+		</ThemeContext.Provider>
 	</Provider>,
 	document.getElementsByTagName("body")[0]
 );

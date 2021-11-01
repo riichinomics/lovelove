@@ -13,7 +13,7 @@ module.exports = env => {
 			historyApiFallback: true
 		},
 		resolve: {
-			extensions: [".ts", ".tsx", ".js", ".json", ".sass"]
+			extensions: [".ts", ".tsx", ".js", ".json", ".sass", ".scss"]
 		},
 		module: {
 			rules: [
@@ -22,8 +22,12 @@ module.exports = env => {
 					exclude: /node_modules/,
 					use: [
 						{
-							loader: "awesome-typescript-loader"
-						}
+							loader: "ts-loader"
+						},
+						{
+							loader: 'astroturf/loader',
+							options: { extension: '.module.scss' },
+						},
 					]
 				},
 				{
@@ -58,7 +62,7 @@ module.exports = env => {
 							loader: 'url-loader',
 						}
 					]
-				}
+				},
 			]
 		},
 		optimization: {
