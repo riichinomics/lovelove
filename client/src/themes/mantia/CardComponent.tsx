@@ -1,5 +1,4 @@
 /* eslint-disable sort-imports */
-
 import * as React from "react";
 import { CardNumber } from "../CardNumber";
 import { CardProps } from "../CardProps";

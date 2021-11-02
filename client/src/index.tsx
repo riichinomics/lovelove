@@ -48,14 +48,23 @@ const store = createStore(
 	composeEnhancers()
 );
 
-
 ReactDOM.render(
 	<Provider store={store}>
 		<ThemeContext.Provider value={{
 			theme: mantia
 		}}
 		>
-			<Table />
+			<Table
+				deck={40}
+				opponentCards={8}
+				opponentCollection={[...Array(8 * 4)].map(_ => ({
+					season: Math.random() * 12 | 0,
+					variation: Math.random() * 4 | 0,
+				}))}
+				playerCollection={[]}
+				playerHand={[]}
+				sharedCards={[]}
+			/>
 		</ThemeContext.Provider>
 	</Provider>,
 	document.getElementsByTagName("body")[0]

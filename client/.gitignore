@@ -2,4 +2,5 @@ node_modules/
 dist/
 src/rpc/proto/*.d.ts
 *.sass.d.ts
+*.scss.d.ts
 yarn-error.log

@@ -49,10 +49,10 @@ rules:
     - error
     - allow: single-child
   react/jsx-boolean-value: error
-  react/jsx-closing-bracket-location:
-    - error
-    - nonEmpty: tag-aligned
-      selfClosing: tag-aligned
+  # react/jsx-closing-bracket-location:
+  #   - error
+  #   - nonEmpty: tag-aligned
+  #     selfClosing: tag-aligned
   react/jsx-curly-brace-presence:
     - error
     - props: never
