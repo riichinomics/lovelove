@@ -143,6 +143,9 @@ const SVG_MAP: Record<Season, Record<CardNumber, string>> = {
 const styles = stylesheet`
 	.card {
 		width: 100px;
+		> img {
+			display: block;
+		}
 	}
 `;
 

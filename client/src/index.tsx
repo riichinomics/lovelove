@@ -6,6 +6,7 @@ import { Provider } from "react-redux";
 import { Table } from "./components/Play/Table";
 import { ThemeContext } from "./themes/ThemeContext";
 import mantia from "./themes/mantia";
+import { createRandomCard } from "./components/Play/utils";
 
 enum ActionType {
 
@@ -55,15 +56,13 @@ ReactDOM.render(
 		}}
 		>
 			<Table
-				deck={40}
-				opponentCards={8}
-				opponentCollection={[...Array(8 * 4)].map(_ => ({
-					season: Math.random() * 12 | 0,
-					variation: Math.random() * 4 | 0,
-				}))}
-				playerCollection={[]}
-				playerHand={[]}
-				sharedCards={[]}
+				deck={Math.random() * 4 | 0}
+				drawnCard={createRandomCard()}
+				opponentCards={Math.random() * 8 | 0}
+				opponentCollection={[...Array(8 * 4)].map(_ => createRandomCard())}
+				playerCollection={[...Array(8 * 4)].map(_ => createRandomCard())}
+				playerHand={[...Array(Math.random() * 8 | 0)].map(_ => createRandomCard())}
+				sharedCards={[...Array(12 + Math.random() * 6 | 0)].map(_ => createRandomCard())}
 			/>
 		</ThemeContext.Provider>
 	</Provider>,

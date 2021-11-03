@@ -3,17 +3,50 @@ import { Center } from "./Center";
 import { Collection } from "./Collection";
 import { ICard } from "../ICard";
 import { OpponentHand } from "./OpponentHand";
-import { PlayerArea } from "./PlayerArea";
+import { PlayerHand } from "./PlayerHand";
 import { stylesheet } from "astroturf";
 
 const styles = stylesheet`
 	.table {
-		display: flex;
 		flex-direction: column;
+		display: flex;
 
-		> * {
-			&:not(:last-child) {
-				margin-bottom: 20px;
+		.center {
+			flex: 1;
+			margin-top: 20px;
+			margin-bottom: 20px;
+		}
+
+		.opponentHand {
+			margin-bottom: 20px;
+		}
+
+		.playerArea {
+			display: flex;
+			flex-direction: column;
+
+			position: fixed;
+			bottom: 0;
+			left: 0;
+			right: 0;
+			z-index: 99;
+
+			margin-top: 20px;
+
+			display: flex;
+			justify-content: center;
+
+			> * {
+				&:not(:last-child) {
+					margin-right: 10px;
+				}
+			}
+
+			.handCard {
+				transition: margin 200ms ease-in-out;
+				&:hover {
+					margin-top: -50px;
+				}
 			}
 		}
 	}
@@ -26,34 +59,19 @@ interface IGameState {
 	playerCollection: ICard[];
 	opponentCards: number;
 	opponentCollection: ICard[];
+	drawnCard?: ICard;
 }
 
 export const Table = (props: IGameState) => <div className={styles.table}>
-	<OpponentHand cards={props.opponentCards} />
+	<div className={styles.opponentHand}>
+		<OpponentHand cards={props.opponentCards} />
+	</div>
 	<Collection cards={props.opponentCollection} />
-	<PlayerArea cards={[
-		{
-			season: 2,
-			variation: 2
-		},
-		{
-			season: 5,
-			variation: 1
-		},
-		{
-			season: 8,
-			variation: 3
-		},
-		{
-			season: 0,
-			variation: 0
-		},
-		{
-			season: 11,
-			variation: 2
-		},
-	]}
-	/>
-	<Center cards={[]} />
-	<PlayerArea cards={[]} />
+	<div className={styles.center}>
+		<Center cards={props.sharedCards} deck={props.deck} drawnCard={props.drawnCard} />
+	</div>
+	<div className={styles.playerArea}>
+		<Collection cards={props.playerCollection} />
+		<PlayerHand cards={props.playerHand} />
+	</div>
 </div>;
