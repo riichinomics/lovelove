@@ -57,7 +57,6 @@ rules:
     - error
     - props: never
       children: never
-  react/jsx-curly-newline: error
   react/jsx-equals-spacing: error
   react/jsx-curly-spacing: error
   react/jsx-first-prop-new-line: error

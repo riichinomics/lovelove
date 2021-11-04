@@ -3,10 +3,16 @@ import { ICard } from "../ICard";
 import { ThemeContext } from "../../themes/ThemeContext";
 import clsx from "clsx";
 import { stylesheet } from "astroturf";
+import { cardKey } from "./utils";
 
 const styles = stylesheet`
 	.collectionGroup {
+		display: flex;
+		align-items: flex-start;
 		position: relative;
+		&.upwards {
+			flex-direction: column-reverse;
+		}
 	}
 
 	.collectionGroupItem {
@@ -14,29 +20,76 @@ const styles = stylesheet`
 	}
 `;
 
-export const CardStack = (props: {cards: ICard[]}) => {
-	const { CardComponent, cardStackSpacing } = React.useContext(ThemeContext).theme;
-	const [selectedIndex, setSelectedIndex] = React.useState(props.cards.length - 1);
-	const padding = cardStackSpacing * (props.cards.length - 1);
+export const CardStack = (props: {
+	cards: ICard[],
+	stackUpwards?: boolean,
+	concealed?: boolean,
+	stackDepth?: number,
+}) => {
+	const { stackDepth = 1 } = props;
+	const {
+		CardComponent,
+		CardPlaceholderComponent,
+		CardBackComponent,
+		cardStackSpacing
+	} = React.useContext(ThemeContext).theme;
+	const [selectedIndex, setSelectedIndex] = React.useState(0);
+	const [selectedLayerIndex, setSelectedLayerIndex] = React.useState(0);
+
+	const layers = React.useMemo(() => {
+		const layers: ICard[][] = [];
+		for (let i = 0; i < props.cards.length; i++) {
+			if (i % stackDepth === 0) {
+				layers.push([]);
+			}
+			layers[layers.length - 1].push(props.cards[i]);
+		}
+		return layers;
+	}, [props.cards, stackDepth]);
+
+	const cardStackHorizontalSpacing = 30;
+	const cardStackVerticalSpacing = 30;
+	const cardStackLayerOffset = 20;
+
+	const horizontalPadding = cardStackHorizontalSpacing * (layers[0].length - 1) + cardStackLayerOffset * layers.slice(1).filter(layer => layer.length >= stackDepth).length;
+	const verticalPadding = cardStackVerticalSpacing * (layers.length - 1);
+
 	return <div
-		className={styles.collectionGroup}
+		className={clsx(styles.collectionGroup, props.stackUpwards && styles.upwards)}
 		style={{
-			paddingRight: padding,
-			paddingBottom: padding,
+			paddingRight: horizontalPadding,
+			paddingBottom: props.stackUpwards ? null : verticalPadding,
+			paddingTop: props.stackUpwards ? verticalPadding : null,
 			zIndex: props.cards.length
 		}}
 	>
-		{props.cards.map((card, index) => <div
-			className={clsx(index && styles.collectionGroupItem)}
-			key={`${card.season}_${card.variation}_${index}`}
-			style={{
-				left: cardStackSpacing * index,
-				top: cardStackSpacing * index,
-				zIndex: selectedIndex - Math.abs(selectedIndex - index)
-			}}
-			onMouseEnter={() => setSelectedIndex(index)}
-		>
-			<CardComponent card={card.variation} season={card.season} />
-		</div>)}
+		{layers.map((layer, layerIndex) => layer.map((card, index) => {
+			const distanceToSelectedLayerIndex = Math.abs(selectedLayerIndex - layerIndex);
+			const distanceToSelectedIndex = Math.abs(selectedIndex - index);
+			return <div
+				className={clsx((index !== 0 || layerIndex !== 0) && styles.collectionGroupItem)}
+				key={cardKey(card, index)}
+				style={{
+					top: props.stackUpwards ? null : cardStackVerticalSpacing * layerIndex,
+					left: cardStackHorizontalSpacing * index + cardStackLayerOffset * layerIndex,
+					bottom: props.stackUpwards ? cardStackVerticalSpacing * layerIndex : null,
+					zIndex: layers.length - distanceToSelectedLayerIndex + (distanceToSelectedLayerIndex === 0
+						? layer.length - distanceToSelectedIndex
+						: 0
+					)
+				}}
+				onMouseEnter={() => {
+					setSelectedIndex(index);
+					setSelectedLayerIndex(layerIndex);
+				}}
+			>
+				{props.concealed
+					? <CardBackComponent />
+					: card
+						? <CardComponent card={card.variation} season={card.season} />
+						: <CardPlaceholderComponent />
+				}
+			</div>;
+		}))}
 	</div>;
 };

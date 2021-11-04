@@ -5,11 +5,15 @@ import { stylesheet } from "astroturf";
 const styles = stylesheet`
 	.opponentHandWrapper {
 		position: relative;
-		height: 40px;
+		height: 50px;
 		overflow: hidden;
 	}
 
 	.opponentHand {
+		min-height: 50px;
+		background-color: #eee;
+		padding-bottom: 10px;
+		border-bottom: 2px solid black;
 		position: absolute;
 		bottom: 0;
 		left: 0;

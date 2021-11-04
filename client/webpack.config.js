@@ -10,7 +10,10 @@ module.exports = env => {
 		mode: env.production ? "production" : "development",
 		devtool: "source-map",
 		devServer: {
-			historyApiFallback: true
+			historyApiFallback: true,
+			host: "0.0.0.0",
+			port: 8080,
+			// disableHostCheck: true,
 		},
 		resolve: {
 			extensions: [".ts", ".tsx", ".js", ".json", ".sass", ".scss"]

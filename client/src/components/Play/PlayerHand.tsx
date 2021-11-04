@@ -7,6 +7,7 @@ import { stylesheet } from "astroturf";
 const styles = stylesheet`
 	.playerHand {
 		background-color: #222;
+		border-top: 2px solid black;
 
 		padding-top: 10px;
 		padding-bottom: 10px;
@@ -22,6 +23,7 @@ const styles = stylesheet`
 
 		.handCard {
 			transition: margin 150ms ease-in-out;
+			z-index: 200;
 			&:hover {
 				margin-top: -20px;
 			}
@@ -32,8 +34,9 @@ const styles = stylesheet`
 export const PlayerHand = (props: {
 	cards: ICard[];
 }) => {
+	const cards = props.cards.length > 0 ? props.cards : [null];
 	return <div className={styles.playerHand}>
-		{props.cards.map((card, index) => <div className={styles.handCard} key={cardKey(card, index)}>
+		{cards.map((card, index) => <div className={styles.handCard} key={cardKey(card, index)}>
 			<CardStack cards={[card]} />
 		</div>)}
 	</div>;

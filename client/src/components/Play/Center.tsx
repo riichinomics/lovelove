@@ -7,8 +7,9 @@ import { stylesheet } from "astroturf";
 const styles = stylesheet`
 	.center {
 		display: flex;
+		flex: 1;
 
-		> * {
+		/* > * {
 			&:not(:last-child) {
 				margin-right: 20px;
 			}
@@ -16,20 +17,35 @@ const styles = stylesheet`
 			> *:not(:last-child) {
 				margin-bottom: 20px;
 			}
-		}
+		} */
 
 		.deck {
+			padding-left: 120px;
+			padding-right: 20px;
+			background-color: white;
 			display: flex;
 			flex-direction: column;
+			justify-content: center;
+			align-items: center;
+			border-right: 2px solid black;
+			.deckStack {
+				margin-bottom: 20px;
+			}
 		}
 
 		.cards {
+			padding-left: 20px;
 			display: flex;
 			flex: 1;
 			flex-direction: column;
+			justify-content: center;
 
 			.cardRow {
 				display: flex;
+				&:not(:last-child) {
+					margin-bottom: 20px;
+				}
+
 				> * {
 					&:not(:last-child) {
 						margin-right: 20px;
@@ -47,10 +63,9 @@ export const Center = (props: {
 }) => {
 	return <div className={styles.center}>
 		<div className={styles.deck}>
-			<div>
-
+			<div className={styles.deckStack}>
+				<CardStack cards={[...new Array(Math.min(props.deck, 3))]} concealed />
 			</div>
-
 			<CardStack cards={[props.drawnCard]} />
 		</div>
 		<div className={styles.cards}>

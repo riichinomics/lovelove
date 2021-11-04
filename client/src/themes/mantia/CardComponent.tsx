@@ -145,12 +145,13 @@ const styles = stylesheet`
 		width: 100px;
 		> img {
 			display: block;
+
 		}
 	}
 `;
 
 export const CardComponent: React.FC<CardProps> = (props) => {
 	return <div className={styles.card}>
-		<img src={SVG_MAP[props.season][props.card]} />
+		<img draggable={false} src={SVG_MAP[props.season][props.card]} />
 	</div>;
 };
