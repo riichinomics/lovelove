@@ -1,9 +1,9 @@
 import * as React from "react";
 import { ICard } from "../ICard";
 import { ThemeContext } from "../../themes/ThemeContext";
+import { cardKey } from "./utils";
 import clsx from "clsx";
 import { stylesheet } from "astroturf";
-import { cardKey } from "./utils";
 
 const styles = stylesheet`
 	.collectionGroup {

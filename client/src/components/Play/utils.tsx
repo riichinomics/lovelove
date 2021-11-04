@@ -1,6 +1,7 @@
 import { CardNumber } from "../../themes/CardNumber";
 import { ICard } from "../ICard";
 import { Season } from "../../themes/Season";
+import { Month } from "../../themes/Month";
 
 export enum CardType {
 	Kasu,
@@ -101,4 +102,23 @@ export function getCardType(card: ICard): CardType {
 		console.log(card);
 	}
 	return type;
+}
+
+const SEASON_MONTH_MAP = {
+	[Season.Matsu]: Month.January,
+	[Season.Ume]: Month.February,
+	[Season.Sakura]: Month.March,
+	[Season.Fuji]: Month.April,
+	[Season.Ayame]: Month.May,
+	[Season.Botan]: Month.June,
+	[Season.Hagi]: Month.July,
+	[Season.Susuki]: Month.August,
+	[Season.Kiku]: Month.September,
+	[Season.Momiji]: Month.October,
+	[Season.Yanagi]: Month.November,
+	[Season.Kiri]: Month.December,
+};
+
+export function getSeasonMonth(season: Season): Month {
+	return SEASON_MONTH_MAP[season];
 }

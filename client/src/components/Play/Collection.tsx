@@ -1,7 +1,7 @@
 import * as React from "react";
+import { getCardType, getSeasonMonth } from "./utils";
 import { CardStack } from "./CardStack";
 import { ICard } from "../ICard";
-import { getCardType } from "./utils";
 import { stylesheet } from "astroturf";
 
 const styles = stylesheet`
@@ -31,7 +31,7 @@ export const Collection = (props: {
 				return total;
 			},
 			{} as Record<number, ICard[]>
-		)).map(group => group.sort((a, b) => a.variation - b.variation)),
+		)).map(group => group.sort((a, b) => getSeasonMonth(a.season) - getSeasonMonth(b.season))),
 		[props.cards]
 	);
 

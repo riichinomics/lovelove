@@ -12,6 +12,8 @@ const styles = stylesheet`
 		padding-top: 10px;
 		padding-bottom: 10px;
 
+		margin-left: -110px;
+
 		display: flex;
 		justify-content: center;
 
@@ -34,7 +36,7 @@ const styles = stylesheet`
 export const PlayerHand = (props: {
 	cards: ICard[];
 }) => {
-	const cards = props.cards.length > 0 ? props.cards : [null];
+	const cards = [null, ...props.cards];
 	return <div className={styles.playerHand}>
 		{cards.map((card, index) => <div className={styles.handCard} key={cardKey(card, index)}>
 			<CardStack cards={[card]} />
