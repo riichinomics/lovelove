@@ -1,10 +1,10 @@
 import * as React from "react";
 import { Center } from "./Center";
 import { Collection } from "./Collection";
-import { ICard } from "../ICard";
 import { OpponentHand } from "./OpponentHand";
 import { PlayerHand } from "./PlayerHand";
 import clsx from "clsx";
+import { lovelove } from "../../rpc/proto/lovelove";
 import { stylesheet } from "astroturf";
 
 const styles = stylesheet`
@@ -80,30 +80,31 @@ const styles = stylesheet`
 	}
 `;
 
-interface IGameState {
-	deck: number;
-	sharedCards: ICard[];
-	playerHand: ICard[];
-	playerCollection: ICard[];
-	opponentCards: number;
-	opponentCollection: ICard[];
-	drawnCard?: ICard;
-}
+type IGameState = lovelove.ICompleteGameState
 
-export const Table = (props: IGameState) => <div className={styles.table}>
-	<div className={styles.opponentHand}>
-		<OpponentHand cards={props.opponentCards} />
-		<div className={clsx(styles.collection, styles.opponentCollection)}>
-			<Collection cards={props.opponentCollection} stackUpwards />
+export const Table = ({
+	collection = [],
+	deck = 0,
+	hand = [],
+	opponentCollection = [],
+	opponentHand = 0,
+	table = []
+}: IGameState) => {
+	return <div className={styles.table}>
+		<div className={styles.opponentHand}>
+			<OpponentHand cards={opponentHand} />
+			<div className={clsx(styles.collection, styles.opponentCollection)}>
+				<Collection cards={opponentCollection} stackUpwards />
+			</div>
 		</div>
-	</div>
-	<div className={styles.center}>
-		<Center cards={props.sharedCards} deck={props.deck} drawnCard={props.drawnCard} />
-	</div>
-	<div className={styles.playerArea}>
-		<div className={clsx(styles.collection, styles.playerCollection)}>
-			<Collection cards={props.playerCollection} />
+		<div className={styles.center}>
+			<Center cards={table} deck={deck} drawnCard={null} />
 		</div>
-		<PlayerHand cards={props.playerHand} />
-	</div>
-</div>;
+		<div className={styles.playerArea}>
+			<div className={clsx(styles.collection, styles.playerCollection)}>
+				<Collection cards={collection} />
+			</div>
+			<PlayerHand cards={hand} />
+		</div>
+	</div>;
+};

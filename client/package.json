@@ -5,7 +5,7 @@
 	"author": "riichinomics",
 	"license": "MIT",
 	"scripts": {
-		"build": "pbjs -t static-module ../server/proto/lovelove.proto | pbts -o src/rpc/proto/lovelove.d.ts -",
+		"proto:generate": "pbjs --no-create --no-encode --no-decode --no-verify --no-convert --no-delimited --no-beautify --no-comments --no-service -t static-module -o src/rpc/proto/lovelove.js ../server/proto/lovelove.proto && pbjs -t static-module ../server/proto/lovelove.proto | pbts -o src/rpc/proto/lovelove.d.ts -",
 		"lint": "eslint --fix **/*.ts --fix **/*.tsx",
 		"dev": "webpack-dev-server"
 	},

@@ -1,21 +1,81 @@
 syntax = "proto3";
 package lovelove;
 
+enum Hana {
+	Ayame = 0;
+	Botan = 1;
+	Fuji = 2;
+	Hagi = 3;
+	Kiku = 4;
+	Kiri = 5;
+	Matsu = 6;
+	Momiji = 7;
+	Sakura = 8;
+	Susuki = 9;
+	Ume = 10;
+	Yanagi = 11;
+}
+
+enum Variation {
+	First = 0;
+	Second = 1;
+	Third = 2;
+	Fourth = 3;
+}
+
+enum PlayerPosition {
+	Red = 0;
+	White = 1;
+}
+
 service LoveLove {
-  rpc SayHello (HelloRequest) returns (HelloReply) {}
+	rpc SayHello (HelloRequest) returns (HelloReply) {}
+
+	rpc Authenticate (AuthenticateRequest) returns (AuthenticateResponse) {}
+
+	rpc ConnectToGame (ConnectToGameRequest) returns (ConnectToGameResponse) {}
 }
 
 message Wrapper {
-  int32 sequence = 1;
-  string type = 2;
-  bytes data = 3;
+	int32 sequence = 1;
+	string type = 2;
+	bytes data = 3;
 }
 
 message HelloRequest {
-  string name = 1;
+	string name = 1;
 }
 
 message HelloReply {
-  string message = 1;
+	string message = 1;
 }
 
+message ConnectToGameRequest {
+	string roomId = 1;
+}
+
+message ConnectToGameResponse {
+	PlayerPosition playerPosition = 1;
+	CompleteGameState gameState = 2;
+}
+
+message Card {
+	Hana hana = 1;
+	Variation variation = 2;
+}
+
+message CompleteGameState {
+	int32 deck = 1;
+	repeated Card table = 2;
+	repeated Card hand = 3;
+	repeated Card collection = 4;
+	int32 opponentHand = 5;
+	repeated Card opponentCollection = 6;
+}
+
+message AuthenticateRequest {
+	string userId = 1;
+}
+
+message AuthenticateResponse {
+}

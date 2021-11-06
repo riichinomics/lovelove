@@ -1,7 +1,7 @@
 import * as React from "react";
 import { getCardType, getSeasonMonth } from "./utils";
 import { CardStack } from "./CardStack";
-import { ICard } from "../ICard";
+import { lovelove } from "../../rpc/proto/lovelove";
 import { stylesheet } from "astroturf";
 
 const styles = stylesheet`
@@ -19,7 +19,7 @@ const styles = stylesheet`
 `;
 
 export const Collection = (props: {
-	cards: ICard[];
+	cards: lovelove.ICard[];
 	stackUpwards?: boolean;
 }) => {
 	const groups = React.useMemo(
@@ -30,12 +30,12 @@ export const Collection = (props: {
 				total[type].push(next);
 				return total;
 			},
-			{} as Record<number, ICard[]>
-		)).map(group => group.sort((a, b) => getSeasonMonth(a.season) - getSeasonMonth(b.season))),
+			{} as Record<number, lovelove.ICard[]>
+		)).map(group => group.sort((a, b) => getSeasonMonth(a.hana) - getSeasonMonth(b.hana))),
 		[props.cards]
 	);
 
 	return <div className={styles.collection}>
-		{groups.map(group => <CardStack cards={group} key={group[0].season} stackDepth={5} stackUpwards={props.stackUpwards} />)}
+		{groups.map(group => <CardStack cards={group} key={group[0].hana} stackDepth={5} stackUpwards={props.stackUpwards} />)}
 	</div>;
 };

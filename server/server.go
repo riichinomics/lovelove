@@ -5,15 +5,16 @@ import (
 	"flag"
 	"io"
 	"log"
+	"math/rand"
 	"net"
 	"net/http"
 	"strings"
 	"time"
 
-	"github.com/golang/protobuf/proto"
+	"google.golang.org/grpc"
+	"google.golang.org/protobuf/proto"
 
 	"github.com/gorilla/websocket"
-	"google.golang.org/grpc"
 	lovelove "hanafuda.moe/lovelove/proto"
 )
 
@@ -58,6 +59,42 @@ func (LoveLoveRpcServer) SayHello(context context.Context, request *lovelove.Hel
 	return &lovelove.HelloReply{Message: "Hello " + request.Name}, nil
 }
 
+func (LoveLoveRpcServer) Authenticate(context context.Context, request *lovelove.AuthenticateRequest) (*lovelove.AuthenticateResponse, error) {
+	log.Print(request.UserId)
+	return &lovelove.AuthenticateResponse{}, nil
+}
+
+func (LoveLoveRpcServer) ConnectToGame(context context.Context, request *lovelove.ConnectToGameRequest) (*lovelove.ConnectToGameResponse, error) {
+	log.Print(request.RoomId)
+
+	cards := make([]*lovelove.Card, 12*4)
+
+	for hana := range lovelove.Hana_name {
+		for variation := range lovelove.Variation_name {
+			cards[hana*4+variation] = &lovelove.Card{
+				Hana:      lovelove.Hana(hana),
+				Variation: lovelove.Variation(variation),
+			}
+		}
+	}
+
+	rand.Shuffle(len(cards), func(i, j int) {
+		cards[i], cards[j] = cards[j], cards[i]
+	})
+
+	return &lovelove.ConnectToGameResponse{
+		PlayerPosition: lovelove.PlayerPosition_Red,
+		GameState: &lovelove.CompleteGameState{
+			Deck:               24,
+			Table:              cards[0:8],
+			Hand:               cards[8:16],
+			OpponentHand:       8,
+			Collection:         make([]*lovelove.Card, 0),
+			OpponentCollection: make([]*lovelove.Card, 0),
+		},
+	}, nil
+}
+
 type WebSocketListener struct {
 	websocketOpened chan *websocket.Conn
 }
@@ -78,6 +115,8 @@ func (conn *WebSocketConn) Read(buffer []byte) (int, error) {
 }
 
 func (conn *WebSocketConn) Write(buffer []byte) (int, error) {
+	log.Print("Write")
+
 	err := conn.WriteMessage(websocket.BinaryMessage, buffer)
 	if err != nil {
 		return 0, err
@@ -168,6 +207,7 @@ func main() {
 	server := &WebSocketRpcServer{
 		services: make(map[string]*serviceInfo),
 	}
+
 	lovelove.RegisterLoveLoveServer(server, &LoveLoveRpcServer{})
 
 	http.HandleFunc("/echo", func(w http.ResponseWriter, r *http.Request) {
@@ -221,15 +261,24 @@ func (server *WebSocketRpcServer) Connect(connection *websocket.Conn) {
 			serviceInfo, serviceIsKnown := server.services[serviceName]
 			if serviceIsKnown {
 				if methodInfo, ok := serviceInfo.methods[methodName]; ok {
-					methodInfo.Handler(
+					value, _ := methodInfo.Handler(
 						serviceInfo.serviceImpl,
-						context.TODO(),
+						context.WithValue(context.Background(), "conn", conn),
 						func(message interface{}) error {
 							return proto.Unmarshal(wrapper.Data, message.(proto.Message))
 						},
 						nil,
 					)
-					return
+
+					valueData, _ := proto.Marshal(value.(proto.Message))
+
+					wrapperData, _ := proto.Marshal(&lovelove.Wrapper{
+						Sequence: wrapper.Sequence,
+						Type:     wrapper.Type,
+						Data:     valueData,
+					})
+
+					conn.WriteMessage(websocket.BinaryMessage, wrapperData)
 				}
 			}
 		}

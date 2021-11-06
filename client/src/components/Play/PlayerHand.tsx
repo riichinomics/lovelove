@@ -1,7 +1,7 @@
 import * as React from "react";
 import { CardStack } from "./CardStack";
-import { ICard } from "../ICard";
 import { cardKey } from "./utils";
+import { lovelove } from "../../rpc/proto/lovelove";
 import { stylesheet } from "astroturf";
 
 const styles = stylesheet`
@@ -34,7 +34,7 @@ const styles = stylesheet`
 `;
 
 export const PlayerHand = (props: {
-	cards: ICard[];
+	cards: lovelove.ICard[];
 }) => {
 	const cards = [null, ...props.cards];
 	return <div className={styles.playerHand}>

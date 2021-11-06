@@ -1,7 +1,7 @@
 import * as React from "react";
 import { CardStack } from "./CardStack";
-import { ICard } from "../ICard";
 import { cardKey } from "./utils";
+import { lovelove } from "../../rpc/proto/lovelove";
 import { stylesheet } from "astroturf";
 
 const styles = stylesheet`
@@ -58,8 +58,8 @@ const styles = stylesheet`
 
 export const Center = (props: {
 	deck: number;
-	drawnCard?: ICard;
-	cards: ICard[];
+	drawnCard?: lovelove.ICard;
+	cards: lovelove.ICard[];
 }) => {
 	return <div className={styles.center}>
 		<div className={styles.deck}>

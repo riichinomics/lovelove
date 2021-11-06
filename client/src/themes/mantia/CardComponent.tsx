@@ -1,8 +1,6 @@
 /* eslint-disable sort-imports */
 import * as React from "react";
-import { CardNumber } from "../CardNumber";
 import { CardProps } from "../CardProps";
-import { Season } from "../Season";
 import { stylesheet } from "astroturf";
 
 import ayame1 from "../mantia/ayame/1.svg";
@@ -65,78 +63,80 @@ import yanagi2 from "../mantia/yanagi/2.svg";
 import yanagi3 from "../mantia/yanagi/3.svg";
 import yanagi4 from "../mantia/yanagi/4.svg";
 
-const SVG_MAP: Record<Season, Record<CardNumber, string>> = {
-	[Season.Ayame]: {
-		[CardNumber.First]: ayame1,
-		[CardNumber.Second]: ayame2,
-		[CardNumber.Third]: ayame3,
-		[CardNumber.Fourth]: ayame4,
+import { lovelove } from "../../rpc/proto/lovelove";
+
+const SVG_MAP: Record<lovelove.Hana, Record<lovelove.Variation, string>> = {
+	[lovelove.Hana.Ayame]: {
+		[lovelove.Variation.First]: ayame1,
+		[lovelove.Variation.Second]: ayame2,
+		[lovelove.Variation.Third]: ayame3,
+		[lovelove.Variation.Fourth]: ayame4,
 	},
-	[Season.Botan]: {
-		[CardNumber.First]: botan1,
-		[CardNumber.Second]: botan2,
-		[CardNumber.Third]: botan3,
-		[CardNumber.Fourth]: botan4,
+	[lovelove.Hana.Botan]: {
+		[lovelove.Variation.First]: botan1,
+		[lovelove.Variation.Second]: botan2,
+		[lovelove.Variation.Third]: botan3,
+		[lovelove.Variation.Fourth]: botan4,
 	},
-	[Season.Fuji]: {
-		[CardNumber.First]: fuji1,
-		[CardNumber.Second]: fuji2,
-		[CardNumber.Third]: fuji3,
-		[CardNumber.Fourth]: fuji4,
+	[lovelove.Hana.Fuji]: {
+		[lovelove.Variation.First]: fuji1,
+		[lovelove.Variation.Second]: fuji2,
+		[lovelove.Variation.Third]: fuji3,
+		[lovelove.Variation.Fourth]: fuji4,
 	},
-	[Season.Hagi]: {
-		[CardNumber.First]: hagi1,
-		[CardNumber.Second]: hagi2,
-		[CardNumber.Third]: hagi3,
-		[CardNumber.Fourth]: hagi4,
+	[lovelove.Hana.Hagi]: {
+		[lovelove.Variation.First]: hagi1,
+		[lovelove.Variation.Second]: hagi2,
+		[lovelove.Variation.Third]: hagi3,
+		[lovelove.Variation.Fourth]: hagi4,
 	},
-	[Season.Kiku]: {
-		[CardNumber.First]: kiku1,
-		[CardNumber.Second]: kiku2,
-		[CardNumber.Third]: kiku3,
-		[CardNumber.Fourth]: kiku4,
+	[lovelove.Hana.Kiku]: {
+		[lovelove.Variation.First]: kiku1,
+		[lovelove.Variation.Second]: kiku2,
+		[lovelove.Variation.Third]: kiku3,
+		[lovelove.Variation.Fourth]: kiku4,
 	},
-	[Season.Kiri]: {
-		[CardNumber.First]: kiri1,
-		[CardNumber.Second]: kiri2,
-		[CardNumber.Third]: kiri3,
-		[CardNumber.Fourth]: kiri4,
+	[lovelove.Hana.Kiri]: {
+		[lovelove.Variation.First]: kiri1,
+		[lovelove.Variation.Second]: kiri2,
+		[lovelove.Variation.Third]: kiri3,
+		[lovelove.Variation.Fourth]: kiri4,
 	},
-	[Season.Matsu]: {
-		[CardNumber.First]: matsu1,
-		[CardNumber.Second]: matsu2,
-		[CardNumber.Third]: matsu3,
-		[CardNumber.Fourth]: matsu4,
+	[lovelove.Hana.Matsu]: {
+		[lovelove.Variation.First]: matsu1,
+		[lovelove.Variation.Second]: matsu2,
+		[lovelove.Variation.Third]: matsu3,
+		[lovelove.Variation.Fourth]: matsu4,
 	},
-	[Season.Momiji]: {
-		[CardNumber.First]: momiji1,
-		[CardNumber.Second]: momiji2,
-		[CardNumber.Third]: momiji3,
-		[CardNumber.Fourth]: momiji4,
+	[lovelove.Hana.Momiji]: {
+		[lovelove.Variation.First]: momiji1,
+		[lovelove.Variation.Second]: momiji2,
+		[lovelove.Variation.Third]: momiji3,
+		[lovelove.Variation.Fourth]: momiji4,
 	},
-	[Season.Sakura]: {
-		[CardNumber.First]: sakura1,
-		[CardNumber.Second]: sakura2,
-		[CardNumber.Third]: sakura3,
-		[CardNumber.Fourth]: sakura4,
+	[lovelove.Hana.Sakura]: {
+		[lovelove.Variation.First]: sakura1,
+		[lovelove.Variation.Second]: sakura2,
+		[lovelove.Variation.Third]: sakura3,
+		[lovelove.Variation.Fourth]: sakura4,
 	},
-	[Season.Susuki]: {
-		[CardNumber.First]: susuki1,
-		[CardNumber.Second]: susuki2,
-		[CardNumber.Third]: susuki3,
-		[CardNumber.Fourth]: susuki4,
+	[lovelove.Hana.Susuki]: {
+		[lovelove.Variation.First]: susuki1,
+		[lovelove.Variation.Second]: susuki2,
+		[lovelove.Variation.Third]: susuki3,
+		[lovelove.Variation.Fourth]: susuki4,
 	},
-	[Season.Ume]: {
-		[CardNumber.First]: ume1,
-		[CardNumber.Second]: ume2,
-		[CardNumber.Third]: ume3,
-		[CardNumber.Fourth]: ume4,
+	[lovelove.Hana.Ume]: {
+		[lovelove.Variation.First]: ume1,
+		[lovelove.Variation.Second]: ume2,
+		[lovelove.Variation.Third]: ume3,
+		[lovelove.Variation.Fourth]: ume4,
 	},
-	[Season.Yanagi]: {
-		[CardNumber.First]: yanagi1,
-		[CardNumber.Second]: yanagi2,
-		[CardNumber.Third]: yanagi3,
-		[CardNumber.Fourth]: yanagi4,
+	[lovelove.Hana.Yanagi]: {
+		[lovelove.Variation.First]: yanagi1,
+		[lovelove.Variation.Second]: yanagi2,
+		[lovelove.Variation.Third]: yanagi3,
+		[lovelove.Variation.Fourth]: yanagi4,
 	}
 };
 
@@ -152,6 +152,6 @@ const styles = stylesheet`
 
 export const CardComponent: React.FC<CardProps> = (props) => {
 	return <div className={styles.card}>
-		<img draggable={false} src={SVG_MAP[props.season][props.card]} />
+		<img draggable={false} src={SVG_MAP[props.hana][props.variation]} />
 	</div>;
 };

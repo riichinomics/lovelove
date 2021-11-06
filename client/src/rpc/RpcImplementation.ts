@@ -1,4 +1,4 @@
-import { Method, RPCImplCallback, Root, Type, rpc } from "protobufjs";
+import { Method, RPCImplCallback, Root, rpc } from "protobufjs";
 import { Connection } from "./Connection";
 import { Subscription } from "rxjs";
 

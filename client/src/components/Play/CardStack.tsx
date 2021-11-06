@@ -1,8 +1,8 @@
 import * as React from "react";
-import { ICard } from "../ICard";
 import { ThemeContext } from "../../themes/ThemeContext";
 import { cardKey } from "./utils";
 import clsx from "clsx";
+import { lovelove } from "../../rpc/proto/lovelove";
 import { stylesheet } from "astroturf";
 
 const styles = stylesheet`
@@ -21,7 +21,7 @@ const styles = stylesheet`
 `;
 
 export const CardStack = (props: {
-	cards: ICard[],
+	cards: lovelove.ICard[],
 	stackUpwards?: boolean,
 	concealed?: boolean,
 	stackDepth?: number,
@@ -30,14 +30,13 @@ export const CardStack = (props: {
 	const {
 		CardComponent,
 		CardPlaceholderComponent,
-		CardBackComponent,
-		cardStackSpacing
+		CardBackComponent
 	} = React.useContext(ThemeContext).theme;
 	const [selectedIndex, setSelectedIndex] = React.useState(0);
 	const [selectedLayerIndex, setSelectedLayerIndex] = React.useState(0);
 
 	const layers = React.useMemo(() => {
-		const layers: ICard[][] = [];
+		const layers: lovelove.ICard[][] = [];
 		for (let i = 0; i < props.cards.length; i++) {
 			if (i % stackDepth === 0) {
 				layers.push([]);
@@ -51,7 +50,7 @@ export const CardStack = (props: {
 	const cardStackVerticalSpacing = 30;
 	const cardStackLayerOffset = 20;
 
-	const horizontalPadding = cardStackHorizontalSpacing * (layers[0].length - 1) + cardStackLayerOffset * layers.slice(1).filter(layer => layer.length >= stackDepth).length;
+	const horizontalPadding = cardStackHorizontalSpacing * ((layers[0]?.length ?? 1) - 1) + cardStackLayerOffset * layers.slice(1).filter(layer => layer.length >= stackDepth).length;
 	const verticalPadding = cardStackVerticalSpacing * (layers.length - 1);
 
 	return <div
@@ -86,7 +85,7 @@ export const CardStack = (props: {
 				{props.concealed
 					? <CardBackComponent />
 					: card
-						? <CardComponent card={card.variation} season={card.season} />
+						? <CardComponent hana={card.hana} variation={card.variation} />
 						: <CardPlaceholderComponent />
 				}
 			</div>;

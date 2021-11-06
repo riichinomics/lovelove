@@ -1,7 +1,3 @@
-import { CardNumber } from "./CardNumber";
-import { Season } from "./Season";
+import { lovelove } from "../rpc/proto/lovelove";
 
-export interface CardProps {
-	season: Season;
-	card: CardNumber;
-}
+export type CardProps = lovelove.ICard

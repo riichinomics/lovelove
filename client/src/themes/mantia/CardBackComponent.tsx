@@ -18,4 +18,4 @@ const styles = stylesheet`
 	}
 `;
 
-export const CardBackComponent: React.FC<CardBackProps> = ({count}) => <div className={styles.cardBack} />;
+export const CardBackComponent: React.FC<CardBackProps> = () => <div className={styles.cardBack} />;
