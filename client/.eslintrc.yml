@@ -64,10 +64,6 @@ rules:
     - maximum: 1
       when: multiline
   react/jsx-props-no-multi-spaces: error
-  react/jsx-sort-props:
-    - error
-    - callbacksLast: true
-      shorthandLast: true
   react/jsx-space-before-closing: error
   react/jsx-tag-spacing:
     - error

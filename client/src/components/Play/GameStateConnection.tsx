@@ -6,12 +6,24 @@ import { IState } from "../../state/IState";
 import { InitialGameStateReceivedAction } from "../../state/actions/InitialGameStateReceivedAction";
 import { Table } from "./Table";
 import { ApiState } from "../../rpc/ApiState";
+import { useLocation, useNavigate } from "react-router";
 
 export const GameStateConnection = () => {
 	const { api } = React.useContext(ApiContext);
+
 	const dispatch = useDispatch<React.Dispatch<InitialGameStateReceivedAction>>();
 
+	const roomId = useLocation().hash?.slice(1);
+	const navigate = useNavigate();
 	const apiState = useSelector<IState>((state) => state.apiState);
+
+	React.useEffect(() => {
+		if (roomId == null || roomId === "") {
+			navigate({
+				hash: Math.random().toString(16).substr(2, 5).toUpperCase()
+			});
+		}
+	}, [roomId]);
 
 	React.useEffect(() => {
 		if (apiState !== ApiState.Connected) {
@@ -21,7 +33,7 @@ export const GameStateConnection = () => {
 		console.log("requesting GameState");
 
 		api.lovelove.connectToGame({
-			roomId: "roomId"
+			roomId
 		}).then(response => {
 			console.log("GameStateConnection", response);
 			dispatch({
@@ -29,7 +41,7 @@ export const GameStateConnection = () => {
 				gameState: response.gameState
 			});
 		});
-	}, [api, dispatch, apiState]);
+	}, [api, dispatch, apiState, roomId]);
 
 	const gameState = useSelector<IState>((state) => state.gameState ?? {});
 	return <Table {...gameState} />;

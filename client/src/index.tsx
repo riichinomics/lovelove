@@ -12,6 +12,7 @@ import { ThemeContext } from "./themes/ThemeContext";
 import mainReducer from "./state/reducers";
 import mantia from "./themes/mantia";
 import { ApiState } from "./rpc/ApiState";
+import { BrowserRouter, Route, Routes } from "react-router-dom";
 import * as uuid from "uuid";
 
 const USER_ID_LOCAL_STORAGE_KEY = "lovelove_user_id";
@@ -63,7 +64,11 @@ ReactDOM.render(
 					opponentHand={Math.random() * 8 | 0}
 					table={[...Array(12 + Math.random() * 6 | 0)].map(_ => createRandomCard())}
 				/> */}
-				<GameStateConnection />
+				<BrowserRouter>
+					<Routes>
+						<Route path="/" element={<GameStateConnection />} />
+					</Routes>
+				</BrowserRouter>
 			</ThemeContext.Provider>
 		</ApiContext.Provider>
 	</Provider>,
