@@ -8,12 +8,14 @@ import (
 	"math/rand"
 	"net"
 	"net/http"
+	"sort"
 	"strings"
 	"time"
 
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/proto"
 
+	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 	lovelove "hanafuda.moe/lovelove/proto"
 )
@@ -50,8 +52,54 @@ func echo(w http.ResponseWriter, r *http.Request) {
 	log.Print("Closed")
 }
 
+type connDetails struct {
+	userId string
+	connId string
+}
+
+type CardLocation int64
+
+const (
+	CardLocation_Deck CardLocation = iota
+	CardLocation_Table
+	CardLocation_RedHand
+	CardLocation_WhiteHand
+	CardLocation_RedCollection
+	CardLocation_WhiteCollection
+	CardLocation_Drawn
+)
+
+type cardState struct {
+	location CardLocation
+	order    int
+	card     *lovelove.Card
+}
+
+type cardId struct {
+	hana      lovelove.Hana
+	variation lovelove.Variation
+}
+
+type playerState struct {
+	id       string
+	position lovelove.PlayerPosition
+}
+
+type gameState struct {
+	id           string
+	activePlayer lovelove.PlayerPosition
+	cards        map[cardId]cardState
+	playerState  map[string]*playerState
+}
+
+type LoveLoveServer struct {
+	connDetails map[string]*connDetails
+	games       map[string]*gameState
+}
+
 type LoveLoveRpcServer struct {
 	lovelove.UnimplementedLoveLoveServer
+	server *LoveLoveServer
 }
 
 func (LoveLoveRpcServer) SayHello(context context.Context, request *lovelove.HelloRequest) (*lovelove.HelloReply, error) {
@@ -59,39 +107,170 @@ func (LoveLoveRpcServer) SayHello(context context.Context, request *lovelove.Hel
 	return &lovelove.HelloReply{Message: "Hello " + request.Name}, nil
 }
 
-func (LoveLoveRpcServer) Authenticate(context context.Context, request *lovelove.AuthenticateRequest) (*lovelove.AuthenticateResponse, error) {
-	log.Print(request.UserId)
+func (server LoveLoveRpcServer) Authenticate(context context.Context, request *lovelove.AuthenticateRequest) (*lovelove.AuthenticateResponse, error) {
+	connId := context.Value(connContextKey{key: "connId"}).(string)
+	log.Print(connId, request.UserId)
+
+	if connDetails, ok := server.server.connDetails[connId]; ok {
+		connDetails.userId = request.UserId
+	}
+
 	return &lovelove.AuthenticateResponse{}, nil
 }
 
-func (LoveLoveRpcServer) ConnectToGame(context context.Context, request *lovelove.ConnectToGameRequest) (*lovelove.ConnectToGameResponse, error) {
-	log.Print(request.RoomId)
+func cardIdFromCard(card lovelove.Card) cardId {
+	return cardId{
+		hana:      card.Hana,
+		variation: card.Variation,
+	}
+}
 
-	cards := make([]*lovelove.Card, 12*4)
+func moveCards(cardMap map[cardId]cardState, cards []*lovelove.Card, location CardLocation) {
+	for i, card := range cards {
+		cardMap[cardIdFromCard(*card)] = cardState{
+			order:    i,
+			card:     card,
+			location: location,
+		}
+	}
+}
 
-	for hana := range lovelove.Hana_name {
-		for variation := range lovelove.Variation_name {
-			cards[hana*4+variation] = &lovelove.Card{
-				Hana:      lovelove.Hana(hana),
-				Variation: lovelove.Variation(variation),
+func createGameStateView(gameState gameState, playerPosition lovelove.PlayerPosition) *lovelove.CompleteGameState {
+	zones := make(map[CardLocation][]cardState)
+
+	for _, card := range gameState.cards {
+		zone, zoneFound := zones[card.location]
+		if !zoneFound {
+			zone = make([]cardState, 0, 12*4)
+		}
+		zones[card.location] = append(zone, card)
+	}
+
+	completeGameState := &lovelove.CompleteGameState{
+		Deck:               0,
+		Table:              make([]*lovelove.Card, 0, 12*4),
+		Hand:               make([]*lovelove.Card, 0, 12*4),
+		Collection:         make([]*lovelove.Card, 0, 12*4),
+		OpponentHand:       0,
+		OpponentCollection: make([]*lovelove.Card, 0, 12*4),
+	}
+
+	for zoneType, zone := range zones {
+		sort.Slice(zone, func(i, j int) bool {
+			return zone[i].order < zone[j].order
+		})
+
+		cards := make([]*lovelove.Card, 0, 12*4)
+		for _, card := range zone {
+			cards = append(cards, card.card)
+		}
+
+		switch zoneType {
+		case CardLocation_Deck:
+			completeGameState.Deck = int32(len(zone))
+		case CardLocation_Table:
+			completeGameState.Table = cards
+		case CardLocation_RedCollection:
+			if playerPosition == lovelove.PlayerPosition_Red {
+				completeGameState.Collection = cards
+			} else {
+				completeGameState.OpponentCollection = cards
+			}
+		case CardLocation_WhiteCollection:
+			if playerPosition == lovelove.PlayerPosition_Red {
+				completeGameState.OpponentCollection = cards
+			} else {
+				completeGameState.Collection = cards
+			}
+		case CardLocation_RedHand:
+			if playerPosition == lovelove.PlayerPosition_Red {
+				completeGameState.Hand = cards
+			} else {
+				completeGameState.OpponentHand = int32(len(zone))
+			}
+		case CardLocation_WhiteHand:
+			if playerPosition == lovelove.PlayerPosition_Red {
+				completeGameState.OpponentHand = int32(len(zone))
+			} else {
+				completeGameState.Hand = cards
 			}
 		}
 	}
 
-	rand.Shuffle(len(cards), func(i, j int) {
-		cards[i], cards[j] = cards[j], cards[i]
-	})
+	return completeGameState
+}
+
+func (server LoveLoveRpcServer) ConnectToGame(context context.Context, request *lovelove.ConnectToGameRequest) (*lovelove.ConnectToGameResponse, error) {
+	log.Print(request.RoomId)
+
+	game, gameFound := server.server.games[request.RoomId]
+
+	// TODO: deal with missing connection problem?
+	connDetails := server.server.connDetails[context.Value(connContextKey{
+		key: "connId",
+	}).(string)]
+
+	if len(connDetails.userId) == 0 {
+		log.Print("Player not identified")
+		return &lovelove.ConnectToGameResponse{}, nil
+	}
+
+	if !gameFound {
+		deck := make([]*lovelove.Card, 12*4)
+
+		for hana := range lovelove.Hana_name {
+			for variation := range lovelove.Variation_name {
+				deck[hana*4+variation] = &lovelove.Card{
+					Hana:      lovelove.Hana(hana),
+					Variation: lovelove.Variation(variation),
+				}
+			}
+		}
+
+		rand.Shuffle(len(deck), func(i, j int) {
+			deck[i], deck[j] = deck[j], deck[i]
+		})
+
+		game = &gameState{
+			id:           request.RoomId,
+			activePlayer: lovelove.PlayerPosition_Red,
+			cards:        make(map[cardId]cardState),
+			playerState:  make(map[string]*playerState),
+		}
+
+		game.playerState[connDetails.userId] = &playerState{
+			id:       connDetails.userId,
+			position: lovelove.PlayerPosition(rand.Intn(2)),
+		}
+
+		moveCards(game.cards, deck[0:8], CardLocation_Table)
+		moveCards(game.cards, deck[8:16], CardLocation_RedHand)
+		moveCards(game.cards, deck[16:24], CardLocation_WhiteHand)
+		moveCards(game.cards, deck[24:], CardLocation_Deck)
+
+		server.server.games[game.id] = game
+	} else {
+		_, playerExists := game.playerState[connDetails.userId]
+		if !playerExists && len(game.playerState) < 2 {
+			newPlayerPosition := lovelove.PlayerPosition_Red
+			for _, playerState := range game.playerState {
+				if playerState.position == lovelove.PlayerPosition_Red {
+					newPlayerPosition = lovelove.PlayerPosition_White
+				}
+			}
+
+			game.playerState[connDetails.userId] = &playerState{
+				id:       connDetails.userId,
+				position: newPlayerPosition,
+			}
+		}
+	}
+
+	playerPosition := game.playerState[connDetails.userId].position
 
 	return &lovelove.ConnectToGameResponse{
-		PlayerPosition: lovelove.PlayerPosition_Red,
-		GameState: &lovelove.CompleteGameState{
-			Deck:               24,
-			Table:              cards[0:8],
-			Hand:               cards[8:16],
-			OpponentHand:       8,
-			Collection:         make([]*lovelove.Card, 0),
-			OpponentCollection: make([]*lovelove.Card, 0),
-		},
+		PlayerPosition: playerPosition,
+		GameState:      createGameStateView(*game, playerPosition),
 	}, nil
 }
 
@@ -172,6 +351,7 @@ type WebSocketRpcServer struct {
 	// conns    map[transport.ServerTransport]bool
 	serve    bool
 	services map[string]*serviceInfo
+	connMap  map[string]*connDetails
 }
 
 func (server *WebSocketRpcServer) RegisterService(serviceDesc *grpc.ServiceDesc, ss interface{}) {
@@ -206,9 +386,16 @@ func main() {
 
 	server := &WebSocketRpcServer{
 		services: make(map[string]*serviceInfo),
+		connMap:  make(map[string]*connDetails),
 	}
 
-	lovelove.RegisterLoveLoveServer(server, &LoveLoveRpcServer{})
+	lovelove.RegisterLoveLoveServer(server, &LoveLoveRpcServer{
+		UnimplementedLoveLoveServer: lovelove.UnimplementedLoveLoveServer{},
+		server: &LoveLoveServer{
+			connDetails: server.connMap,
+			games:       make(map[string]*gameState),
+		},
+	})
 
 	http.HandleFunc("/echo", func(w http.ResponseWriter, r *http.Request) {
 		c, err := upgrader.Upgrade(w, r, nil)
@@ -229,8 +416,20 @@ func main() {
 	log.Fatal(http.ListenAndServe(*addr, nil))
 }
 
+type connContextKey struct {
+	key string
+}
+
 func (server *WebSocketRpcServer) Connect(connection *websocket.Conn) {
 	go func(conn *websocket.Conn) {
+		connId := uuid.New().String()
+
+		server.connMap[connId] = &connDetails{
+			connId: connId,
+		}
+
+		defer delete(server.connMap, connId)
+
 		for {
 			messageType, data, err := conn.ReadMessage()
 			if err != nil {
@@ -263,7 +462,9 @@ func (server *WebSocketRpcServer) Connect(connection *websocket.Conn) {
 				if methodInfo, ok := serviceInfo.methods[methodName]; ok {
 					value, _ := methodInfo.Handler(
 						serviceInfo.serviceImpl,
-						context.WithValue(context.Background(), "conn", conn),
+						context.WithValue(context.Background(), connContextKey{
+							key: "connId",
+						}, connId),
 						func(message interface{}) error {
 							return proto.Unmarshal(wrapper.Data, message.(proto.Message))
 						},
