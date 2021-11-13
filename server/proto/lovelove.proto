@@ -55,8 +55,9 @@ message ConnectToGameRequest {
 }
 
 message ConnectToGameResponse {
-	PlayerPosition playerPosition = 1;
-	CompleteGameState gameState = 2;
+	PlayerPosition position = 2;
+	CompleteGameState gameState = 1;
+
 }
 
 message Card {
@@ -71,6 +72,8 @@ message CompleteGameState {
 	repeated Card collection = 4;
 	int32 opponentHand = 5;
 	repeated Card opponentCollection = 6;
+	PlayerPosition oya = 7;
+	PlayerPosition active = 8;
 }
 
 message AuthenticateRequest {

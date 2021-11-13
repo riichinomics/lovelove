@@ -6,6 +6,8 @@ import { PlayerHand } from "./PlayerHand";
 import clsx from "clsx";
 import { lovelove } from "../../rpc/proto/lovelove";
 import { stylesheet } from "astroturf";
+import { PlayerNameTag } from "./PlayerNameTag";
+import { oppositePosition } from "./utils";
 
 const styles = stylesheet`
 	$collection-peek: 100px;
@@ -18,6 +20,17 @@ const styles = stylesheet`
 		min-height: 800px;
 		height: 100vh;
 		width: 100%;
+
+		.nameTag {
+			z-index: 100;
+			&.opponentNameTag {
+				border-bottom: $border-weight solid black;
+			}
+
+			&.playerNameTag {
+				border-top: $border-weight solid black;
+			}
+		}
 
 		.collection {
 			position: relative;
@@ -65,6 +78,7 @@ const styles = stylesheet`
 				display: flex;
 				flex-direction: column;
 				justify-content: flex-end;
+				flex: 1;
 
 				&:hover {
 					max-height: 280px;
@@ -72,6 +86,7 @@ const styles = stylesheet`
 				}
 
 				> .collectionWrapper {
+					flex: 1;
 					padding-top: 10px;
 					padding-bottom: 10px;
 					box-sizing: border-box;
@@ -97,7 +112,7 @@ const styles = stylesheet`
 			bottom: 0;
 			left: 0;
 			right: 0;
-			z-index: 99;
+			z-index: 200;
 
 			display: flex;
 			justify-content: center;
@@ -105,7 +120,9 @@ const styles = stylesheet`
 	}
 `;
 
-type IGameState = lovelove.ICompleteGameState
+type IGameState = lovelove.ICompleteGameState & {
+	position: lovelove.PlayerPosition
+}
 
 export const Table = ({
 	collection = [],
@@ -113,11 +130,18 @@ export const Table = ({
 	hand = [],
 	opponentCollection = [],
 	opponentHand = 0,
-	table = []
+	table = [],
+	active = lovelove.PlayerPosition.Red,
+	oya = lovelove.PlayerPosition.Red,
+	position = lovelove.PlayerPosition.Red
 }: IGameState) => {
+	const opponentPosition = oppositePosition(position);
 	return <div className={styles.table}>
 		<div className={styles.opponentHand}>
 			<OpponentHand cards={opponentHand} />
+		</div>
+		<div className={clsx(styles.nameTag, styles.opponentNameTag)}>
+			<PlayerNameTag position={opponentPosition} active={opponentPosition === active} oya={opponentPosition === oya} />
 		</div>
 		<div className={clsx(styles.collection, styles.opponentCollection)}>
 			<div className={styles.popup}>
@@ -135,6 +159,9 @@ export const Table = ({
 					<Collection cards={collection} />
 				</div>
 			</div>
+		</div>
+		<div className={clsx(styles.nameTag, styles.playerNameTag)}>
+			<PlayerNameTag position={position} active={position === active} oya={position === oya} />
 		</div>
 		<div className={styles.playerArea}>
 			<PlayerHand cards={hand} />

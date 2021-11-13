@@ -7,7 +7,7 @@ const styles = stylesheet`
 		position: relative;
 		height: 50px;
 		overflow: hidden;
-		z-index: 100;
+		z-index: 200;
 	}
 
 	.opponentHand {

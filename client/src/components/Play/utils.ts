@@ -120,3 +120,12 @@ const SEASON_MONTH_MAP = {
 export function getSeasonMonth(season: lovelove.Hana): Month {
 	return SEASON_MONTH_MAP[season];
 }
+
+export function oppositePosition(position: lovelove.PlayerPosition) {
+	switch (position) {
+		case lovelove.PlayerPosition.Red:
+			return lovelove.PlayerPosition.White;
+		case lovelove.PlayerPosition.White:
+			return lovelove.PlayerPosition.Red;
+	}
+}

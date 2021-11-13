@@ -88,6 +88,7 @@ type playerState struct {
 type gameState struct {
 	id           string
 	activePlayer lovelove.PlayerPosition
+	oya          lovelove.PlayerPosition
 	cards        map[cardId]cardState
 	playerState  map[string]*playerState
 }
@@ -153,6 +154,8 @@ func createGameStateView(gameState gameState, playerPosition lovelove.PlayerPosi
 		Collection:         make([]*lovelove.Card, 0, 12*4),
 		OpponentHand:       0,
 		OpponentCollection: make([]*lovelove.Card, 0, 12*4),
+		Active:             gameState.activePlayer,
+		Oya:                gameState.oya,
 	}
 
 	for zoneType, zone := range zones {
@@ -231,11 +234,14 @@ func (server LoveLoveRpcServer) ConnectToGame(context context.Context, request *
 			deck[i], deck[j] = deck[j], deck[i]
 		})
 
+		oya := lovelove.PlayerPosition(rand.Intn(2))
+
 		game = &gameState{
 			id:           request.RoomId,
-			activePlayer: lovelove.PlayerPosition_Red,
+			activePlayer: oya,
 			cards:        make(map[cardId]cardState),
 			playerState:  make(map[string]*playerState),
+			oya:          oya,
 		}
 
 		game.playerState[connDetails.userId] = &playerState{
@@ -269,8 +275,8 @@ func (server LoveLoveRpcServer) ConnectToGame(context context.Context, request *
 	playerPosition := game.playerState[connDetails.userId].position
 
 	return &lovelove.ConnectToGameResponse{
-		PlayerPosition: playerPosition,
-		GameState:      createGameStateView(*game, playerPosition),
+		Position:  playerPosition,
+		GameState: createGameStateView(*game, playerPosition),
 	}, nil
 }
 

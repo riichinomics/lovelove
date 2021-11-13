@@ -13,6 +13,7 @@ function mainReducer(state: IState, action: Action): IState {
 		} case ActionType.InitialGameStateReceived: {
 			return {
 				...state,
+				gamePosition: action.position,
 				gameState: action.gameState
 			};
 		}

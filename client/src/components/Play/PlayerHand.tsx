@@ -25,7 +25,6 @@ const styles = stylesheet`
 
 		.handCard {
 			transition: margin 150ms ease-in-out;
-			z-index: 200;
 			&:hover {
 				margin-top: -20px;
 			}

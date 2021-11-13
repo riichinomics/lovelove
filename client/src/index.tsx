@@ -16,6 +16,7 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 import * as uuid from "uuid";
 import { Table } from "./components/Play/Table";
 import { createRandomCard } from "./components/Play/utils";
+import { lovelove } from "./rpc/proto/lovelove";
 
 const USER_ID_LOCAL_STORAGE_KEY = "lovelove_user_id";
 const storedUserId = localStorage.getItem(USER_ID_LOCAL_STORAGE_KEY);
@@ -57,7 +58,7 @@ ReactDOM.render(
 				theme: mantia
 			}}
 			>
-				<Table
+				{/* <Table
 					collection={[...Array(8 * 4)].map(_ => createRandomCard())}
 					// drawnCard={createRandomCard()}
 					deck={Math.random() * 4 | 0}
@@ -65,12 +66,15 @@ ReactDOM.render(
 					opponentCollection={[...Array(8 * 4)].map(_ => createRandomCard())}
 					opponentHand={Math.random() * 8 | 0}
 					table={[...Array(12 + Math.random() * 6 | 0)].map(_ => createRandomCard())}
-				/>
-				{/* <BrowserRouter>
+					oya={Math.random() * 2 | 0}
+					position={Math.random() * 2 | 0}
+					active={Math.random() * 2 | 0}
+				/> */}
+				<BrowserRouter>
 					<Routes>
 						<Route path="/" element={<GameStateConnection />} />
 					</Routes>
-				</BrowserRouter> */}
+				</BrowserRouter>
 			</ThemeContext.Provider>
 		</ApiContext.Provider>
 	</Provider>,

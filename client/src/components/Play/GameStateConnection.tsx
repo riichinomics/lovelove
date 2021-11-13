@@ -38,11 +38,13 @@ export const GameStateConnection = () => {
 			console.log("GameStateConnection", response);
 			dispatch({
 				type: ActionType.InitialGameStateReceived,
+				position: response.position,
 				gameState: response.gameState
 			});
 		});
 	}, [api, dispatch, apiState, roomId]);
 
-	const gameState = useSelector<IState>((state) => state.gameState ?? {});
-	return <Table {...gameState} />;
+	const gameState = useSelector((state: IState) => state.gameState ?? {});
+	const position = useSelector((state: IState) => state.gamePosition);
+	return <Table {...gameState} position={position} />;
 };
