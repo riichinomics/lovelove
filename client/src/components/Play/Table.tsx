@@ -12,42 +12,75 @@ const styles = stylesheet`
 	$border-weight: 2px;
 
 	.table {
-		display: flex;
+		overflow: hidden;
+		display: inline-flex;
 		flex-direction: column;
+		min-height: 800px;
 		height: 100vh;
+		width: 100%;
 
 		.collection {
-			position: absolute;
-			z-index: 99;
-			left: 0;
-			right: 0;
-
-			padding-top: 10px;
-			padding-bottom: 10px;
-
-			overflow: hidden;
-			max-height: $collection-peek;
+			position: relative;
 			box-sizing: border-box;
-			transition: max-height 350ms ease-in-out;
+
+			min-height: 40px;
 
 			display: flex;
-			justify-content: center;
+			flex-direction: column;
+			align-items: stretch;
 
-			&:hover {
-				max-height: 300px;
+			&.opponentCollection {
+				.popup {
+					> .collectionWrapper {
+						border-bottom: $border-weight solid black;
+						background-color: #222;
+					}
+				}
+			}
+
+			&.playerCollection {
+				.popup {
+					> .collectionWrapper {
+						border-top: $border-weight solid black;
+						background-color: #888;
+					}
+
+					max-height: 280px;
+					transition: max-height 350ms ease-in;
+
+					&:hover {
+						max-height: 100%;
+						transition: max-height 350ms ease-out;
+					}
+				}
+			}
+
+			transition: flex-basis 350ms ease-in-out;
+
+
+			> .popup {
+				z-index: 99;
+				max-height: 100%;
+				transition: max-height 350ms ease-out;
+				display: flex;
+				flex-direction: column;
+				justify-content: flex-end;
+
+				&:hover {
+					max-height: 280px;
+					transition: max-height 350ms ease-in;
+				}
+
+				> .collectionWrapper {
+					padding-top: 10px;
+					padding-bottom: 10px;
+					box-sizing: border-box;
+				}
 			}
 		}
 
 		.opponentHand {
 			position: relative;
-			margin-bottom: $collection-peek;
-
-			.opponentCollection {
-				top: 100%;
-				background-color: #222;
-				border-bottom: $border-weight solid black;
-				align-items: flex-end;
-			}
 		}
 
 		.center {
@@ -66,16 +99,8 @@ const styles = stylesheet`
 			right: 0;
 			z-index: 99;
 
-			margin-top: $collection-peek;
-
 			display: flex;
 			justify-content: center;
-
-			.playerCollection {
-				bottom: 100%;
-				background-color: #888;
-				border-top: $border-weight solid black;
-			}
 		}
 	}
 `;
@@ -93,17 +118,25 @@ export const Table = ({
 	return <div className={styles.table}>
 		<div className={styles.opponentHand}>
 			<OpponentHand cards={opponentHand} />
-			<div className={clsx(styles.collection, styles.opponentCollection)}>
-				<Collection cards={opponentCollection} stackUpwards />
+		</div>
+		<div className={clsx(styles.collection, styles.opponentCollection)}>
+			<div className={styles.popup}>
+				<div className={styles.collectionWrapper}>
+					<Collection cards={opponentCollection} stackUpwards />
+				</div>
 			</div>
 		</div>
 		<div className={styles.center}>
 			<Center cards={table} deck={deck} drawnCard={null} />
 		</div>
-		<div className={styles.playerArea}>
-			<div className={clsx(styles.collection, styles.playerCollection)}>
-				<Collection cards={collection} />
+		<div className={clsx(styles.collection, styles.playerCollection)}>
+			<div className={styles.popup}>
+				<div className={styles.collectionWrapper}>
+					<Collection cards={collection} />
+				</div>
 			</div>
+		</div>
+		<div className={styles.playerArea}>
 			<PlayerHand cards={hand} />
 		</div>
 	</div>;

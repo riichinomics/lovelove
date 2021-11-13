@@ -20,6 +20,8 @@ const styles = stylesheet`
 		} */
 
 		.deck {
+			padding-top: 20px;
+			padding-bottom: 20px;
 			padding-left: 120px;
 			padding-right: 20px;
 			background-color: white;
@@ -34,6 +36,8 @@ const styles = stylesheet`
 		}
 
 		.cards {
+			padding-top: 20px;
+			padding-bottom: 20px;
 			padding-left: 20px;
 			display: flex;
 			flex: 1;
