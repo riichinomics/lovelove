@@ -129,3 +129,19 @@ export function oppositePosition(position: lovelove.PlayerPosition) {
 			return lovelove.PlayerPosition.Red;
 	}
 }
+
+export enum CardZone {
+	Hand,
+	Table,
+	Drawn,
+}
+
+export interface CardWithZone {
+	card: lovelove.ICard,
+	zone: CardZone
+}
+
+export type CardDroppedHandler = (
+	movedCard: CardWithZone,
+	target: CardWithZone
+) => void;

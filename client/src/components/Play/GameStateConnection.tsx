@@ -7,6 +7,7 @@ import { InitialGameStateReceivedAction } from "../../state/actions/InitialGameS
 import { Table } from "./Table";
 import { ApiState } from "../../rpc/ApiState";
 import { useLocation, useNavigate } from "react-router";
+import { CardWithZone } from "./utils";
 
 export const GameStateConnection = () => {
 	const { api } = React.useContext(ApiContext);
@@ -44,7 +45,15 @@ export const GameStateConnection = () => {
 		});
 	}, [api, dispatch, apiState, roomId]);
 
+	const onCardDropped = React.useCallback((a: CardWithZone, b: CardWithZone) => {
+		console.log(a, b);
+	}, []);
+
 	const gameState = useSelector((state: IState) => state.gameState ?? {});
 	const position = useSelector((state: IState) => state.gamePosition);
-	return <Table {...gameState} position={position} />;
+	return <Table
+		{...gameState}
+		position={position}
+		onCardDropped={onCardDropped}
+	/>;
 };

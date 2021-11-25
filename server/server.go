@@ -69,6 +69,14 @@ const (
 	CardLocation_Drawn
 )
 
+type GameState int64
+
+const (
+	GameState_HandCardPlay GameState = iota
+	GameState_DeckCardPlay
+	GameState_DeclareWin
+)
+
 type cardState struct {
 	location CardLocation
 	order    int
@@ -86,6 +94,7 @@ type playerState struct {
 }
 
 type gameState struct {
+	state        GameState
 	id           string
 	activePlayer lovelove.PlayerPosition
 	oya          lovelove.PlayerPosition
@@ -200,6 +209,27 @@ func createGameStateView(gameState gameState, playerPosition lovelove.PlayerPosi
 		}
 	}
 
+	if gameState.activePlayer == playerPosition && gameState.state == GameState_HandCardPlay {
+		completeGameState.Action = &lovelove.PlayerAction{
+			Type:        lovelove.PlayerActionType_HandCardPlayOpportunity,
+			PlayOptions: make(map[int32]*lovelove.PlayOptions),
+		}
+		for _, tableCard := range completeGameState.Table {
+			playOptions := make([]int32, 0)
+			for _, handCard := range completeGameState.Hand {
+				if handCard.Hana == tableCard.Hana {
+					playOptions = append(playOptions, handCard.Id)
+				}
+			}
+
+			if len(playOptions) > 0 {
+				completeGameState.Action.PlayOptions[tableCard.Id] = &lovelove.PlayOptions{
+					Options: playOptions,
+				}
+			}
+		}
+	}
+
 	return completeGameState
 }
 
@@ -224,6 +254,7 @@ func (server LoveLoveRpcServer) ConnectToGame(context context.Context, request *
 		for hana := range lovelove.Hana_name {
 			for variation := range lovelove.Variation_name {
 				deck[hana*4+variation] = &lovelove.Card{
+					Id:        hana*4 + variation,
 					Hana:      lovelove.Hana(hana),
 					Variation: lovelove.Variation(variation),
 				}
@@ -237,6 +268,7 @@ func (server LoveLoveRpcServer) ConnectToGame(context context.Context, request *
 		oya := lovelove.PlayerPosition(rand.Intn(2))
 
 		game = &gameState{
+			state:        GameState_HandCardPlay,
 			id:           request.RoomId,
 			activePlayer: oya,
 			cards:        make(map[cardId]cardState),
@@ -387,6 +419,8 @@ func (server *WebSocketRpcServer) RegisterService(serviceDesc *grpc.ServiceDesc,
 }
 
 func main() {
+	rand.Seed(time.Now().UnixNano())
+
 	flag.Parse()
 	log.SetFlags(0)
 

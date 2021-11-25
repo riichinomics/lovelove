@@ -18,6 +18,9 @@ import { Table } from "./components/Play/Table";
 import { createRandomCard } from "./components/Play/utils";
 import { lovelove } from "./rpc/proto/lovelove";
 
+import { DndProvider } from "react-dnd";
+import { HTML5Backend } from "react-dnd-html5-backend";
+
 const USER_ID_LOCAL_STORAGE_KEY = "lovelove_user_id";
 const storedUserId = localStorage.getItem(USER_ID_LOCAL_STORAGE_KEY);
 const userId = storedUserId ?? uuid.v4();
@@ -58,23 +61,26 @@ ReactDOM.render(
 				theme: mantia
 			}}
 			>
-				{/* <Table
-					collection={[...Array(8 * 4)].map(_ => createRandomCard())}
-					// drawnCard={createRandomCard()}
-					deck={Math.random() * 4 | 0}
-					hand={[...Array(Math.random() * 8 | 0)].map(_ => createRandomCard())}
-					opponentCollection={[...Array(8 * 4)].map(_ => createRandomCard())}
-					opponentHand={Math.random() * 8 | 0}
-					table={[...Array(12 + Math.random() * 6 | 0)].map(_ => createRandomCard())}
-					oya={Math.random() * 2 | 0}
-					position={Math.random() * 2 | 0}
-					active={Math.random() * 2 | 0}
-				/> */}
-				<BrowserRouter>
-					<Routes>
-						<Route path="/" element={<GameStateConnection />} />
-					</Routes>
-				</BrowserRouter>
+				<DndProvider backend={HTML5Backend}>
+					<BrowserRouter>
+						<Routes>
+							<Route path="/" element={<GameStateConnection />} />
+							{/* <Table
+								collection={[...Array(8 * 4)].map(_ => createRandomCard())}
+								// drawnCard={createRandomCard()}
+								deck={Math.random() * 4 | 0}
+								hand={[...Array(Math.random() * 8 | 0)].map(_ => createRandomCard())}
+								opponentCollection={[...Array(8 * 4)].map(_ => createRandomCard())}
+								opponentHand={Math.random() * 8 | 0}
+								table={[...Array(12 + Math.random() * 6 | 0)].map(_ => createRandomCard())}
+								oya={Math.random() * 2 | 0}
+								position={Math.random() * 2 | 0}
+								active={Math.random() * 2 | 0}
+							/> */}
+
+						</Routes>
+					</BrowserRouter>
+				</DndProvider>
 			</ThemeContext.Provider>
 		</ApiContext.Provider>
 	</Provider>,

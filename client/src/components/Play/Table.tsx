@@ -7,7 +7,7 @@ import clsx from "clsx";
 import { lovelove } from "../../rpc/proto/lovelove";
 import { stylesheet } from "astroturf";
 import { PlayerNameTag } from "./PlayerNameTag";
-import { oppositePosition } from "./utils";
+import { CardDroppedHandler, oppositePosition } from "./utils";
 
 const styles = stylesheet`
 	$collection-peek: 100px;
@@ -127,15 +127,21 @@ type IGameState = lovelove.ICompleteGameState & {
 export const Table = ({
 	collection = [],
 	deck = 0,
+	deckFlipCard,
 	hand = [],
 	opponentCollection = [],
 	opponentHand = 0,
 	table = [],
 	active = lovelove.PlayerPosition.Red,
 	oya = lovelove.PlayerPosition.Red,
-	position = lovelove.PlayerPosition.Red
-}: IGameState) => {
+	position = lovelove.PlayerPosition.Red,
+	action,
+	onCardDropped
+}: IGameState & {
+	onCardDropped: CardDroppedHandler
+}) => {
 	const opponentPosition = oppositePosition(position);
+	const [previewCard, setPreviewCard] = React.useState<lovelove.ICard>();
 	return <div className={styles.table}>
 		<div className={styles.opponentHand}>
 			<OpponentHand cards={opponentHand} />
@@ -151,7 +157,7 @@ export const Table = ({
 			</div>
 		</div>
 		<div className={styles.center}>
-			<Center cards={table} deck={deck} drawnCard={null} />
+			<Center cards={table} deck={deck} drawnCard={deckFlipCard} playOptions={action?.playOptions} previewCard={previewCard} onCardDropped={onCardDropped} />
 		</div>
 		<div className={clsx(styles.collection, styles.playerCollection)}>
 			<div className={styles.popup}>
@@ -164,7 +170,7 @@ export const Table = ({
 			<PlayerNameTag position={position} active={position === active} oya={position === oya} />
 		</div>
 		<div className={styles.playerArea}>
-			<PlayerHand cards={hand} />
+			<PlayerHand cards={hand} onPreviewCardChanged={setPreviewCard} />
 		</div>
 	</div>;
 };

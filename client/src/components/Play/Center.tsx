@@ -1,6 +1,6 @@
 import * as React from "react";
 import { CardStack } from "./CardStack";
-import { cardKey } from "./utils";
+import { CardDroppedHandler, cardKey, CardZone } from "./utils";
 import { lovelove } from "../../rpc/proto/lovelove";
 import { stylesheet } from "astroturf";
 
@@ -60,10 +60,27 @@ const styles = stylesheet`
 	}
 `;
 
+const CenterCardStack = (props: {
+	card: lovelove.ICard;
+	playOptions: Record<string, lovelove.IPlayOptions>;
+	previewCard: lovelove.ICard;
+	onCardDropped?: CardDroppedHandler;
+}) =>
+	<CardStack
+		cards={[props.card]}
+		playOptions={props.playOptions?.[props.card.id]?.options ?? []}
+		onCardDropped={props.onCardDropped}
+		previewCard={props.previewCard}
+		zone={CardZone.Table}
+	/>;
+
 export const Center = (props: {
 	deck: number;
 	drawnCard?: lovelove.ICard;
 	cards: lovelove.ICard[];
+	playOptions: Record<string, lovelove.IPlayOptions>;
+	previewCard: lovelove.ICard;
+	onCardDropped?: CardDroppedHandler;
 }) => {
 	return <div className={styles.center}>
 		<div className={styles.deck}>
@@ -75,13 +92,13 @@ export const Center = (props: {
 		<div className={styles.cards}>
 			<div className={styles.cardRow}>
 				{props.cards
-					.filter((card, index) => index % 2 === 0)
-					.map((card, index) => <CardStack cards={[card]} key={cardKey(card, `center_top_${index}`)} />)}
+					.filter((_, index) => index % 2 === 0)
+					.map((card, index) => <CenterCardStack key={cardKey(card, `center_top_${index}`)} card={card} {...props} />)}
 			</div>
 			<div className={styles.cardRow}>
 				{props.cards
-					.filter((card, index) => index % 2 === 1)
-					.map((card, index) => <CardStack cards={[card]} key={cardKey(card, `center_bottom_${index}`)} />)}
+					.filter((_, index) => index % 2 === 1)
+					.map((card, index) => <CenterCardStack key={cardKey(card, `center_bottom_${index}`)} card={card} {...props} />)}
 			</div>
 		</div>
 	</div>;

@@ -23,6 +23,13 @@ enum Variation {
 	Fourth = 3;
 }
 
+enum PlayerActionType {
+	None = 0;
+	HandCardPlayOpportunity = 1;
+	DeckCardPlayOpportunity = 2;
+	DeclareWinOpportunity = 3;
+}
+
 enum PlayerPosition {
 	Red = 0;
 	White = 1;
@@ -55,25 +62,36 @@ message ConnectToGameRequest {
 }
 
 message ConnectToGameResponse {
-	PlayerPosition position = 2;
-	CompleteGameState gameState = 1;
-
+	PlayerPosition position = 1;
+	CompleteGameState gameState = 2;
 }
 
 message Card {
-	Hana hana = 1;
-	Variation variation = 2;
+	int32 id = 1;
+	Hana hana = 2;
+	Variation variation = 3;
+}
+
+message PlayOptions {
+	repeated int32 options = 1;
+}
+
+message PlayerAction {
+	PlayerActionType type = 1;
+	map<int32, PlayOptions> playOptions = 2;
 }
 
 message CompleteGameState {
 	int32 deck = 1;
-	repeated Card table = 2;
-	repeated Card hand = 3;
-	repeated Card collection = 4;
-	int32 opponentHand = 5;
-	repeated Card opponentCollection = 6;
-	PlayerPosition oya = 7;
-	PlayerPosition active = 8;
+	Card deckFlipCard = 2;
+	repeated Card table = 3;
+	repeated Card hand = 4;
+	repeated Card collection = 5;
+	int32 opponentHand = 6;
+	repeated Card opponentCollection = 7;
+	PlayerPosition oya = 8;
+	PlayerPosition active = 9;
+	PlayerAction action = 10;
 }
 
 message AuthenticateRequest {

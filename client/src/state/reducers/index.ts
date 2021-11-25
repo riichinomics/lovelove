@@ -16,6 +16,11 @@ function mainReducer(state: IState, action: Action): IState {
 				gamePosition: action.position,
 				gameState: action.gameState
 			};
+		} case ActionType.PreviewCardChanged: {
+			return {
+				...state,
+				previewCard: action.card
+			};
 		}
 	}
 
