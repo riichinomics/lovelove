@@ -7,7 +7,8 @@ import { InitialGameStateReceivedAction } from "../../state/actions/InitialGameS
 import { Table } from "./Table";
 import { ApiState } from "../../rpc/ApiState";
 import { useLocation, useNavigate } from "react-router";
-import { CardWithZone } from "./utils";
+import { CardMove, createRandomCard } from "./utils";
+import { CardMoveContext } from "../../rpc/CardMoveContext";
 
 export const GameStateConnection = () => {
 	const { api } = React.useContext(ApiContext);
@@ -27,6 +28,25 @@ export const GameStateConnection = () => {
 	}, [roomId]);
 
 	React.useEffect(() => {
+		if (roomId === "test") {
+			dispatch({
+				type: ActionType.InitialGameStateReceived,
+				position: Math.random() * 2 | 0,
+				gameState: {
+					collection: [...Array(8 * 4)].map(_ => createRandomCard()),
+					//: drawnCard={createRandomCard()},
+					deck: Math.random() * 4 | 0,
+					hand: [...Array(Math.random() * 8 | 0)].map(_ => createRandomCard()),
+					opponentCollection: [...Array(8 * 4)].map(_ => createRandomCard()),
+					opponentHand: Math.random() * 8 | 0,
+					table: [...Array(12 + Math.random() * 6 | 0)].map(_ => createRandomCard()),
+					oya: Math.random() * 2 | 0,
+					active: Math.random() * 2 | 0,
+				}
+			});
+			return;
+		}
+
 		if (apiState !== ApiState.Connected) {
 			return;
 		}
@@ -45,15 +65,20 @@ export const GameStateConnection = () => {
 		});
 	}, [api, dispatch, apiState, roomId]);
 
-	const onCardDropped = React.useCallback((a: CardWithZone, b: CardWithZone) => {
-		console.log(a, b);
+	const onCardDropped = React.useCallback((move: CardMove) => {
+		console.log(move);
+		setMove(move);
 	}, []);
+
+	const [move, setMove] = React.useState<CardMove>();
 
 	const gameState = useSelector((state: IState) => state.gameState ?? {});
 	const position = useSelector((state: IState) => state.gamePosition);
-	return <Table
-		{...gameState}
-		position={position}
-		onCardDropped={onCardDropped}
-	/>;
+	return <CardMoveContext.Provider value={{move}}>
+		<Table
+			{...gameState}
+			position={position}
+			onCardDropped={onCardDropped}
+		/>
+	</CardMoveContext.Provider>;
 };

@@ -1,5 +1,6 @@
 import { Month } from "../../themes/Month";
 import { lovelove } from "../../rpc/proto/lovelove";
+import { CardProps } from "../../themes/CardProps";
 
 export enum CardType {
 	Kasu,
@@ -136,12 +137,27 @@ export enum CardZone {
 	Drawn,
 }
 
-export interface CardWithZone {
-	card: lovelove.ICard,
-	zone: CardZone
+export interface Vector2 {
+	x: number;
+	y: number;
+}
+
+export interface CardWithOffset extends lovelove.ICard, CardProps {
+	offset?: Vector2;
+}
+
+export interface CardLocation {
+	card: CardWithOffset;
+	index?: number;
+	zone: CardZone;
 }
 
 export type CardDroppedHandler = (
-	movedCard: CardWithZone,
-	target: CardWithZone
+	move: CardMove
 ) => void;
+
+export interface CardMove {
+	from: CardLocation;
+	to: CardLocation;
+	offset: Vector2;
+}

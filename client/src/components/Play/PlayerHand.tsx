@@ -3,9 +3,7 @@ import { CardStack } from "./CardStack";
 import { cardKey, CardZone } from "./utils";
 import { lovelove } from "../../rpc/proto/lovelove";
 import { stylesheet } from "astroturf";
-import { useDispatch } from "react-redux";
-import { PreviewCardChangedAction } from "../../state/actions/PreviewCardChangedAction";
-import { ActionType } from "../../state/actions/ActionType";
+import { CardMoveContext } from "../../rpc/CardMoveContext";
 
 const styles = stylesheet`
 	.playerHand {
@@ -40,11 +38,18 @@ export const PlayerHand = (props: {
 	onPreviewCardChanged?: (card: lovelove.ICard) => void;
 }) => {
 	const onNoCardSelected = React.useCallback(() => props.onPreviewCardChanged?.(null), [props.onPreviewCardChanged]);
-
+	const { move } = React.useContext(CardMoveContext);
+	const moveOrigin = move?.from?.zone === CardZone.Hand ? move.from : null;
 	const cards = [null, ...props.cards];
 	return <div className={styles.playerHand} onMouseLeave={onNoCardSelected}>
 		{cards.map((card, index) => <div className={styles.handCard} key={cardKey(card, index)}>
-			<CardStack cards={[card]} onCardSelected={props.onPreviewCardChanged} canDrag zone={CardZone.Hand} />
+			<CardStack
+				cards={[(moveOrigin?.index === index - 1) ? null : card]}
+				onCardSelected={props.onPreviewCardChanged}
+				canDrag
+				zone={CardZone.Hand}
+				index={index-1}
+			/>
 		</div>)}
 	</div>;
 };

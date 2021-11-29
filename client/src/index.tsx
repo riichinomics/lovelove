@@ -14,9 +14,6 @@ import mantia from "./themes/mantia";
 import { ApiState } from "./rpc/ApiState";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import * as uuid from "uuid";
-import { Table } from "./components/Play/Table";
-import { createRandomCard } from "./components/Play/utils";
-import { lovelove } from "./rpc/proto/lovelove";
 
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
@@ -65,18 +62,6 @@ ReactDOM.render(
 					<BrowserRouter>
 						<Routes>
 							<Route path="/" element={<GameStateConnection />} />
-							{/* <Table
-								collection={[...Array(8 * 4)].map(_ => createRandomCard())}
-								// drawnCard={createRandomCard()}
-								deck={Math.random() * 4 | 0}
-								hand={[...Array(Math.random() * 8 | 0)].map(_ => createRandomCard())}
-								opponentCollection={[...Array(8 * 4)].map(_ => createRandomCard())}
-								opponentHand={Math.random() * 8 | 0}
-								table={[...Array(12 + Math.random() * 6 | 0)].map(_ => createRandomCard())}
-								oya={Math.random() * 2 | 0}
-								position={Math.random() * 2 | 0}
-								active={Math.random() * 2 | 0}
-							/> */}
 
 						</Routes>
 					</BrowserRouter>

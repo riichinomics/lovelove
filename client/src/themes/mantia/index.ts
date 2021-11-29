@@ -4,7 +4,10 @@ import { CardPlaceholderComponent } from "./CardPlaceholderComponent";
 import { ITheme } from "../ITheme";
 
 const theme = {
-	cardStackSpacing: 20,
+	cardStackSpacing: {
+		horizontal: 20,
+		vertical: 30,
+	},
 	CardComponent,
 	CardPlaceholderComponent,
 	CardBackComponent

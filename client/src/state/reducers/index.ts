@@ -19,7 +19,6 @@ function mainReducer(state: IState, action: Action): IState {
 		} case ActionType.PreviewCardChanged: {
 			return {
 				...state,
-				previewCard: action.card
 			};
 		}
 	}

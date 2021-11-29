@@ -1,21 +1,23 @@
 import * as React from "react";
 import { ThemeContext } from "../../themes/ThemeContext";
-import { CardDroppedHandler, cardKey, CardWithZone, CardZone } from "./utils";
+import { CardDroppedHandler, cardKey, CardLocation, CardWithOffset, CardZone, Vector2 } from "./utils";
 import clsx from "clsx";
 import { lovelove } from "../../rpc/proto/lovelove";
 import { stylesheet } from "astroturf";
-import { CardProps } from "../../themes/CardProps";
 import { DragDropTypes } from "./DragDropTypes";
 import { useDrag, useDrop } from "react-dnd";
 
 export const Card = (props: {
-	card?: CardProps,
+	card?: CardWithOffset,
 } & ISharedCardProps) => {
 	const {
+		cardStackSpacing,
 		CardComponent,
 		CardPlaceholderComponent,
 		CardBackComponent
 	} = React.useContext(ThemeContext).theme;
+
+	const wrapperRef = React.useRef<HTMLDivElement>(null);
 
 	const [{ isDragging }, drag] = useDrag(() => ({
 		type: DragDropTypes.Card,
@@ -23,33 +25,53 @@ export const Card = (props: {
 			isDragging: monitor.isDragging(),
 		}),
 		canDrag: () => props.canDrag,
-		item: {
-			zone: props.zone,
-			card: {
-				...(props.card ?? {})
-			}
+		item: () => {
+			const rect = wrapperRef.current.getBoundingClientRect();
+			return {
+				card: {
+					zone: props.zone,
+					index: props.index,
+					card: {
+						...(props.card ?? {})
+					},
+				},
+				offset: {
+					x: rect.left,
+					y: rect.top,
+				}
+			};
 		}
-	}), [props.card, props.zone, props.canDrag]);
+	}), [props.card, props.zone, props.canDrag, wrapperRef]);
 
 	const [{canDrop, isOver}, drop] = useDrop(() => ({
 		accept: DragDropTypes.Card,
-		canDrop: (item: CardWithZone) => props.playOptions?.indexOf(item.card.id) >= 0,
+		canDrop: (item: { card: CardLocation, offset: Vector2 }) => props.playOptions?.indexOf(item.card.card.id) >= 0,
 		drop: (item) => {
-			props.onCardDropped?.(item, {
-				zone: props.zone,
-				card: {
-					...(props.card ?? {})
+			const rect = wrapperRef.current.getBoundingClientRect();
+			props.onCardDropped?.(
+				{
+					from: item.card,
+					to: {
+						zone: props.zone,
+						index: props.index,
+						card: {
+							...(props.card ?? {})
+						},
+					},
+					offset: {
+						x: item.offset.x - rect.left - cardStackSpacing.horizontal,
+						y: item.offset.y - rect.top - cardStackSpacing.vertical
+					}
 				}
-			});
+			);
 		},
 		collect: (monitor) => ({
 			canDrop: monitor.canDrop(),
 			isOver: monitor.isOver(),
 		})
-	}), [props.playOptions, props.onCardDropped, props.card, props.zone]);
+	}), [props.playOptions, props.onCardDropped, props.card, props.zone, cardStackSpacing]);
 
-
-	const dragDropRef = drag(drop(React.useRef(null)));
+	const dragDropRef = drag(drop(wrapperRef));
 
 	return <div
 		ref={dragDropRef as any}
@@ -58,6 +80,9 @@ export const Card = (props: {
 			(!isDragging && canDrop) || (props.previewCard && props.playOptions?.indexOf(props.previewCard.id) < 0) && styles.previewCardNotAccepted,
 			isOver && canDrop && styles.cardHoverOver
 		)}
+		style={{
+			transform: props.card?.offset && `translate(${props.card.offset.x}px, ${props.card.offset.y}px)`
+		}}
 	>
 		{isDragging
 			? <CardPlaceholderComponent />
@@ -122,6 +147,7 @@ const styles = stylesheet`
 `;
 
 interface ISharedCardProps {
+	index?: number;
 	playOptions?: number[];
 	canDrag?: boolean;
 	concealed?: boolean;
@@ -131,18 +157,21 @@ interface ISharedCardProps {
 }
 
 export const CardStack = (props: {
-	cards: lovelove.ICard[],
+	cards: CardWithOffset[],
 	stackUpwards?: boolean,
 	stackDepth?: number,
+	move?: CardLocation,
 	onCardSelected?: (card: lovelove.ICard) => void,
 	onMouseLeave?: () => void,
+	stunted?: boolean;
+	laminated?: boolean
 } & ISharedCardProps ) => {
 	const { stackDepth = 1 } = props;
-	const [selectedIndex, setSelectedIndex] = React.useState(0);
-	const [selectedLayerIndex, setSelectedLayerIndex] = React.useState(0);
+	const [selectedIndexReal, setSelectedIndex] = React.useState(-1);
+	const [selectedLayerIndexReal, setSelectedLayerIndex] = React.useState(-1);
 
 	const layers = React.useMemo(() => {
-		const layers: lovelove.ICard[][] = [];
+		const layers: CardWithOffset[][] = [];
 		for (let i = 0; i < props.cards.length; i++) {
 			if (i % stackDepth === 0) {
 				layers.push([]);
@@ -152,9 +181,16 @@ export const CardStack = (props: {
 		return layers;
 	}, [props.cards, stackDepth]);
 
-	const cardStackHorizontalSpacing = 30;
-	const cardStackVerticalSpacing = 30;
-	const cardStackLayerOffset = 20;
+	const selectedLayerIndex = (layers.length + selectedLayerIndexReal) % layers.length;
+	const selectedIndex = (layers[selectedLayerIndex]?.length ?? 0 + selectedIndexReal) % (layers[selectedLayerIndex]?.length ?? 1);
+
+	const {
+		cardStackSpacing,
+	} = React.useContext(ThemeContext).theme;
+
+	const cardStackHorizontalSpacing = cardStackSpacing.vertical ?? 30;
+	const cardStackVerticalSpacing = cardStackSpacing.vertical ?? 30;
+	const cardStackLayerOffset = cardStackSpacing.horizontal ?? 20;
 
 	const horizontalPadding = cardStackHorizontalSpacing * ((layers[0]?.length ?? 1) - 1) + cardStackLayerOffset * layers.slice(1).filter(layer => layer.length >= stackDepth).length;
 	const verticalPadding = cardStackVerticalSpacing * (layers.length - 1);
@@ -163,9 +199,9 @@ export const CardStack = (props: {
 		<div
 			className={clsx(styles.collectionGroup, props.stackUpwards && styles.upwards)}
 			style={{
-				paddingRight: horizontalPadding,
-				paddingBottom: props.stackUpwards ? null : verticalPadding,
-				paddingTop: props.stackUpwards ? verticalPadding : null,
+				paddingRight: !props.stunted && horizontalPadding,
+				paddingBottom: !props.stunted && (props.stackUpwards ? null : verticalPadding),
+				paddingTop: !props.stunted && (props.stackUpwards ? verticalPadding : null),
 				zIndex: props.cards.length
 			}}
 			onMouseLeave={props.onMouseLeave}
@@ -186,7 +222,7 @@ export const CardStack = (props: {
 						)
 					}}
 					onMouseEnter={() => {
-						if (!props.concealed) {
+						if (!props.concealed && !props.laminated) {
 							setSelectedIndex(index);
 							setSelectedLayerIndex(layerIndex);
 							props.onCardSelected?.(layers[layerIndex][index]);
@@ -201,6 +237,7 @@ export const CardStack = (props: {
 						previewCard={props.previewCard}
 						onCardDropped={props.onCardDropped}
 						zone={props.zone}
+						index={props.index}
 					/>
 				</div>;
 			}))}

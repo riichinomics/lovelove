@@ -1,8 +1,9 @@
 import * as React from "react";
 import { CardStack } from "./CardStack";
-import { CardDroppedHandler, cardKey, CardZone } from "./utils";
+import { CardDroppedHandler, cardKey, CardMove, CardWithOffset, CardZone } from "./utils";
 import { lovelove } from "../../rpc/proto/lovelove";
 import { stylesheet } from "astroturf";
+import { CardMoveContext } from "../../rpc/CardMoveContext";
 
 const styles = stylesheet`
 	.center {
@@ -62,17 +63,32 @@ const styles = stylesheet`
 
 const CenterCardStack = (props: {
 	card: lovelove.ICard;
+	index: number;
+	move: CardMove;
 	playOptions: Record<string, lovelove.IPlayOptions>;
 	previewCard: lovelove.ICard;
 	onCardDropped?: CardDroppedHandler;
-}) =>
-	<CardStack
-		cards={[props.card]}
+}) => {
+	const cards = [props.card] as CardWithOffset[];
+
+	if (props.move) {
+		cards.push({
+			...props.move.from.card,
+			offset: props.move.offset
+		});
+	}
+
+	return <CardStack
+		cards={cards}
 		playOptions={props.playOptions?.[props.card.id]?.options ?? []}
 		onCardDropped={props.onCardDropped}
 		previewCard={props.previewCard}
 		zone={CardZone.Table}
+		index={props.index}
+		stunted
+		laminated
 	/>;
+};
 
 export const Center = (props: {
 	deck: number;
@@ -82,6 +98,8 @@ export const Center = (props: {
 	previewCard: lovelove.ICard;
 	onCardDropped?: CardDroppedHandler;
 }) => {
+	const { move } = React.useContext(CardMoveContext);
+	const moveDestination = move?.to.zone === CardZone.Table ? move.to : null;
 	return <div className={styles.center}>
 		<div className={styles.deck}>
 			<div className={styles.deckStack}>
@@ -93,12 +111,30 @@ export const Center = (props: {
 			<div className={styles.cardRow}>
 				{props.cards
 					.filter((_, index) => index % 2 === 0)
-					.map((card, index) => <CenterCardStack key={cardKey(card, `center_top_${index}`)} card={card} {...props} />)}
+					.map((card, index) => {
+						const tableIndex = (index * 2);
+						return <CenterCardStack
+							key={cardKey(card, `center_top_${index}`)}
+							card={card}
+							index={tableIndex}
+							move={tableIndex === moveDestination?.index ? move : null}
+							{...props}
+						/>;
+					})}
 			</div>
 			<div className={styles.cardRow}>
 				{props.cards
 					.filter((_, index) => index % 2 === 1)
-					.map((card, index) => <CenterCardStack key={cardKey(card, `center_bottom_${index}`)} card={card} {...props} />)}
+					.map((card, index) => {
+						const tableIndex = (index * 2 + 1);
+						return <CenterCardStack
+							key={cardKey(card, `center_bottom_${index}`)}
+							card={card}
+							index={tableIndex}
+							move={tableIndex === moveDestination?.index ? move : null}
+							{...props}
+						/>;
+					})}
 			</div>
 		</div>
 	</div>;
