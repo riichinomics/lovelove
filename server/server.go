@@ -53,8 +53,10 @@ func echo(w http.ResponseWriter, r *http.Request) {
 }
 
 type connDetails struct {
-	userId string
-	connId string
+	userId   string
+	connId   string
+	roomId   string
+	messages chan proto.Message
 }
 
 type CardLocation int64
@@ -83,22 +85,20 @@ type cardState struct {
 	card     *lovelove.Card
 }
 
-type cardId struct {
-	hana      lovelove.Hana
-	variation lovelove.Variation
-}
-
 type playerState struct {
 	id       string
 	position lovelove.PlayerPosition
 }
 
 type gameState struct {
+	updates   chan *lovelove.GameStateUpdate
+	listeners []chan proto.Message
+
 	state        GameState
 	id           string
 	activePlayer lovelove.PlayerPosition
 	oya          lovelove.PlayerPosition
-	cards        map[cardId]cardState
+	cards        map[int32]*cardState
 	playerState  map[string]*playerState
 }
 
@@ -128,16 +128,17 @@ func (server LoveLoveRpcServer) Authenticate(context context.Context, request *l
 	return &lovelove.AuthenticateResponse{}, nil
 }
 
-func cardIdFromCard(card lovelove.Card) cardId {
-	return cardId{
-		hana:      card.Hana,
-		variation: card.Variation,
-	}
+func cardIdFromCardDetails(hana int32, variation int32) int32 {
+	return (hana-1)*4 + (variation - 1)
 }
 
-func moveCards(cardMap map[cardId]cardState, cards []*lovelove.Card, location CardLocation) {
+func cardIdFromCard(card lovelove.Card) int32 {
+	return cardIdFromCardDetails(int32(card.Hana), int32(card.Variation))
+}
+
+func moveCards(cardMap map[int32]*cardState, cards []*lovelove.Card, location CardLocation) {
 	for i, card := range cards {
-		cardMap[cardIdFromCard(*card)] = cardState{
+		cardMap[cardIdFromCard(*card)] = &cardState{
 			order:    i,
 			card:     card,
 			location: location,
@@ -146,12 +147,12 @@ func moveCards(cardMap map[cardId]cardState, cards []*lovelove.Card, location Ca
 }
 
 func createGameStateView(gameState gameState, playerPosition lovelove.PlayerPosition) *lovelove.CompleteGameState {
-	zones := make(map[CardLocation][]cardState)
+	zones := make(map[CardLocation][]*cardState)
 
 	for _, card := range gameState.cards {
 		zone, zoneFound := zones[card.location]
 		if !zoneFound {
-			zone = make([]cardState, 0, 12*4)
+			zone = make([]*cardState, 0, 12*4)
 		}
 		zones[card.location] = append(zone, card)
 	}
@@ -243,6 +244,8 @@ func (server LoveLoveRpcServer) ConnectToGame(context context.Context, request *
 		key: "connId",
 	}).(string)]
 
+	connDetails.roomId = request.RoomId
+
 	if len(connDetails.userId) == 0 {
 		log.Print("Player not identified")
 		return &lovelove.ConnectToGameResponse{}, nil
@@ -252,9 +255,19 @@ func (server LoveLoveRpcServer) ConnectToGame(context context.Context, request *
 		deck := make([]*lovelove.Card, 12*4)
 
 		for hana := range lovelove.Hana_name {
+			if hana == 0 {
+				continue
+			}
+
 			for variation := range lovelove.Variation_name {
-				deck[hana*4+variation] = &lovelove.Card{
-					Id:        hana*4 + variation,
+				if variation == 0 {
+					continue
+				}
+
+				id := cardIdFromCardDetails(hana, variation)
+
+				deck[id] = &lovelove.Card{
+					Id:        id,
 					Hana:      lovelove.Hana(hana),
 					Variation: lovelove.Variation(variation),
 				}
@@ -265,20 +278,30 @@ func (server LoveLoveRpcServer) ConnectToGame(context context.Context, request *
 			deck[i], deck[j] = deck[j], deck[i]
 		})
 
-		oya := lovelove.PlayerPosition(rand.Intn(2))
+		oya := lovelove.PlayerPosition(rand.Intn(2) + 1)
 
 		game = &gameState{
+			updates:      make(chan *lovelove.GameStateUpdate),
+			listeners:    make([]chan proto.Message, 2),
 			state:        GameState_HandCardPlay,
 			id:           request.RoomId,
 			activePlayer: oya,
-			cards:        make(map[cardId]cardState),
+			cards:        make(map[int32]*cardState),
 			playerState:  make(map[string]*playerState),
 			oya:          oya,
 		}
 
+		go func() {
+			for update := range game.updates {
+				for _, listener := range game.listeners {
+					listener <- update
+				}
+			}
+		}()
+
 		game.playerState[connDetails.userId] = &playerState{
 			id:       connDetails.userId,
-			position: lovelove.PlayerPosition(rand.Intn(2)),
+			position: lovelove.PlayerPosition(rand.Intn(2) + 1),
 		}
 
 		moveCards(game.cards, deck[0:8], CardLocation_Table)
@@ -306,9 +329,130 @@ func (server LoveLoveRpcServer) ConnectToGame(context context.Context, request *
 
 	playerPosition := game.playerState[connDetails.userId].position
 
+	game.listeners = append(game.listeners, connDetails.messages)
+
 	return &lovelove.ConnectToGameResponse{
 		Position:  playerPosition,
 		GameState: createGameStateView(*game, playerPosition),
+	}, nil
+}
+
+func (server LoveLoveRpcServer) PlayHandCard(context context.Context, request *lovelove.PlayHandCardRequest) (*lovelove.PlayHandCardResponse, error) {
+	log.Print("PlayHandCard")
+
+	if request.HandCard == nil {
+		log.Print("No hand card")
+		return &lovelove.PlayHandCardResponse{
+			Status: lovelove.PlayHandCardResponseCode_Error,
+		}, nil
+	}
+
+	// TODO: deal with missing connection problem?
+	connDetails := server.server.connDetails[context.Value(connContextKey{
+		key: "connId",
+	}).(string)]
+
+	if len(connDetails.userId) == 0 {
+		log.Print("Player not identified")
+		return &lovelove.PlayHandCardResponse{
+			Status: lovelove.PlayHandCardResponseCode_Error,
+		}, nil
+	}
+
+	game, gameFound := server.server.games[connDetails.roomId]
+
+	if !gameFound {
+		log.Print("Not connected to room")
+		return &lovelove.PlayHandCardResponse{
+			Status: lovelove.PlayHandCardResponseCode_Error,
+		}, nil
+	}
+
+	playerState, playerStateFound := game.playerState[connDetails.userId]
+
+	if !playerStateFound {
+		log.Print("Player not in game")
+		return &lovelove.PlayHandCardResponse{
+			Status: lovelove.PlayHandCardResponseCode_Error,
+		}, nil
+	}
+
+	if game.activePlayer != playerState.position {
+		log.Print("Player is not active")
+		return &lovelove.PlayHandCardResponse{
+			Status: lovelove.PlayHandCardResponseCode_Error,
+		}, nil
+	}
+
+	if game.state != GameState_HandCardPlay {
+		log.Print("Game is in wrong state")
+		return &lovelove.PlayHandCardResponse{
+			Status: lovelove.PlayHandCardResponseCode_Error,
+		}, nil
+	}
+
+	movingCard, movingCardExists := game.cards[request.HandCard.CardId]
+	if !movingCardExists {
+		log.Print("Card to move is invalid")
+		return &lovelove.PlayHandCardResponse{
+			Status: lovelove.PlayHandCardResponseCode_Error,
+		}, nil
+	}
+
+	playerHandLocation := CardLocation_RedHand
+	if playerState.position == lovelove.PlayerPosition_White {
+		playerHandLocation = CardLocation_WhiteHand
+	}
+
+	if movingCard.location != playerHandLocation {
+		log.Print("Moving card is not in player hand")
+		return &lovelove.PlayHandCardResponse{
+			Status: lovelove.PlayHandCardResponseCode_Error,
+		}, nil
+	}
+
+	if request.TableCard != nil {
+		tableCard, tableCardExists := game.cards[request.TableCard.CardId]
+		if !tableCardExists {
+			log.Print("Card on table doesn't exist")
+			return &lovelove.PlayHandCardResponse{
+				Status: lovelove.PlayHandCardResponseCode_Error,
+			}, nil
+		}
+
+		if tableCard.location != CardLocation_Table {
+			log.Print("Table card is not on table")
+			return &lovelove.PlayHandCardResponse{
+				Status: lovelove.PlayHandCardResponseCode_Error,
+			}, nil
+		}
+
+		if tableCard.card.Hana != movingCard.card.Hana {
+			log.Print("Card's suit doesn't match")
+			return &lovelove.PlayHandCardResponse{
+				Status: lovelove.PlayHandCardResponseCode_Error,
+			}, nil
+		}
+
+		playerCollectionLocation := CardLocation_RedCollection
+		if playerState.position == lovelove.PlayerPosition_White {
+			playerCollectionLocation = CardLocation_WhiteCollection
+		}
+
+		tableCard.location = playerCollectionLocation
+		movingCard.location = playerCollectionLocation
+
+		game.updates <- &lovelove.GameStateUpdate{}
+
+		log.Print("Success")
+		return &lovelove.PlayHandCardResponse{
+			Status: lovelove.PlayHandCardResponseCode_Ok,
+		}, nil
+	}
+
+	log.Print("No target")
+	return &lovelove.PlayHandCardResponse{
+		Status: lovelove.PlayHandCardResponseCode_Error,
 	}, nil
 }
 
@@ -465,10 +609,28 @@ func (server *WebSocketRpcServer) Connect(connection *websocket.Conn) {
 		connId := uuid.New().String()
 
 		server.connMap[connId] = &connDetails{
-			connId: connId,
+			connId:   connId,
+			messages: make(chan proto.Message),
 		}
 
 		defer delete(server.connMap, connId)
+		defer close(server.connMap[connId].messages)
+
+		go func() {
+			sequence := int32(0)
+			for message := range server.connMap[connId].messages {
+				valueData, _ := proto.Marshal(message)
+
+				wrapperData, _ := proto.Marshal(&lovelove.Wrapper{
+					Type:        lovelove.MessageType_Broadcast,
+					Sequence:    sequence,
+					ContentType: string(message.ProtoReflect().Descriptor().Name()),
+					Data:        valueData,
+				})
+				sequence = sequence + 1
+				conn.WriteMessage(websocket.BinaryMessage, wrapperData)
+			}
+		}()
 
 		for {
 			messageType, data, err := conn.ReadMessage()
@@ -480,9 +642,9 @@ func (server *WebSocketRpcServer) Connect(connection *websocket.Conn) {
 			log.Print(data)
 			wrapper := new(lovelove.Wrapper)
 			proto.Unmarshal(data, wrapper)
-			log.Print(wrapper.Sequence, wrapper.Type, wrapper.Data)
+			log.Print(wrapper.Type, wrapper.Sequence, wrapper.ContentType, wrapper.Data)
 
-			method := wrapper.Type
+			method := wrapper.ContentType
 			if method != "" && method[0] == '.' {
 				method = method[1:]
 			}
@@ -514,9 +676,10 @@ func (server *WebSocketRpcServer) Connect(connection *websocket.Conn) {
 					valueData, _ := proto.Marshal(value.(proto.Message))
 
 					wrapperData, _ := proto.Marshal(&lovelove.Wrapper{
-						Sequence: wrapper.Sequence,
-						Type:     wrapper.Type,
-						Data:     valueData,
+						Sequence:    wrapper.Sequence,
+						Type:        lovelove.MessageType_Transact,
+						ContentType: wrapper.ContentType,
+						Data:        valueData,
 					})
 
 					conn.WriteMessage(websocket.BinaryMessage, wrapperData)

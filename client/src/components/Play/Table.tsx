@@ -132,9 +132,9 @@ export const Table = ({
 	opponentCollection = [],
 	opponentHand = 0,
 	table = [],
-	active = lovelove.PlayerPosition.Red,
-	oya = lovelove.PlayerPosition.Red,
-	position = lovelove.PlayerPosition.Red,
+	active,
+	oya,
+	position,
 	action,
 	onCardDropped
 }: IGameState & {

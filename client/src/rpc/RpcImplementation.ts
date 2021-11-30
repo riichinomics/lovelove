@@ -1,8 +1,11 @@
 import { Method, RPCImplCallback, Root, rpc } from "protobufjs";
 import { Connection } from "./Connection";
-import { Subscription } from "rxjs";
+import { filter, Observable, share, Subscription } from "rxjs";
+import { lovelove } from "./proto/lovelove";
 
 export class RpcImplementation {
+	public readonly broadcastMessages: Observable<lovelove.Wrapper>;
+
 	private readonly transactionMap: {
 		[key: number]: protobuf.RPCImplCallback;
 	} = {};
@@ -11,7 +14,15 @@ export class RpcImplementation {
 	private index = 0;
 
 	constructor(private readonly connection: Connection, private readonly protobufRoot: Root) {
-		this.dataSubscription = connection.messages.subscribe((message) => {
+		this.broadcastMessages = connection.messages.pipe(
+			filter(message => message.type === lovelove.MessageType.Broadcast),
+			share()
+		);
+
+
+		this.dataSubscription = connection.messages.pipe(
+			filter(message => message.type === lovelove.MessageType.Transact),
+		).subscribe((message) => {
 			if (!message.sequence) {
 				return;
 			}

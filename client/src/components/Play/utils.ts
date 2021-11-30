@@ -3,6 +3,7 @@ import { lovelove } from "../../rpc/proto/lovelove";
 import { CardProps } from "../../themes/CardProps";
 
 export enum CardType {
+	None,
 	Kasu,
 	Tane,
 	Tanzaku,
@@ -21,73 +22,92 @@ export function createRandomCard(): lovelove.ICard {
 }
 
 const CARD_TYPE_MAP: Record<lovelove.Hana, Record<lovelove.Variation, CardType>> = {
+	[lovelove.Hana.UnknownSeason]: {
+		[lovelove.Variation.UnknownVariation]: CardType.None,
+		[lovelove.Variation.First]: CardType.None,
+		[lovelove.Variation.Second]: CardType.None,
+		[lovelove.Variation.Third]: CardType.None,
+		[lovelove.Variation.Fourth]: CardType.None,
+	},
 	[lovelove.Hana.Ayame]: {
+		[lovelove.Variation.UnknownVariation]: CardType.None,
 		[lovelove.Variation.First]: CardType.Kasu,
 		[lovelove.Variation.Second]: CardType.Kasu,
 		[lovelove.Variation.Third]: CardType.Tane,
 		[lovelove.Variation.Fourth]: CardType.Tanzaku,
 	},
 	[lovelove.Hana.Botan]: {
+		[lovelove.Variation.UnknownVariation]: CardType.None,
 		[lovelove.Variation.First]: CardType.Kasu,
 		[lovelove.Variation.Second]: CardType.Kasu,
 		[lovelove.Variation.Third]: CardType.Tane,
 		[lovelove.Variation.Fourth]: CardType.Tanzaku,
 	},
 	[lovelove.Hana.Fuji]: {
+		[lovelove.Variation.UnknownVariation]: CardType.None,
 		[lovelove.Variation.First]: CardType.Kasu,
 		[lovelove.Variation.Second]: CardType.Kasu,
 		[lovelove.Variation.Third]: CardType.Tane,
 		[lovelove.Variation.Fourth]: CardType.Tanzaku,
 	},
 	[lovelove.Hana.Hagi]: {
+		[lovelove.Variation.UnknownVariation]: CardType.None,
 		[lovelove.Variation.First]: CardType.Kasu,
 		[lovelove.Variation.Second]: CardType.Kasu,
 		[lovelove.Variation.Third]: CardType.Tane,
 		[lovelove.Variation.Fourth]: CardType.Tanzaku,
 	},
 	[lovelove.Hana.Kiku]: {
+		[lovelove.Variation.UnknownVariation]: CardType.None,
 		[lovelove.Variation.First]: CardType.Kasu,
 		[lovelove.Variation.Second]: CardType.Kasu,
 		[lovelove.Variation.Third]: CardType.Tane,
 		[lovelove.Variation.Fourth]: CardType.Tanzaku,
 	},
 	[lovelove.Hana.Kiri]: {
+		[lovelove.Variation.UnknownVariation]: CardType.None,
 		[lovelove.Variation.First]: CardType.Kasu,
 		[lovelove.Variation.Second]: CardType.Kasu,
 		[lovelove.Variation.Third]: CardType.Kasu,
 		[lovelove.Variation.Fourth]: CardType.Hikari,
 	},
 	[lovelove.Hana.Matsu]: {
+		[lovelove.Variation.UnknownVariation]: CardType.None,
 		[lovelove.Variation.First]: CardType.Kasu,
 		[lovelove.Variation.Second]: CardType.Kasu,
 		[lovelove.Variation.Third]: CardType.Tanzaku,
 		[lovelove.Variation.Fourth]: CardType.Hikari,
 	},
 	[lovelove.Hana.Momiji]: {
+		[lovelove.Variation.UnknownVariation]: CardType.None,
 		[lovelove.Variation.First]: CardType.Kasu,
 		[lovelove.Variation.Second]: CardType.Kasu,
 		[lovelove.Variation.Third]: CardType.Tane,
 		[lovelove.Variation.Fourth]: CardType.Tanzaku,
 	},
 	[lovelove.Hana.Sakura]: {
+		[lovelove.Variation.UnknownVariation]: CardType.None,
 		[lovelove.Variation.First]: CardType.Kasu,
 		[lovelove.Variation.Second]: CardType.Kasu,
 		[lovelove.Variation.Third]: CardType.Tanzaku,
 		[lovelove.Variation.Fourth]: CardType.Hikari,
 	},
 	[lovelove.Hana.Susuki]: {
+		[lovelove.Variation.UnknownVariation]: CardType.None,
 		[lovelove.Variation.First]: CardType.Kasu,
 		[lovelove.Variation.Second]: CardType.Kasu,
 		[lovelove.Variation.Third]: CardType.Tane,
 		[lovelove.Variation.Fourth]: CardType.Hikari,
 	},
 	[lovelove.Hana.Ume]: {
+		[lovelove.Variation.UnknownVariation]: CardType.None,
 		[lovelove.Variation.First]: CardType.Kasu,
 		[lovelove.Variation.Second]: CardType.Kasu,
 		[lovelove.Variation.Third]: CardType.Tane,
 		[lovelove.Variation.Fourth]: CardType.Tanzaku,
 	},
 	[lovelove.Hana.Yanagi]: {
+		[lovelove.Variation.UnknownVariation]: CardType.None,
 		[lovelove.Variation.First]: CardType.Kasu,
 		[lovelove.Variation.Second]: CardType.Tane,
 		[lovelove.Variation.Third]: CardType.Tanzaku,
@@ -104,6 +124,7 @@ export function getCardType(card: lovelove.ICard): CardType {
 }
 
 const SEASON_MONTH_MAP = {
+	[lovelove.Hana.UnknownSeason]: Month.January,
 	[lovelove.Hana.Matsu]: Month.January,
 	[lovelove.Hana.Ume]: Month.February,
 	[lovelove.Hana.Sakura]: Month.March,

@@ -30,9 +30,7 @@ export class Connection {
 			this.socket.onmessage = (event: MessageEvent) => {
 				event.data.arrayBuffer().then((data: Uint8Array) => {
 					const array = new Uint8Array(data);
-					console.log(array);
 					const wrapper = this.Wrapper.decode(array);
-					console.log(wrapper);
 					this.messagesSubject.next(wrapper);
 				});
 			};
@@ -53,7 +51,8 @@ export class Connection {
 		}
 
 		this.socket.send(this.Wrapper.encode({
-			type,
+			type: lovelove.MessageType.Transact,
+			contentType: type,
 			sequence,
 			data
 		}).finish());

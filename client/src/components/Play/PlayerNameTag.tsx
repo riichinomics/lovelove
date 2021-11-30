@@ -22,5 +22,5 @@ const styles = stylesheet`
 `;
 
 export const PlayerNameTag = (props: IPlayerInfo) => {
-	return <div className={clsx(styles.nameTag, props.oya && styles.red, props.active && styles.active)}/>
+	return <div className={clsx(styles.nameTag, props.oya && styles.red, props.active && styles.active)} />;
 };

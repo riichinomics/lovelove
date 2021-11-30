@@ -2,25 +2,27 @@ syntax = "proto3";
 package lovelove;
 
 enum Hana {
-	Ayame = 0;
-	Botan = 1;
-	Fuji = 2;
-	Hagi = 3;
-	Kiku = 4;
-	Kiri = 5;
-	Matsu = 6;
-	Momiji = 7;
-	Sakura = 8;
-	Susuki = 9;
-	Ume = 10;
-	Yanagi = 11;
+	UnknownSeason = 0;
+	Ayame = 1;
+	Botan = 2;
+	Fuji = 3;
+	Hagi = 4;
+	Kiku = 5;
+	Kiri = 6;
+	Matsu = 7;
+	Momiji = 8;
+	Sakura = 9;
+	Susuki = 10;
+	Ume = 11;
+	Yanagi = 12;
 }
 
 enum Variation {
-	First = 0;
-	Second = 1;
-	Third = 2;
-	Fourth = 3;
+	UnknownVariation = 0;
+	First = 1;
+	Second = 2;
+	Third = 3;
+	Fourth = 4;
 }
 
 enum PlayerActionType {
@@ -30,9 +32,28 @@ enum PlayerActionType {
 	DeclareWinOpportunity = 3;
 }
 
+enum PlayHandCardResponseCode {
+	Error = 0;
+	Ok = 1;
+}
+
 enum PlayerPosition {
-	Red = 0;
-	White = 1;
+	UnknownPosition = 0;
+	Red = 1;
+	White = 2;
+}
+
+enum PlayerCentricZone {
+	UnknownZone = 0;
+	Table = 1;
+	Hand = 2;
+	OpponentHand = 3;
+}
+
+
+enum MessageType {
+	Transact = 0;
+	Broadcast = 1;
 }
 
 service LoveLove {
@@ -41,12 +62,15 @@ service LoveLove {
 	rpc Authenticate (AuthenticateRequest) returns (AuthenticateResponse) {}
 
 	rpc ConnectToGame (ConnectToGameRequest) returns (ConnectToGameResponse) {}
+
+	rpc PlayHandCard (PlayHandCardRequest) returns (PlayHandCardResponse) {}
 }
 
 message Wrapper {
-	int32 sequence = 1;
-	string type = 2;
-	bytes data = 3;
+	MessageType type = 1;
+	int32 sequence = 2;
+	string contentType = 3;
+	bytes data = 4;
 }
 
 message HelloRequest {
@@ -99,4 +123,45 @@ message AuthenticateRequest {
 }
 
 message AuthenticateResponse {
+}
+
+message CardId {
+	int32 cardId = 1;
+}
+
+message PlayHandCardRequest {
+	CardId handCard = 1;
+	CardId tableCard = 2;
+}
+
+message PlayHandCardResponse {
+	PlayHandCardResponseCode status = 1;
+}
+
+message CardSlot {
+	PlayerCentricZone zone = 1;
+	int32 index = 2;
+}
+
+message CardMove {
+	Card movedCard = 1;
+	CardSlot originSlot = 2;
+	CardSlot destinationSlot = 3;
+}
+
+message CardMoveUpdate {
+	repeated CardMove moves = 1;
+}
+
+message GameStateUpdatePart {
+	CardMoveUpdate cardMoveUpdate = 1;
+	ActivePlayerUpdate activePlayerUpdate = 2;
+}
+
+message ActivePlayerUpdate {
+	PlayerPosition position = 1;
+}
+
+message GameStateUpdate {
+	repeated GameStateUpdatePart cardUpdates = 1;
 }

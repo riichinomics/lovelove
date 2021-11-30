@@ -69,8 +69,23 @@ export const GameStateConnection = () => {
 		console.log(move);
 		setMove(move);
 	}, []);
-
 	const [move, setMove] = React.useState<CardMove>();
+
+	React.useEffect(() => {
+		if (!move) {
+			return;
+		}
+
+		api.lovelove.playHandCard({
+			handCard: {
+				cardId: move.from.card.id
+			},
+			tableCard: {
+				cardId: move.to.card.id
+			},
+		}).then(response => console.log(response));
+
+	}, [move]);
 
 	const gameState = useSelector((state: IState) => state.gameState ?? {});
 	const position = useSelector((state: IState) => state.gamePosition);
