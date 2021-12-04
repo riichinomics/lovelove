@@ -3,15 +3,20 @@ import { Action } from "../actions/Action";
 import { ActionType } from "../actions/ActionType";
 import { IState } from "../IState";
 
-function removeCard(zone: lovelove.ICard[], cardId: number): lovelove.ICard[] {
+function removeCard(zone: lovelove.ICard[], cardId: number, leaveSpace?: boolean): lovelove.ICard[] {
 	if (!zone) {
 		return zone;
 	}
 
-	const index = zone.findIndex(card => card.id === cardId);
+	const index = zone.findIndex(card => card?.id === cardId);
 	if (index < 0) {
 		return zone;
 	}
+
+	if (leaveSpace) {
+		return [...zone.slice(0, index), null, ...zone.slice(index + 1)];
+	}
+
 	return [...zone.slice(0, index), ...zone.slice(index + 1)];
 }
 
@@ -40,7 +45,7 @@ function mainReducer(state: IState, action: Action): IState {
 								break;
 							}
 							case lovelove.PlayerCentricZone.Table: {
-								updatedGameState.table = removeCard(updatedGameState.table, cardMove.movedCard.id);
+								updatedGameState.table = removeCard(updatedGameState.table, cardMove.movedCard.id, true);
 								break;
 							}
 							case lovelove.PlayerCentricZone.Hand: {
@@ -74,7 +79,7 @@ function mainReducer(state: IState, action: Action): IState {
 								break;
 							}
 							case lovelove.PlayerCentricZone.Table: {
-								updatedGameState.table = [...updatedGameState.table ?? [], cardMove.movedCard];
+								//TODO: animation float
 								break;
 							}
 							case lovelove.PlayerCentricZone.Hand: {

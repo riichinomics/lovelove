@@ -196,7 +196,10 @@ func createGameStateView(gameState gameState, playerPosition lovelove.PlayerPosi
 		case CardLocation_Deck:
 			completeGameState.Deck = int32(len(zone))
 		case CardLocation_Table:
-			completeGameState.Table = cards
+			completeGameState.Table = make([]*lovelove.Card, zone[len(zone)-1].order+1)
+			for _, card := range zone {
+				completeGameState.Table[card.order] = card.card
+			}
 		case CardLocation_RedCollection:
 			if playerPosition == lovelove.PlayerPosition_Red {
 				completeGameState.Collection = cards
@@ -234,7 +237,7 @@ func createGameStateView(gameState gameState, playerPosition lovelove.PlayerPosi
 		for _, tableCard := range completeGameState.Table {
 			playOptions := make([]int32, 0)
 			for _, handCard := range completeGameState.Hand {
-				if handCard.Hana == tableCard.Hana {
+				if tableCard != nil && handCard.Hana == tableCard.Hana {
 					playOptions = append(playOptions, handCard.Id)
 				}
 			}

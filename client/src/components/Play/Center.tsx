@@ -80,7 +80,7 @@ const CenterCardStack = (props: {
 
 	return <CardStack
 		cards={cards}
-		playOptions={props.playOptions?.[props.card.id]?.options ?? []}
+		playOptions={props.playOptions?.[props.card?.id]?.options ?? []}
 		onCardDropped={props.onCardDropped}
 		previewCard={props.previewCard}
 		zone={CardZone.Table}
