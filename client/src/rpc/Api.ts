@@ -2,6 +2,7 @@ import { Root, load } from "protobufjs";
 import { Connection } from "./Connection";
 import { RpcImplementation } from "./RpcImplementation";
 import { lovelove } from "./proto/lovelove";
+import { map } from "rxjs";
 
 export interface ApiOptions {
 	url: string;
@@ -28,6 +29,12 @@ export class Api {
 				);
 		};
 		// this.notifications = this.connection.messages.pipe(filter(message => message.index !== 0), map(message => this.codec.decode(message.data)));
+	}
+
+	public get broadcastMessages() {
+		return this.rpc.broadcastMessages.pipe(
+			map(wrapper => this.protobufRoot.lookupType(wrapper.contentType).decode(wrapper.data))
+		);
 	}
 
 	public async init(): Promise<void> {

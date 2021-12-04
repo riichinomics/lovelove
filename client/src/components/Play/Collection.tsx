@@ -1,5 +1,5 @@
 import * as React from "react";
-import { getCardType, getSeasonMonth } from "./utils";
+import { CardType, getCardType, getSeasonMonth } from "./utils";
 import { CardStack } from "./CardStack";
 import { lovelove } from "../../rpc/proto/lovelove";
 import { stylesheet } from "astroturf";
@@ -23,19 +23,32 @@ export const Collection = (props: {
 	stackUpwards?: boolean;
 }) => {
 	const groups = React.useMemo(
-		() => Object.values(props.cards.reduce(
-			(total, next) => {
-				const type = getCardType(next);
-				total[type] ??= [];
-				total[type].push(next);
-				return total;
-			},
-			{} as Record<number, lovelove.ICard[]>
-		)).map(group => group.sort((a, b) => getSeasonMonth(a.hana) - getSeasonMonth(b.hana))),
+		() => {
+			const groups = Object.values(props.cards.reduce(
+				(total, next) => {
+					const type = getCardType(next);
+					total[type] ??= {
+						type,
+						cards: [],
+					};
+					total[type].cards.push(next);
+					return total;
+				},
+				{} as Record<number, {
+					type: CardType,
+					cards: lovelove.ICard[]
+				}>
+			));
+
+			for (const group of groups) {
+				group.cards.sort((a, b) => getSeasonMonth(a.hana) - getSeasonMonth(b.hana));
+			}
+			return groups;
+		},
 		[props.cards]
 	);
 
 	return <div className={styles.collection}>
-		{groups.map(group => <CardStack cards={group} key={group[0].hana} stackDepth={5} stackUpwards={props.stackUpwards} />)}
+		{groups.map(group => <CardStack cards={group.cards} key={group.type} stackDepth={5} stackUpwards={props.stackUpwards} />)}
 	</div>;
 };

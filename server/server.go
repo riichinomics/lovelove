@@ -57,6 +57,7 @@ type connDetails struct {
 	connId   string
 	roomId   string
 	messages chan proto.Message
+	closed   chan struct{}
 }
 
 type CardLocation int64
@@ -100,6 +101,19 @@ type gameState struct {
 	oya          lovelove.PlayerPosition
 	cards        map[int32]*cardState
 	playerState  map[string]*playerState
+}
+
+func (game *gameState) Deck() (deck []*cardState) {
+	deck = make([]*cardState, 0)
+	for _, card := range game.cards {
+		if card.location == CardLocation_Deck {
+			deck = append(deck, card)
+		}
+	}
+	sort.SliceStable(deck, func(i, j int) bool {
+		return deck[i].order < deck[j].order
+	})
+	return
 }
 
 type LoveLoveServer struct {
@@ -169,7 +183,7 @@ func createGameStateView(gameState gameState, playerPosition lovelove.PlayerPosi
 	}
 
 	for zoneType, zone := range zones {
-		sort.Slice(zone, func(i, j int) bool {
+		sort.SliceStable(zone, func(i, j int) bool {
 			return zone[i].order < zone[j].order
 		})
 
@@ -207,6 +221,8 @@ func createGameStateView(gameState gameState, playerPosition lovelove.PlayerPosi
 			} else {
 				completeGameState.Hand = cards
 			}
+		case CardLocation_Drawn:
+			completeGameState.DeckFlipCard = cards[0]
 		}
 	}
 
@@ -278,11 +294,11 @@ func (server LoveLoveRpcServer) ConnectToGame(context context.Context, request *
 			deck[i], deck[j] = deck[j], deck[i]
 		})
 
-		oya := lovelove.PlayerPosition(rand.Intn(2) + 1)
+		oya := lovelove.PlayerPosition(rand.Intn(1) + 1)
 
 		game = &gameState{
 			updates:      make(chan *lovelove.GameStateUpdate),
-			listeners:    make([]chan proto.Message, 2),
+			listeners:    make([]chan proto.Message, 0),
 			state:        GameState_HandCardPlay,
 			id:           request.RoomId,
 			activePlayer: oya,
@@ -293,7 +309,9 @@ func (server LoveLoveRpcServer) ConnectToGame(context context.Context, request *
 
 		go func() {
 			for update := range game.updates {
+				log.Print("Update detencted", update)
 				for _, listener := range game.listeners {
+					log.Print("Sending Update to listener", listener)
 					listener <- update
 				}
 			}
@@ -301,7 +319,7 @@ func (server LoveLoveRpcServer) ConnectToGame(context context.Context, request *
 
 		game.playerState[connDetails.userId] = &playerState{
 			id:       connDetails.userId,
-			position: lovelove.PlayerPosition(rand.Intn(2) + 1),
+			position: lovelove.PlayerPosition(rand.Intn(1) + 1),
 		}
 
 		moveCards(game.cards, deck[0:8], CardLocation_Table)
@@ -330,11 +348,68 @@ func (server LoveLoveRpcServer) ConnectToGame(context context.Context, request *
 	playerPosition := game.playerState[connDetails.userId].position
 
 	game.listeners = append(game.listeners, connDetails.messages)
+	go func() {
+		for range connDetails.closed {
+		}
+		for i, listener := range game.listeners {
+			if listener == connDetails.messages {
+				game.listeners = append(game.listeners[:i], game.listeners[i+1:]...)
+				return
+			}
+		}
+	}()
 
 	return &lovelove.ConnectToGameResponse{
 		Position:  playerPosition,
 		GameState: createGameStateView(*game, playerPosition),
 	}, nil
+}
+
+func locationToPlayerCentricZone(location CardLocation, playerPosition lovelove.PlayerPosition) lovelove.PlayerCentricZone {
+	switch location {
+	case CardLocation_Deck:
+		return lovelove.PlayerCentricZone_Deck
+	case CardLocation_Table:
+		return lovelove.PlayerCentricZone_Table
+	case CardLocation_RedHand:
+		if playerPosition == lovelove.PlayerPosition_Red {
+			return lovelove.PlayerCentricZone_Hand
+		}
+		return lovelove.PlayerCentricZone_OpponentHand
+	case CardLocation_WhiteHand:
+		if playerPosition == lovelove.PlayerPosition_White {
+			return lovelove.PlayerCentricZone_Hand
+		}
+		return lovelove.PlayerCentricZone_OpponentHand
+	case CardLocation_RedCollection:
+		if playerPosition == lovelove.PlayerPosition_Red {
+			return lovelove.PlayerCentricZone_Collection
+		}
+		return lovelove.PlayerCentricZone_OpponentCollection
+	case CardLocation_WhiteCollection:
+		if playerPosition == lovelove.PlayerPosition_White {
+			return lovelove.PlayerCentricZone_Collection
+		}
+		return lovelove.PlayerCentricZone_OpponentCollection
+	case CardLocation_Drawn:
+		return lovelove.PlayerCentricZone_Drawn
+	}
+
+	return lovelove.PlayerCentricZone_UnknownZone
+}
+
+func createCardMoveUpdate(movingCard *cardState, targetLocation CardLocation, playerPosition lovelove.PlayerPosition, targetIndex int32) *lovelove.CardMoveUpdate {
+	return &lovelove.CardMoveUpdate{
+		MovedCard: movingCard.card,
+		OriginSlot: &lovelove.CardSlot{
+			Zone:  locationToPlayerCentricZone(movingCard.location, playerPosition),
+			Index: int32(movingCard.order),
+		},
+		DestinationSlot: &lovelove.CardSlot{
+			Zone:  locationToPlayerCentricZone(targetLocation, playerPosition),
+			Index: targetIndex,
+		},
+	}
 }
 
 func (server LoveLoveRpcServer) PlayHandCard(context context.Context, request *lovelove.PlayHandCardRequest) (*lovelove.PlayHandCardResponse, error) {
@@ -439,12 +514,46 @@ func (server LoveLoveRpcServer) PlayHandCard(context context.Context, request *l
 			playerCollectionLocation = CardLocation_WhiteCollection
 		}
 
+		update := &lovelove.GameStateUpdate{
+			Updates: make([]*lovelove.GameStateUpdatePart, 0),
+		}
+
+		update.Updates = append(update.Updates, &lovelove.GameStateUpdatePart{
+			CardMoveUpdates: []*lovelove.CardMoveUpdate{
+				createCardMoveUpdate(movingCard, CardLocation_Table, playerState.position, int32(tableCard.order)),
+			},
+		})
+
+		movingCard.location = CardLocation_Table
+
+		update.Updates = append(update.Updates, &lovelove.GameStateUpdatePart{
+			CardMoveUpdates: []*lovelove.CardMoveUpdate{
+				createCardMoveUpdate(movingCard, playerCollectionLocation, playerState.position, 0),
+				createCardMoveUpdate(tableCard, playerCollectionLocation, playerState.position, 0),
+			},
+		})
+
 		tableCard.location = playerCollectionLocation
 		movingCard.location = playerCollectionLocation
 
-		game.updates <- &lovelove.GameStateUpdate{}
+		deck := game.Deck()
+		deckLen := len(deck)
+		if deckLen == 0 {
+			game.updates <- update
+			return &lovelove.PlayHandCardResponse{
+				Status: lovelove.PlayHandCardResponseCode_Ok,
+			}, nil
+		}
 
-		log.Print("Success")
+		drawnCard := deck[deckLen-1]
+		update.Updates = append(update.Updates, &lovelove.GameStateUpdatePart{
+			CardMoveUpdates: []*lovelove.CardMoveUpdate{
+				createCardMoveUpdate(drawnCard, CardLocation_Drawn, playerState.position, 0),
+			},
+		})
+		drawnCard.location = CardLocation_Drawn
+
+		game.updates <- update
 		return &lovelove.PlayHandCardResponse{
 			Status: lovelove.PlayHandCardResponseCode_Ok,
 		}, nil
@@ -611,10 +720,12 @@ func (server *WebSocketRpcServer) Connect(connection *websocket.Conn) {
 		server.connMap[connId] = &connDetails{
 			connId:   connId,
 			messages: make(chan proto.Message),
+			closed:   make(chan struct{}),
 		}
 
 		defer delete(server.connMap, connId)
 		defer close(server.connMap[connId].messages)
+		defer close(server.connMap[connId].closed)
 
 		go func() {
 			sequence := int32(0)
