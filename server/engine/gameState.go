@@ -130,7 +130,7 @@ func (gameState *gameState) ToCompleteGameState(playerPosition lovelove.PlayerPo
 		for _, tableCard := range completeGameState.Table {
 			playOptions := make([]int32, 0)
 			for _, handCard := range completeGameState.Hand {
-				if tableCard != nil && handCard.Hana == tableCard.Hana {
+				if tableCard != nil && WillAccept(tableCard, handCard) {
 					playOptions = append(playOptions, handCard.Id)
 				}
 			}

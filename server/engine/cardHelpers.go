@@ -20,16 +20,6 @@ func moveCards(cardMap map[int32]*cardState, cards []*lovelove.Card, location Ca
 	}
 }
 
-func createCardMoveUpdate(movingCard *cardState, targetLocation CardLocation, playerPosition lovelove.PlayerPosition, targetIndex int32) *lovelove.CardMoveUpdate {
-	return &lovelove.CardMoveUpdate{
-		MovedCard: movingCard.card,
-		OriginSlot: &lovelove.CardSlot{
-			Zone:  movingCard.location.ToPlayerCentricZone(playerPosition),
-			Index: int32(movingCard.order),
-		},
-		DestinationSlot: &lovelove.CardSlot{
-			Zone:  targetLocation.ToPlayerCentricZone(playerPosition),
-			Index: targetIndex,
-		},
-	}
+func WillAccept(receiver *lovelove.Card, option *lovelove.Card) bool {
+	return receiver.Hana == option.Hana
 }
