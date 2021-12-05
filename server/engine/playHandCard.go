@@ -40,14 +40,17 @@ func (game *gameState) Apply(mutations []*gameStateMutation, playerPosition love
 	return updates
 }
 
-func (server loveLoveRpcServer) PlayHandCard(context context.Context, request *lovelove.PlayHandCardRequest) (*lovelove.PlayHandCardResponse, error) {
+func (server loveLoveRpcServer) PlayHandCard(context context.Context, request *lovelove.PlayHandCardRequest) (response *lovelove.PlayHandCardResponse, rpcError error) {
+	response = &lovelove.PlayHandCardResponse{
+		Status: lovelove.PlayHandCardResponseCode_Error,
+	}
+	rpcError = nil
+
 	log.Print("PlayHandCard")
 
 	if request.HandCard == nil {
 		log.Print("No hand card")
-		return &lovelove.PlayHandCardResponse{
-			Status: lovelove.PlayHandCardResponseCode_Error,
-		}, nil
+		return
 	}
 
 	// TODO: deal with missing connection problem?
@@ -56,55 +59,53 @@ func (server loveLoveRpcServer) PlayHandCard(context context.Context, request *l
 
 	if !connMetaFound || len(connMeta.userId) == 0 {
 		log.Print("Player not identified")
-		return &lovelove.PlayHandCardResponse{
-			Status: lovelove.PlayHandCardResponseCode_Error,
-		}, nil
+		return
 	}
 
 	userMeta, userMetaFound := server.userMeta[connMeta.userId]
 	if !userMetaFound || len(userMeta.roomId) == 0 {
 		log.Print("User not in room")
-		return &lovelove.PlayHandCardResponse{
-			Status: lovelove.PlayHandCardResponseCode_Error,
-		}, nil
+		return
 	}
 
 	game, gameFound := server.games[userMeta.roomId]
 
 	if !gameFound {
 		log.Print("Not connected to room")
-		return &lovelove.PlayHandCardResponse{
-			Status: lovelove.PlayHandCardResponseCode_Error,
-		}, nil
+		return
 	}
 
 	playerState, playerStateFound := game.playerState[connMeta.userId]
 
 	if !playerStateFound {
 		log.Print("Player not in game")
-		return &lovelove.PlayHandCardResponse{
-			Status: lovelove.PlayHandCardResponseCode_Error,
-		}, nil
+		return
 	}
 
 	mutation, err := PlayHandCard(game, request, playerState)
 	if err != nil {
 		log.Print(err.Error())
-		return &lovelove.PlayHandCardResponse{
-			Status: lovelove.PlayHandCardResponseCode_Error,
-		}, nil
+		return
 	}
 
 	updates := game.Apply(mutation, playerState.position)
+
+	mutation, err = DrawCard(game)
+
+	if err == nil {
+		updates = append(updates, game.Apply(mutation, playerState.position)...)
+	}
 
 	update := &lovelove.GameStateUpdate{
 		Updates: updates,
 	}
 
 	game.updates <- update
-	return &lovelove.PlayHandCardResponse{
+
+	response = &lovelove.PlayHandCardResponse{
 		Status: lovelove.PlayHandCardResponseCode_Ok,
-	}, nil
+	}
+	return
 }
 
 type cardMove struct {
@@ -128,10 +129,10 @@ func MoveToTable(game *gameState, cardId int32, cardLocation CardLocation) ([]*g
 	}
 
 	return []*gameStateMutation{
-		&gameStateMutation{
+		{
 			cardMoves: []*cardMove{
-				&cardMove{
-					cardId:      movingCard.card.Id,
+				{
+					cardId:      cardId,
 					destination: CardLocation_Table,
 				},
 			},
@@ -169,22 +170,22 @@ func MoveToPlayOption(
 	}
 
 	return []*gameStateMutation{
-		&gameStateMutation{
+		{
 			cardMoves: []*cardMove{
-				&cardMove{
+				{
 					cardId:      movingCardId,
 					destination: CardLocation_Table,
 					order:       destinationCard.order,
 				},
 			},
 		},
-		&gameStateMutation{
+		{
 			cardMoves: []*cardMove{
-				&cardMove{
+				{
 					cardId:      movingCardId,
 					destination: playerCollectionLocation,
 				},
-				&cardMove{
+				{
 					cardId:      destinationCardId,
 					destination: playerCollectionLocation,
 				},
@@ -205,6 +206,25 @@ func GetCollectionLocation(playerPosition lovelove.PlayerPosition) CardLocation 
 		return CardLocation_WhiteCollection
 	}
 	return CardLocation_RedCollection
+}
+
+func DrawCard(game *gameState) ([]*gameStateMutation, error) {
+	deck := game.Deck()
+	if len(deck) == 0 {
+		return nil, errors.New("No cards left to draw")
+	}
+	drawnCard := deck[len(deck)-1]
+
+	return []*gameStateMutation{
+		{
+			cardMoves: []*cardMove{
+				{
+					cardId:      drawnCard.card.Id,
+					destination: CardLocation_Drawn,
+				},
+			},
+		},
+	}, nil
 }
 
 func PlayHandCard(
