@@ -4,10 +4,10 @@ import lovelove "hanafuda.moe/lovelove/proto"
 
 type connectionMeta struct {
 	userId string
+	roomId string
 }
 
 type userMeta struct {
-	roomId string
 }
 
 type loveLoveRpcServer struct {

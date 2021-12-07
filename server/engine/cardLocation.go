@@ -46,3 +46,37 @@ func (location CardLocation) ToPlayerCentricZone(playerPosition lovelove.PlayerP
 
 	return lovelove.PlayerCentricZone_UnknownZone
 }
+
+func GetHandLocation(playerPosition lovelove.PlayerPosition) CardLocation {
+	if playerPosition == lovelove.PlayerPosition_White {
+		return CardLocation_WhiteHand
+	}
+	return CardLocation_RedHand
+}
+
+func GetCollectionLocation(playerPosition lovelove.PlayerPosition) CardLocation {
+	if playerPosition == lovelove.PlayerPosition_White {
+		return CardLocation_WhiteCollection
+	}
+	return CardLocation_RedCollection
+}
+
+func LocationIsVisible(cardLocation CardLocation, playerPosition lovelove.PlayerPosition) bool {
+	switch cardLocation {
+	case CardLocation_Deck:
+		return false
+	case CardLocation_Drawn:
+		return true
+	case CardLocation_Table:
+		return true
+	case CardLocation_WhiteCollection:
+		return true
+	case CardLocation_RedCollection:
+		return true
+	case CardLocation_RedHand:
+		return playerPosition == lovelove.PlayerPosition_Red
+	case CardLocation_WhiteHand:
+		return playerPosition == lovelove.PlayerPosition_White
+	}
+	return false
+}

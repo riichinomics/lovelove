@@ -85,10 +85,19 @@ func (server *webSocketRpcServer) HandleConnection(connection *websocket.Conn) {
 		connMeta.Closed = rxgo.FromChannel(connMeta.closed, rxgo.WithPublishStrategy())
 		connMeta.Closed.Connect(context.TODO())
 
+		sendChannel := make(chan []byte)
+
 		defer close(connMeta.Messages)
 		defer close(connMeta.closed)
+		defer close(sendChannel)
 
-		go func(cm *connectionMeta) {
+		go func(sendChannel chan []byte) {
+			for data := range sendChannel {
+				conn.WriteMessage(websocket.BinaryMessage, data)
+			}
+		}(sendChannel)
+
+		go func(cm *connectionMeta, sendChannel chan []byte) {
 			sequence := int32(0)
 			for message := range cm.Messages {
 				valueData, _ := proto.Marshal(message)
@@ -100,9 +109,9 @@ func (server *webSocketRpcServer) HandleConnection(connection *websocket.Conn) {
 					Data:        valueData,
 				})
 				sequence = sequence + 1
-				conn.WriteMessage(websocket.BinaryMessage, wrapperData)
+				sendChannel <- wrapperData
 			}
-		}(connMeta)
+		}(connMeta, sendChannel)
 
 		for {
 			messageType, data, err := conn.ReadMessage()
@@ -154,7 +163,7 @@ func (server *webSocketRpcServer) HandleConnection(connection *websocket.Conn) {
 						Data:        valueData,
 					})
 
-					conn.WriteMessage(websocket.BinaryMessage, wrapperData)
+					sendChannel <- wrapperData
 				}
 			}
 		}

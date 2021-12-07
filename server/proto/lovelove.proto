@@ -146,10 +146,16 @@ message CardMoveUpdate {
 message GameStateUpdatePart {
 	repeated CardMoveUpdate cardMoveUpdates = 1;
 	ActivePlayerUpdate activePlayerUpdate = 2;
+	ActionUpdate actionUpdate = 3;
+
 }
 
 message ActivePlayerUpdate {
 	PlayerPosition position = 1;
+}
+
+message ActionUpdate {
+	PlayerAction action = 1;
 }
 
 message GameStateUpdate {

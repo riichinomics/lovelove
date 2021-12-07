@@ -25,7 +25,7 @@ func (server loveLoveRpcServer) ConnectToGame(context context.Context, request *
 	}
 
 	// TODO: room change stop listening to other room
-	userMetaData.roomId = request.RoomId
+	connMeta.roomId = request.RoomId
 
 	if len(connMeta.userId) == 0 {
 		log.Print("Player not identified")
@@ -62,8 +62,6 @@ func (server loveLoveRpcServer) ConnectToGame(context context.Context, request *
 		oya := lovelove.PlayerPosition(rand.Intn(1) + 1)
 
 		game = &gameState{
-			updates:      make(chan *lovelove.GameStateUpdate),
-			listeners:    make([]chan proto.Message, 0),
 			state:        GameState_HandCardPlay,
 			id:           request.RoomId,
 			activePlayer: oya,
@@ -72,19 +70,10 @@ func (server loveLoveRpcServer) ConnectToGame(context context.Context, request *
 			oya:          oya,
 		}
 
-		go func() {
-			for update := range game.updates {
-				log.Print("Update detencted", update)
-				for _, listener := range game.listeners {
-					log.Print("Sending Update to listener", listener)
-					listener <- update
-				}
-			}
-		}()
-
 		game.playerState[connMeta.userId] = &playerState{
-			id:       connMeta.userId,
-			position: lovelove.PlayerPosition(rand.Intn(1) + 1),
+			id:        connMeta.userId,
+			position:  lovelove.PlayerPosition(rand.Intn(1) + 1),
+			listeners: make([]chan proto.Message, 0),
 		}
 
 		moveCards(game.cards, deck[0:8], CardLocation_Table)
@@ -95,33 +84,45 @@ func (server loveLoveRpcServer) ConnectToGame(context context.Context, request *
 		server.games[game.id] = game
 	} else {
 		_, playerExists := game.playerState[connMeta.userId]
-		if !playerExists && len(game.playerState) < 2 {
-			newPlayerPosition := lovelove.PlayerPosition_Red
-			for _, playerState := range game.playerState {
-				if playerState.position == lovelove.PlayerPosition_Red {
-					newPlayerPosition = lovelove.PlayerPosition_White
-				}
+		if !playerExists {
+			newPlayer := &playerState{
+				id:        connMeta.userId,
+				position:  lovelove.PlayerPosition_UnknownPosition,
+				listeners: make([]chan proto.Message, 0),
 			}
+			game.playerState[connMeta.userId] = newPlayer
 
-			game.playerState[connMeta.userId] = &playerState{
-				id:       connMeta.userId,
-				position: newPlayerPosition,
+		POSITION:
+			for p := range lovelove.PlayerPosition_name {
+				position := lovelove.PlayerPosition(p)
+				if position == lovelove.PlayerPosition_UnknownPosition {
+					continue
+				}
+
+				for _, playerState := range game.playerState {
+					if playerState.position == position {
+						continue POSITION
+					}
+				}
+
+				newPlayer.position = position
+				break
 			}
 		}
 	}
 
-	playerPosition := game.playerState[connMeta.userId].position
-
-	game.listeners = append(game.listeners, rpcConnMeta.Messages)
+	playerState := game.playerState[connMeta.userId]
+	playerState.listeners = append(playerState.listeners, rpcConnMeta.Messages)
 	rpcConnMeta.Closed.DoOnCompleted(func() {
-		for i, listener := range game.listeners {
+		for i, listener := range playerState.listeners {
 			if listener == rpcConnMeta.Messages {
-				game.listeners = append(game.listeners[:i], game.listeners[i+1:]...)
+				playerState.listeners = append(playerState.listeners[:i], playerState.listeners[i+1:]...)
 				return
 			}
 		}
 	})
 
+	playerPosition := playerState.position
 	return &lovelove.ConnectToGameResponse{
 		Position:  playerPosition,
 		GameState: game.ToCompleteGameState(playerPosition),

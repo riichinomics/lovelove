@@ -1,6 +1,7 @@
 package engine
 
 import (
+	"google.golang.org/protobuf/proto"
 	lovelove "hanafuda.moe/lovelove/proto"
 )
 
@@ -19,6 +20,7 @@ type cardState struct {
 }
 
 type playerState struct {
-	id       string
-	position lovelove.PlayerPosition
+	id        string
+	position  lovelove.PlayerPosition
+	listeners []chan proto.Message
 }
