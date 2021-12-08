@@ -8,6 +8,8 @@ import { lovelove } from "../../rpc/proto/lovelove";
 import { stylesheet } from "astroturf";
 import { PlayerNameTag } from "./PlayerNameTag";
 import { CardDroppedHandler, oppositePosition } from "./utils";
+import { CardMoveContext } from "../../rpc/CardMoveContext";
+import { useEffect } from "hoist-non-react-statics/node_modules/@types/react";
 
 const styles = stylesheet`
 	$collection-peek: 100px;
@@ -142,6 +144,11 @@ export const Table = ({
 }) => {
 	const opponentPosition = oppositePosition(position);
 	const [previewCard, setPreviewCard] = React.useState<lovelove.ICard>();
+	const { move } = React.useContext(CardMoveContext);
+	React.useEffect(() => {
+		setPreviewCard(null);
+	}, [!!move]);
+
 	return <div className={styles.table}>
 		<div className={styles.opponentHand}>
 			<OpponentHand cards={opponentHand} />

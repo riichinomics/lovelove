@@ -44,9 +44,7 @@ export const GameStateConnection = () => {
 
 			switch (message.$type.name) {
 				case lovelove.GameStateUpdate.name: {
-					if (move) {
-						setMove(null);
-					}
+					setMove(null);
 
 					const gameStateUpdate = message as any as lovelove.GameStateUpdate;
 					dispatch({

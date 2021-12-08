@@ -79,7 +79,10 @@ function mainReducer(state: IState, action: Action): IState {
 								break;
 							}
 							case lovelove.PlayerCentricZone.Table: {
-								//TODO: animation float
+								// TODO: Animation Float
+								if (!updatedGameState.table[cardMove.destinationSlot.index]) {
+									updatedGameState.table[cardMove.destinationSlot.index] = cardMove.movedCard;
+								}
 								break;
 							}
 							case lovelove.PlayerCentricZone.Hand: {
