@@ -20,8 +20,10 @@ func main() {
 	flag.Parse()
 	log.SetFlags(0)
 
-	websocketRpcServer := rpc.NewWebSocketRpcServer()
+	// TODO: separate server from interceptor
+	interceptor := engine.NewLoveLoveRpcInterceptor()
 	loveloveRpcServer := engine.NewLoveLoveRpcServer()
+	websocketRpcServer := rpc.NewWebSocketRpcServer(rpc.UnaryInterceptor(interceptor.Interceptor))
 
 	lovelove.RegisterLoveLoveServer(websocketRpcServer, loveloveRpcServer)
 

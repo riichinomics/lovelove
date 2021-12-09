@@ -25,7 +25,7 @@ enum Variation {
 	Fourth = 4;
 }
 
-enum PlayHandCardResponseCode {
+enum GenericResponseCode {
 	Error = 0;
 	Ok = 1;
 }
@@ -59,6 +59,8 @@ service LoveLove {
 	rpc ConnectToGame (ConnectToGameRequest) returns (ConnectToGameResponse) {}
 
 	rpc PlayHandCard (PlayHandCardRequest) returns (PlayHandCardResponse) {}
+
+	rpc PlayDrawnCard (PlayDrawnCardRequest) returns (PlayDrawnCardResponse) {}
 }
 
 message Wrapper {
@@ -123,7 +125,15 @@ message PlayHandCardRequest {
 }
 
 message PlayHandCardResponse {
-	PlayHandCardResponseCode status = 1;
+	GenericResponseCode status = 1;
+}
+
+message PlayDrawnCardRequest {
+	CardId tableCard = 2;
+}
+
+message PlayDrawnCardResponse {
+	GenericResponseCode status = 1;
 }
 
 message CardSlot {

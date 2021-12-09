@@ -8,7 +8,6 @@ import (
 
 type gameState struct {
 	state        GameState
-	id           string
 	activePlayer lovelove.PlayerPosition
 	oya          lovelove.PlayerPosition
 	cards        map[int32]*cardState

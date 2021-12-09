@@ -5,12 +5,11 @@ import (
 	"log"
 
 	lovelove "hanafuda.moe/lovelove/proto"
-	"hanafuda.moe/lovelove/rpc"
 )
 
 func (server loveLoveRpcServer) PlayHandCard(context context.Context, request *lovelove.PlayHandCardRequest) (response *lovelove.PlayHandCardResponse, rpcError error) {
 	response = &lovelove.PlayHandCardResponse{
-		Status: lovelove.PlayHandCardResponseCode_Error,
+		Status: lovelove.GenericResponseCode_Error,
 	}
 	rpcError = nil
 
@@ -21,50 +20,42 @@ func (server loveLoveRpcServer) PlayHandCard(context context.Context, request *l
 		return
 	}
 
-	// TODO: deal with missing connection problem?
-	rpcConnMeta := rpc.GetConnectionMeta(context)
-	connMeta, connMetaFound := server.connectionMeta[rpcConnMeta.ConnId]
+	connMeta := GetConnectionMeta(context)
+	gameContext := GetGameContext(context)
 
-	if !connMetaFound || len(connMeta.userId) == 0 {
+	if len(connMeta.userId) == 0 {
 		log.Print("Player not identified")
 		return
 	}
 
-	if len(connMeta.roomId) == 0 {
-		log.Print("User not in room")
-		return
-	}
-
-	game, gameFound := server.games[connMeta.roomId]
-
-	if !gameFound {
+	if gameContext == nil || gameContext.GameState == nil {
 		log.Print("Not connected to room")
 		return
 	}
 
-	playerState, playerStateFound := game.playerState[connMeta.userId]
+	playerState, playerStateFound := gameContext.GameState.playerState[connMeta.userId]
 
 	if !playerStateFound {
 		log.Print("Player not in game")
 		return
 	}
 
-	mutation, err := PlayHandCardMutation(game, request, playerState.position)
+	mutation, err := PlayHandCardMutation(gameContext.GameState, request, playerState.position)
 	if err != nil {
 		log.Print(err.Error())
 		return
 	}
 
 	response = &lovelove.PlayHandCardResponse{
-		Status: lovelove.PlayHandCardResponseCode_Ok,
+		Status: lovelove.GenericResponseCode_Ok,
 	}
 
-	mutationContext := NewGameMutationContext(game)
+	mutationContext := NewGameMutationContext(gameContext.GameState)
 	defer mutationContext.BroadcastUpdates()
 
 	mutationContext.Apply(mutation)
 
-	mutation, err = DrawCardMutation(game)
+	mutation, err = DrawCardMutation(gameContext.GameState)
 
 	if err != nil {
 		//TODO: report error
@@ -73,7 +64,7 @@ func (server loveLoveRpcServer) PlayHandCard(context context.Context, request *l
 
 	mutationContext.Apply(mutation)
 
-	mutation, err = PlayDrawnCardMutation(game, playerState.position)
+	mutation, err = PlayDrawnCardMutation(gameContext.GameState, playerState.position)
 
 	if err != nil {
 		return
@@ -82,7 +73,7 @@ func (server loveLoveRpcServer) PlayHandCard(context context.Context, request *l
 	mutationContext.Apply(mutation)
 
 	if mutation[0].gameStateChange != nil {
-
+		// TODO: check yaku
 	}
 
 	return

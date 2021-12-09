@@ -2,6 +2,7 @@ package engine
 
 import (
 	"context"
+	"errors"
 	"log"
 	"math/rand"
 
@@ -13,26 +14,28 @@ import (
 func (server loveLoveRpcServer) ConnectToGame(context context.Context, request *lovelove.ConnectToGameRequest) (*lovelove.ConnectToGameResponse, error) {
 	log.Print(request.RoomId)
 
-	game, gameFound := server.games[request.RoomId]
-
-	// TODO: deal with missing connection problem?
 	rpcConnMeta := rpc.GetConnectionMeta(context)
-	connMeta := server.connectionMeta[rpcConnMeta.ConnId]
-	userMetaData, userFound := server.userMeta[connMeta.userId]
-	if !userFound {
-		userMetaData = &userMeta{}
-		server.userMeta[connMeta.userId] = userMetaData
+	connMeta := GetConnectionMeta(context)
+
+	if len(connMeta.userId) == 0 {
+		//TODO: report no user error
+		log.Print("User not logged in ", connMeta)
+		return &lovelove.ConnectToGameResponse{}, nil
+	}
+
+	gameContext := GetGameContext(context)
+
+	if gameContext == nil {
+		//TODO: report no user error
+		log.Print("No GameContext! ", connMeta)
+		return nil, errors.New("No GameContext!")
 	}
 
 	// TODO: room change stop listening to other room
 	connMeta.roomId = request.RoomId
 
-	if len(connMeta.userId) == 0 {
-		log.Print("Player not identified")
-		return &lovelove.ConnectToGameResponse{}, nil
-	}
-
-	if !gameFound {
+	game := gameContext.GameState
+	if game == nil {
 		deck := make([]*lovelove.Card, 12*4)
 
 		for hana := range lovelove.Hana_name {
@@ -63,12 +66,13 @@ func (server loveLoveRpcServer) ConnectToGame(context context.Context, request *
 
 		game = &gameState{
 			state:        GameState_HandCardPlay,
-			id:           request.RoomId,
 			activePlayer: oya,
 			cards:        make(map[int32]*cardState),
 			playerState:  make(map[string]*playerState),
 			oya:          oya,
 		}
+
+		gameContext.GameState = game
 
 		game.playerState[connMeta.userId] = &playerState{
 			id:        connMeta.userId,
@@ -80,8 +84,6 @@ func (server loveLoveRpcServer) ConnectToGame(context context.Context, request *
 		moveCards(game.cards, deck[8:16], CardLocation_RedHand)
 		moveCards(game.cards, deck[16:24], CardLocation_WhiteHand)
 		moveCards(game.cards, deck[24:], CardLocation_Deck)
-
-		server.games[game.id] = game
 	} else {
 		_, playerExists := game.playerState[connMeta.userId]
 		if !playerExists {

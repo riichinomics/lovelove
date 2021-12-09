@@ -39,14 +39,38 @@ type connectionMeta struct {
 type webSocketRpcServer struct {
 	// lis      map[net.Listener]bool
 	// conns    map[transport.ServerTransport]bool
-	serve    bool
-	services map[string]*serviceInfo
+	services    map[string]*serviceInfo
+	interceptor grpc.UnaryServerInterceptor
 }
 
-func NewWebSocketRpcServer() *webSocketRpcServer {
-	return &webSocketRpcServer{
+type WebSocketRpcServerOption interface {
+	apply(server *webSocketRpcServer)
+}
+
+type unaryInterceptorServerOption struct {
+	interceptor grpc.UnaryServerInterceptor
+}
+
+func (option unaryInterceptorServerOption) apply(server *webSocketRpcServer) {
+	server.interceptor = option.interceptor
+}
+
+func UnaryInterceptor(interceptor grpc.UnaryServerInterceptor) *unaryInterceptorServerOption {
+	return &unaryInterceptorServerOption{
+		interceptor,
+	}
+}
+
+func NewWebSocketRpcServer(options ...WebSocketRpcServerOption) *webSocketRpcServer {
+	server := &webSocketRpcServer{
 		services: make(map[string]*serviceInfo),
 	}
+
+	for _, option := range options {
+		option.apply(server)
+	}
+
+	return server
 }
 
 func (server *webSocketRpcServer) RegisterService(serviceDesc *grpc.ServiceDesc, ss interface{}) {
@@ -83,12 +107,12 @@ func (server *webSocketRpcServer) HandleConnection(connection *websocket.Conn) {
 			closed:   make(chan rxgo.Item),
 		}
 		connMeta.Closed = rxgo.FromChannel(connMeta.closed, rxgo.WithPublishStrategy())
-		connMeta.Closed.Connect(context.TODO())
-
+		_, disposeClosedBroadcast := connMeta.Closed.Connect(context.Background())
 		sendChannel := make(chan []byte)
 
 		defer close(connMeta.Messages)
 		defer close(connMeta.closed)
+		defer disposeClosedBroadcast()
 		defer close(sendChannel)
 
 		go func(sendChannel chan []byte) {
@@ -141,30 +165,33 @@ func (server *webSocketRpcServer) HandleConnection(connection *websocket.Conn) {
 			methodName := method[lastDotPosition+1:]
 
 			serviceInfo, serviceIsKnown := server.services[serviceName]
-			if serviceIsKnown {
-				if methodInfo, ok := serviceInfo.methods[methodName]; ok {
-					value, _ := methodInfo.Handler(
-						serviceInfo.serviceImpl,
-						context.WithValue(context.Background(), connContextKey{
-							key: "connId",
-						}, connMeta),
-						func(message interface{}) error {
-							return proto.Unmarshal(wrapper.Data, message.(proto.Message))
-						},
-						nil,
-					)
+			if !serviceIsKnown {
+				continue
+			}
 
-					valueData, _ := proto.Marshal(value.(proto.Message))
+			if methodInfo, ok := serviceInfo.methods[methodName]; ok {
 
-					wrapperData, _ := proto.Marshal(&lovelove.Wrapper{
-						Sequence:    wrapper.Sequence,
-						Type:        lovelove.MessageType_Transact,
-						ContentType: wrapper.ContentType,
-						Data:        valueData,
-					})
+				value, _ := methodInfo.Handler(
+					serviceInfo.serviceImpl,
+					context.WithValue(context.Background(), connContextKey{
+						key: "connId",
+					}, connMeta),
+					func(message interface{}) error {
+						return proto.Unmarshal(wrapper.Data, message.(proto.Message))
+					},
+					server.interceptor,
+				)
 
-					sendChannel <- wrapperData
-				}
+				valueData, _ := proto.Marshal(value.(proto.Message))
+
+				wrapperData, _ := proto.Marshal(&lovelove.Wrapper{
+					Sequence:    wrapper.Sequence,
+					Type:        lovelove.MessageType_Transact,
+					ContentType: wrapper.ContentType,
+					Data:        valueData,
+				})
+
+				sendChannel <- wrapperData
 			}
 		}
 	}(connection)

@@ -38,7 +38,6 @@ function mainReducer(state: IState, action: Action): IState {
 				gameState: action.gameState
 			};
 		} case ActionType.GameUpdateReceived: {
-			console.log(state.gameState);
 			return {
 				...state,
 				gameState: produce(state.gameState, gameState => {
