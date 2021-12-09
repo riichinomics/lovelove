@@ -21,7 +21,7 @@ type gameStateMutation struct {
 	gameStateChange *gameStateChange
 }
 
-func PlayDrawnCard(game *gameState, playerPosition lovelove.PlayerPosition) ([]*gameStateMutation, error) {
+func PlayDrawnCardMutation(game *gameState, playerPosition lovelove.PlayerPosition) ([]*gameStateMutation, error) {
 	drawnCard := game.DrawnCard()
 	if drawnCard == nil {
 		return nil, errors.New("No drawn card")
@@ -140,7 +140,7 @@ func MoveToPlayOption(
 	}, nil
 }
 
-func DrawCard(game *gameState) ([]*gameStateMutation, error) {
+func DrawCardMutation(game *gameState) ([]*gameStateMutation, error) {
 	deck := game.Deck()
 	if len(deck) == 0 {
 		return nil, errors.New("No cards left to draw")
@@ -159,7 +159,7 @@ func DrawCard(game *gameState) ([]*gameStateMutation, error) {
 	}, nil
 }
 
-func PlayHandCard(
+func PlayHandCardMutation(
 	game *gameState,
 	request *lovelove.PlayHandCardRequest,
 	playerPosition lovelove.PlayerPosition,

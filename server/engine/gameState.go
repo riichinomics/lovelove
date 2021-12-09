@@ -6,8 +6,6 @@ import (
 	lovelove "hanafuda.moe/lovelove/proto"
 )
 
-type GameUpdateMap map[lovelove.PlayerPosition][]*lovelove.GameStateUpdatePart
-
 type gameState struct {
 	state        GameState
 	id           string
@@ -137,185 +135,91 @@ func (gameState *gameState) ToCompleteGameState(playerPosition lovelove.PlayerPo
 		}
 	}
 
-	completeGameState.Action = gameState.GetActionForPosition(playerPosition)
+	completeGameState.TablePlayOptions = gameState.GetTablePlayOptions(playerPosition)
 
 	return completeGameState
 }
 
-func (gameState *gameState) GetActionForPosition(playerPosition lovelove.PlayerPosition) (action *lovelove.PlayerAction) {
+func (gameState *gameState) GetPlayOptionsOriginZoneUpdate(playerPosition lovelove.PlayerPosition) (originZones []lovelove.PlayerCentricZone) {
+	originZones = make([]lovelove.PlayerCentricZone, 0)
 	switch gameState.state {
 	case GameState_HandCardPlay:
 		if gameState.activePlayer != playerPosition {
 			return
 		}
 
-		action = &lovelove.PlayerAction{
-			Type:        lovelove.PlayerActionType_HandCardPlayOpportunity,
-			PlayOptions: make(map[int32]*lovelove.PlayOptions),
+		return []lovelove.PlayerCentricZone{
+			GetHandLocation(playerPosition).ToPlayerCentricZone(playerPosition),
 		}
 
-		for _, tableCard := range gameState.Table() {
-			playOptions := make([]int32, 0)
-			for _, handCard := range gameState.Hand(playerPosition) {
-				if tableCard != nil && WillAccept(tableCard.card, handCard.card) {
-					playOptions = append(playOptions, handCard.card.Id)
-				}
-			}
-
-			if len(playOptions) > 0 {
-				action.PlayOptions[tableCard.card.Id] = &lovelove.PlayOptions{
-					Options: playOptions,
-				}
-			}
-		}
 	case GameState_DeckCardPlay:
 		if gameState.activePlayer != playerPosition {
 			return
 		}
 
-		drawnCard := gameState.DrawnCard()
-		if drawnCard == nil {
-			return
-		}
-
-		action = &lovelove.PlayerAction{
-			Type:        lovelove.PlayerActionType_HandCardPlayOpportunity,
-			PlayOptions: make(map[int32]*lovelove.PlayOptions),
-		}
-
-		for _, tableCard := range gameState.Table() {
-			playOptions := make([]int32, 0)
-			if tableCard != nil && WillAccept(tableCard.card, drawnCard.card) {
-				playOptions = append(playOptions, drawnCard.card.Id)
-			}
-
-			if len(playOptions) > 0 {
-				action.PlayOptions[tableCard.card.Id] = &lovelove.PlayOptions{
-					Options: playOptions,
-				}
-			}
-		}
-	}
-	return
-}
-
-func (game *gameState) applyCardMoves(cardMoves []*cardMove) (updatesMap map[lovelove.PlayerPosition][]*lovelove.CardMoveUpdate) {
-	updatesMap = make(map[lovelove.PlayerPosition][]*lovelove.CardMoveUpdate)
-
-	if cardMoves == nil {
-		return
-	}
-
-	for p, _ := range lovelove.PlayerPosition_name {
-		position := lovelove.PlayerPosition(p)
-		updatesMap[position] = make([]*lovelove.CardMoveUpdate, 0)
-	}
-
-	for _, move := range cardMoves {
-		movingCard := game.cards[move.cardId]
-
-		for p, _ := range lovelove.PlayerPosition_name {
-			position := lovelove.PlayerPosition(p)
-
-			if !LocationIsVisible(move.destination, position) && !LocationIsVisible(movingCard.location, position) {
-				continue
-			}
-
-			cardMove := &lovelove.CardMoveUpdate{
-				MovedCard: movingCard.card,
-				OriginSlot: &lovelove.CardSlot{
-					Zone:  movingCard.location.ToPlayerCentricZone(position),
-					Index: int32(movingCard.order),
-				},
-				DestinationSlot: &lovelove.CardSlot{
-					Zone:  move.destination.ToPlayerCentricZone(position),
-					Index: int32(move.order),
-				},
-			}
-
-			updatesMap[position] = append(updatesMap[position], cardMove)
-		}
-
-		movingCard.location = move.destination
-		movingCard.order = move.order
-	}
-
-	return updatesMap
-}
-
-func (game *gameState) applyGameStateChange(gameStateChange *gameStateChange) (updatesMap map[lovelove.PlayerPosition]*lovelove.ActionUpdate) {
-	updatesMap = make(map[lovelove.PlayerPosition]*lovelove.ActionUpdate)
-
-	if gameStateChange == nil {
-		return
-	}
-
-	game.state = gameStateChange.newState
-
-	for p, _ := range lovelove.PlayerPosition_name {
-		position := lovelove.PlayerPosition(p)
-		actionUpdate := game.GetActionForPosition(position)
-		if actionUpdate != nil {
-			updatesMap[position] = &lovelove.ActionUpdate{
-				Action: game.GetActionForPosition(position),
-			}
+		return []lovelove.PlayerCentricZone{
+			lovelove.PlayerCentricZone_Drawn,
 		}
 	}
 
 	return
 }
 
-func (game *gameState) Apply(mutations []*gameStateMutation) GameUpdateMap {
-	updatesMap := make(map[lovelove.PlayerPosition][]*lovelove.GameStateUpdatePart)
-
-	for p, _ := range lovelove.PlayerPosition_name {
-		position := lovelove.PlayerPosition(p)
-		updatesMap[position] = make([]*lovelove.GameStateUpdatePart, 0)
+func (gameState *gameState) PlayableCards(playerPosition lovelove.PlayerPosition) []*cardState {
+	drawnCard := gameState.DrawnCard()
+	playableCards := gameState.Hand(playerPosition)
+	if drawnCard != nil {
+		playableCards = append(playableCards, drawnCard)
 	}
-
-	for _, mutation := range mutations {
-		cardUpdatesMap := game.applyCardMoves(mutation.cardMoves)
-		actionUpdatesMap := game.applyGameStateChange(mutation.gameStateChange)
-
-		for p, _ := range lovelove.PlayerPosition_name {
-			position := lovelove.PlayerPosition(p)
-			updatePart := &lovelove.GameStateUpdatePart{}
-			updatesMap[position] = append(updatesMap[position], updatePart)
-
-			if cardUpdate, ok := cardUpdatesMap[position]; ok {
-				updatePart.CardMoveUpdates = cardUpdate
-			}
-
-			if actionUpdate, ok := actionUpdatesMap[position]; ok {
-				updatePart.ActionUpdate = actionUpdate
-			}
-		}
-
-	}
-
-	return updatesMap
+	return playableCards
 }
 
-func (game *gameState) SendUpdates(gameUpdates []GameUpdateMap) {
-	payloadsForPosition := make(map[lovelove.PlayerPosition]*lovelove.GameStateUpdate)
-	for _, gameUpdateMap := range gameUpdates {
-		for position, gameUpdate := range gameUpdateMap {
-			payload, payloadExists := payloadsForPosition[position]
-			if !payloadExists {
-				payload = &lovelove.GameStateUpdate{
-					Updates: make([]*lovelove.GameStateUpdatePart, 0),
-				}
-				payloadsForPosition[position] = payload
-			}
-
-			payload.Updates = append(payload.Updates, gameUpdate...)
-		}
+func (gameState *gameState) GetTablePlayOptions(playerPosition lovelove.PlayerPosition) (action *lovelove.ZonePlayOptions) {
+	action = &lovelove.ZonePlayOptions{
+		AcceptedOriginZones: gameState.GetPlayOptionsOriginZoneUpdate(playerPosition),
+		PlayOptions:         make(map[int32]*lovelove.PlayOptions),
+		NoTargetPlayOptions: &lovelove.PlayOptions{
+			Options: make([]int32, 0),
+		},
 	}
 
+	playableCards := gameState.PlayableCards(playerPosition)
+
+	tableCards := gameState.Table()
+
+	for _, playable := range playableCards {
+		foundMatch := false
+
+		for _, tableCard := range tableCards {
+			if tableCard != nil && WillAccept(tableCard.card, playable.card) {
+				foundMatch = true
+				tableCardOptions, tableCardOptionsExist := action.PlayOptions[tableCard.card.Id]
+				if !tableCardOptionsExist {
+					tableCardOptions = &lovelove.PlayOptions{
+						Options: make([]int32, 0),
+					}
+					action.PlayOptions[tableCard.card.Id] = tableCardOptions
+				}
+				tableCardOptions.Options = append(tableCardOptions.Options, playable.card.Id)
+			}
+		}
+
+		if !foundMatch {
+			action.NoTargetPlayOptions.Options = append(action.NoTargetPlayOptions.Options, playable.card.Id)
+		}
+	}
+	return
+}
+
+func (game *gameState) BroadcastUpdates(gameUpdates map[lovelove.PlayerPosition][]*lovelove.GameStateUpdatePart) {
 	for _, playerState := range game.playerState {
-		payload, payloadExists := payloadsForPosition[playerState.position]
-		if !payloadExists {
+		updates, updatesExist := gameUpdates[playerState.position]
+		if !updatesExist {
 			continue
+		}
+
+		payload := &lovelove.GameStateUpdate{
+			Updates: updates,
 		}
 
 		for _, listener := range playerState.listeners {

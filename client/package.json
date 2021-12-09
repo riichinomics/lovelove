@@ -9,7 +9,7 @@
 		"lint": "eslint --fix **/*.ts --fix **/*.tsx",
 		"dev": "webpack-dev-server"
 	},
-	"devDependencies": {
+	"dependencies": {
 		"@teamsupercell/typings-for-css-modules-loader": "^2.5.1",
 		"@types/react": "^17.0.32",
 		"@types/react-dom": "^17.0.10",
@@ -46,6 +46,7 @@
 		"uuid": "^8.3.2",
 		"webpack": "^5.59.1",
 		"webpack-cli": "^4.9.1",
-		"webpack-dev-server": "^4.3.1"
+		"webpack-dev-server": "^4.3.1",
+		"immer": "^9.0.7"
 	}
 }

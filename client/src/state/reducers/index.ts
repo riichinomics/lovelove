@@ -1,7 +1,9 @@
+import {produce, immerable} from "immer";
 import { lovelove } from "../../rpc/proto/lovelove";
 import { Action } from "../actions/Action";
 import { ActionType } from "../actions/ActionType";
 import { IState } from "../IState";
+
 
 function removeCard(zone: lovelove.ICard[], cardId: number, leaveSpace?: boolean): lovelove.ICard[] {
 	if (!zone) {
@@ -29,93 +31,133 @@ function mainReducer(state: IState, action: Action): IState {
 				apiState: action.apiState
 			};
 		} case ActionType.InitialGameStateReceived: {
+			(action.gameState as any)[immerable] = true;
 			return {
 				...state,
 				gamePosition: action.position,
 				gameState: action.gameState
 			};
 		} case ActionType.GameUpdateReceived: {
-			const gameStateUpdate = action.update;
-			const updatedGameState = {...state.gameState};
-			for (const update of gameStateUpdate.updates) {
-				if (update.cardMoveUpdates) {
-					for (const cardMove of update.cardMoveUpdates) {
-						switch(cardMove.originSlot.zone) {
-							case lovelove.PlayerCentricZone.UnknownZone: {
-								break;
-							}
-							case lovelove.PlayerCentricZone.Table: {
-								updatedGameState.table = removeCard(updatedGameState.table, cardMove.movedCard.id, true);
-								break;
-							}
-							case lovelove.PlayerCentricZone.Hand: {
-								updatedGameState.hand = removeCard(updatedGameState.hand, cardMove.movedCard.id);
-								break;
-							}
-							case lovelove.PlayerCentricZone.OpponentHand: {
-								updatedGameState.opponentHand--;
-								break;
-							}
-							case lovelove.PlayerCentricZone.Deck: {
-								updatedGameState.deck--;
-								break;
-							}
-							case lovelove.PlayerCentricZone.Collection: {
-								updatedGameState.collection = removeCard(updatedGameState.collection, cardMove.movedCard.id);
-								break;
-							}
-							case lovelove.PlayerCentricZone.OpponentCollection: {
-								updatedGameState.opponentCollection = removeCard(updatedGameState.opponentCollection, cardMove.movedCard.id);
-								break;
-							}
-							case lovelove.PlayerCentricZone.Drawn: {
-								updatedGameState.deckFlipCard = null;
-								break;
+			console.log(state.gameState);
+			return {
+				...state,
+				gameState: produce(state.gameState, gameState => {
+					for (const update of action.update.updates) {
+						if (update.cardMoveUpdates) {
+							for (const cardMove of update.cardMoveUpdates) {
+								switch(cardMove.originSlot.zone) {
+									case lovelove.PlayerCentricZone.UnknownZone: {
+										break;
+									}
+									case lovelove.PlayerCentricZone.Table: {
+										gameState.table = removeCard(gameState.table, cardMove.movedCard.id, true);
+										break;
+									}
+									case lovelove.PlayerCentricZone.Hand: {
+										gameState.hand = removeCard(gameState.hand, cardMove.movedCard.id);
+										break;
+									}
+									case lovelove.PlayerCentricZone.OpponentHand: {
+										gameState.opponentHand--;
+										break;
+									}
+									case lovelove.PlayerCentricZone.Deck: {
+										gameState.deck--;
+										break;
+									}
+									case lovelove.PlayerCentricZone.Collection: {
+										gameState.collection = removeCard(gameState.collection, cardMove.movedCard.id);
+										break;
+									}
+									case lovelove.PlayerCentricZone.OpponentCollection: {
+										gameState.opponentCollection = removeCard(gameState.opponentCollection, cardMove.movedCard.id);
+										break;
+									}
+									case lovelove.PlayerCentricZone.Drawn: {
+										gameState.deckFlipCard = null;
+										break;
+									}
+								}
+
+								switch(cardMove.destinationSlot.zone) {
+									case lovelove.PlayerCentricZone.UnknownZone: {
+										break;
+									}
+									case lovelove.PlayerCentricZone.Table: {
+										// TODO: Animation Float
+										if (!gameState.table[cardMove.destinationSlot.index]) {
+											gameState.table[cardMove.destinationSlot.index] = cardMove.movedCard;
+										}
+										break;
+									}
+									case lovelove.PlayerCentricZone.Hand: {
+										gameState.hand = [...gameState.hand ?? [], cardMove.movedCard];
+										break;
+									}
+									case lovelove.PlayerCentricZone.OpponentHand: {
+										gameState.opponentHand++;
+										break;
+									}
+									case lovelove.PlayerCentricZone.Deck: {
+										gameState.deck++;
+										break;
+									}
+									case lovelove.PlayerCentricZone.Collection: {
+										gameState.collection = [...gameState.collection ?? [], cardMove.movedCard];
+										break;
+									}
+									case lovelove.PlayerCentricZone.OpponentCollection: {
+										gameState.opponentCollection = [...gameState.opponentCollection ?? [], cardMove.movedCard];
+										break;
+									}
+									case lovelove.PlayerCentricZone.Drawn: {
+										gameState.deckFlipCard = cardMove.movedCard;
+										break;
+									}
+								}
 							}
 						}
 
-						switch(cardMove.destinationSlot.zone) {
-							case lovelove.PlayerCentricZone.UnknownZone: {
-								break;
-							}
-							case lovelove.PlayerCentricZone.Table: {
-								// TODO: Animation Float
-								if (!updatedGameState.table[cardMove.destinationSlot.index]) {
-									updatedGameState.table[cardMove.destinationSlot.index] = cardMove.movedCard;
+						if (update.playOptionsUpdate) {
+							if (update.playOptionsUpdate.defunctOptions) {
+								for (const defuctOption of update.playOptionsUpdate.defunctOptions) {
+									if (!defuctOption.originCardId) {
+										delete gameState.tablePlayOptions.playOptions[defuctOption.targetCardId.cardId];
+										continue;
+									}
+
+									if (!defuctOption.targetCardId) {
+										const originOptionIndex = gameState.tablePlayOptions.noTargetPlayOptions.options.indexOf(defuctOption.originCardId.cardId);
+										if (originOptionIndex >= 0) {
+											gameState.tablePlayOptions.noTargetPlayOptions.options.splice(originOptionIndex, 1);
+										}
+										continue;
+									}
+
+									const optionIndex = gameState.tablePlayOptions.playOptions[defuctOption.targetCardId.cardId].options.indexOf(defuctOption.originCardId.cardId);
+									gameState.tablePlayOptions.noTargetPlayOptions.options.splice(optionIndex, 1);
 								}
-								break;
 							}
-							case lovelove.PlayerCentricZone.Hand: {
-								updatedGameState.hand = [...updatedGameState.hand ?? [], cardMove.movedCard];
-								break;
-							}
-							case lovelove.PlayerCentricZone.OpponentHand: {
-								updatedGameState.opponentHand++;
-								break;
-							}
-							case lovelove.PlayerCentricZone.Deck: {
-								updatedGameState.deck++;
-								break;
-							}
-							case lovelove.PlayerCentricZone.Collection: {
-								updatedGameState.collection = [...updatedGameState.collection ?? [], cardMove.movedCard];
-								break;
-							}
-							case lovelove.PlayerCentricZone.OpponentCollection: {
-								updatedGameState.opponentCollection = [...updatedGameState.opponentCollection ?? [], cardMove.movedCard];
-								break;
-							}
-							case lovelove.PlayerCentricZone.Drawn: {
-								updatedGameState.deckFlipCard = cardMove.movedCard;
-								break;
+
+							if (update.playOptionsUpdate.newOptions) {
+								for (const newOption of update.playOptionsUpdate.newOptions) {
+									if (!newOption.targetCardId) {
+										gameState.tablePlayOptions.noTargetPlayOptions.options.push(newOption.originCardId.cardId);
+										continue;
+									}
+
+									if (!gameState.tablePlayOptions.playOptions[newOption.targetCardId.cardId]) {
+										gameState.tablePlayOptions.playOptions[newOption.targetCardId.cardId] = {
+											options: []
+										};
+									}
+
+									gameState.tablePlayOptions.playOptions[newOption.targetCardId.cardId].options.push(newOption.originCardId.cardId);
+								}
 							}
 						}
 					}
-				}
-			}
-			return {
-				...state,
-				gameState: updatedGameState,
+				}),
 			};
 		} case ActionType.PreviewCardChanged: {
 			return {

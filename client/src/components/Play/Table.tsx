@@ -9,7 +9,6 @@ import { stylesheet } from "astroturf";
 import { PlayerNameTag } from "./PlayerNameTag";
 import { CardDroppedHandler, oppositePosition } from "./utils";
 import { CardMoveContext } from "../../rpc/CardMoveContext";
-import { useEffect } from "hoist-non-react-statics/node_modules/@types/react";
 
 const styles = stylesheet`
 	$collection-peek: 100px;
@@ -137,7 +136,7 @@ export const Table = ({
 	active,
 	oya,
 	position,
-	action,
+	tablePlayOptions,
 	onCardDropped
 }: IGameState & {
 	onCardDropped: CardDroppedHandler
@@ -164,7 +163,7 @@ export const Table = ({
 			</div>
 		</div>
 		<div className={styles.center}>
-			<Center cards={table} deck={deck} drawnCard={deckFlipCard} playOptions={action?.playOptions} previewCard={previewCard} onCardDropped={onCardDropped} />
+			<Center cards={table} deck={deck} drawnCard={deckFlipCard} playOptions={tablePlayOptions} previewCard={previewCard} onCardDropped={onCardDropped} />
 		</div>
 		<div className={clsx(styles.collection, styles.playerCollection)}>
 			<div className={styles.popup}>

@@ -49,7 +49,7 @@ func (server loveLoveRpcServer) PlayHandCard(context context.Context, request *l
 		return
 	}
 
-	mutation, err := PlayHandCard(game, request, playerState.position)
+	mutation, err := PlayHandCardMutation(game, request, playerState.position)
 	if err != nil {
 		log.Print(err.Error())
 		return
@@ -59,29 +59,27 @@ func (server loveLoveRpcServer) PlayHandCard(context context.Context, request *l
 		Status: lovelove.PlayHandCardResponseCode_Ok,
 	}
 
-	updates := make([]GameUpdateMap, 0)
-	defer func() {
-		game.SendUpdates(updates)
-	}()
+	mutationContext := NewGameMutationContext(game)
+	defer mutationContext.BroadcastUpdates()
 
-	updates = append(updates, game.Apply(mutation))
+	mutationContext.Apply(mutation)
 
-	mutation, err = DrawCard(game)
+	mutation, err = DrawCardMutation(game)
 
 	if err != nil {
 		//TODO: report error
 		return
 	}
 
-	updates = append(updates, game.Apply(mutation))
+	mutationContext.Apply(mutation)
 
-	mutation, err = PlayDrawnCard(game, playerState.position)
+	mutation, err = PlayDrawnCardMutation(game, playerState.position)
 
 	if err != nil {
 		return
 	}
 
-	updates = append(updates, game.Apply(mutation))
+	mutationContext.Apply(mutation)
 
 	if mutation[0].gameStateChange != nil {
 

@@ -5,7 +5,7 @@ import { IState } from "../../state/IState";
 import { Table } from "./Table";
 import { ApiState } from "../../rpc/ApiState";
 import { useLocation, useNavigate } from "react-router";
-import { CardMove, createRandomCard } from "./utils";
+import { CardMove, CardZone, createRandomCard } from "./utils";
 import { CardMoveContext } from "../../rpc/CardMoveContext";
 import { lovelove } from "../../rpc/proto/lovelove";
 import { InitialGameStateReceivedAction } from "../../state/actions/InitialGameStateReceivedAction";
@@ -105,14 +105,20 @@ export const GameStateConnection = () => {
 			return;
 		}
 
-		api.lovelove.playHandCard({
+
+		const request: lovelove.IPlayHandCardRequest = {
 			handCard: {
 				cardId: move.from.card.id
 			},
-			tableCard: {
+		};
+
+		if (move.to.card) {
+			request.tableCard = {
 				cardId: move.to.card.id
-			},
-		}).then(response => console.log(response));
+			};
+		};
+
+		api.lovelove.playHandCard(request).then(response => console.log(response));
 
 	}, [move]);
 

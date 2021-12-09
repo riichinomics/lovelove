@@ -25,13 +25,6 @@ enum Variation {
 	Fourth = 4;
 }
 
-enum PlayerActionType {
-	NoAction = 0;
-	HandCardPlayOpportunity = 1;
-	DeckCardPlayOpportunity = 2;
-	DeclareWinOpportunity = 3;
-}
-
 enum PlayHandCardResponseCode {
 	Error = 0;
 	Ok = 1;
@@ -94,9 +87,10 @@ message PlayOptions {
 	repeated int32 options = 1;
 }
 
-message PlayerAction {
-	PlayerActionType type = 1;
-	map<int32, PlayOptions> playOptions = 2;
+message ZonePlayOptions {
+	repeated PlayerCentricZone acceptedOriginZones = 1;
+	PlayOptions noTargetPlayOptions = 2;
+	map<int32, PlayOptions> playOptions = 3;
 }
 
 message CompleteGameState {
@@ -109,7 +103,7 @@ message CompleteGameState {
 	repeated Card opponentCollection = 7;
 	PlayerPosition oya = 8;
 	PlayerPosition active = 9;
-	PlayerAction action = 10;
+	ZonePlayOptions tablePlayOptions = 10;
 }
 
 message AuthenticateRequest {
@@ -146,7 +140,7 @@ message CardMoveUpdate {
 message GameStateUpdatePart {
 	repeated CardMoveUpdate cardMoveUpdates = 1;
 	ActivePlayerUpdate activePlayerUpdate = 2;
-	ActionUpdate actionUpdate = 3;
+	PlayOptionsUpdate playOptionsUpdate = 3;
 
 }
 
@@ -154,8 +148,15 @@ message ActivePlayerUpdate {
 	PlayerPosition position = 1;
 }
 
-message ActionUpdate {
-	PlayerAction action = 1;
+message PlayOption {
+	CardId targetCardId = 1;
+	CardId originCardId = 2;
+}
+
+message PlayOptionsUpdate {
+	repeated PlayerCentricZone originZones = 1;
+	repeated PlayOption defunctOptions = 2;
+	repeated PlayOption newOptions = 3;
 }
 
 message GameStateUpdate {

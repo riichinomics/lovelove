@@ -1,9 +1,12 @@
 import * as React from "react";
 import { CardStack } from "./CardStack";
-import { CardDroppedHandler, cardKey, CardMove, CardWithOffset, CardZone } from "./utils";
+import { CardDroppedHandler, cardKey, CardLocation, CardMove, CardWithOffset, CardZone, Vector2 } from "./utils";
 import { lovelove } from "../../rpc/proto/lovelove";
 import { stylesheet } from "astroturf";
 import { CardMoveContext } from "../../rpc/CardMoveContext";
+import { DragDropTypes } from "./DragDropTypes";
+import { useDrop } from "react-dnd";
+import clsx from "clsx";
 
 const styles = stylesheet`
 	.center {
@@ -57,6 +60,10 @@ const styles = stylesheet`
 					}
 				}
 			}
+
+			&.dropPossible {
+				background-color: pink;
+			}
 		}
 	}
 `;
@@ -65,7 +72,7 @@ const CenterCardStack = (props: {
 	card: lovelove.ICard;
 	index: number;
 	move: CardMove;
-	playOptions: Record<string, lovelove.IPlayOptions>;
+	playOptions: lovelove.IZonePlayOptions;
 	previewCard: lovelove.ICard;
 	onCardDropped?: CardDroppedHandler;
 }) => {
@@ -80,7 +87,7 @@ const CenterCardStack = (props: {
 
 	return <CardStack
 		cards={cards}
-		playOptions={props.playOptions?.[props.card?.id]?.options ?? []}
+		playOptions={props.playOptions?.playOptions?.[props.card?.id]?.options ?? []}
 		onCardDropped={props.onCardDropped}
 		previewCard={props.previewCard}
 		zone={CardZone.Table}
@@ -94,12 +101,38 @@ export const Center = (props: {
 	deck: number;
 	drawnCard?: lovelove.ICard;
 	cards: lovelove.ICard[];
-	playOptions: Record<string, lovelove.IPlayOptions>;
+	playOptions: lovelove.IZonePlayOptions;
 	previewCard: lovelove.ICard;
 	onCardDropped?: CardDroppedHandler;
 }) => {
 	const { move } = React.useContext(CardMoveContext);
 	const moveDestination = move?.to.zone === CardZone.Table ? move.to : null;
+
+	const [{canDrop, isOver}, drop] = useDrop(() => ({
+		accept: DragDropTypes.Card,
+		canDrop: (item: { card: CardLocation, offset: Vector2 }) => props.playOptions?.noTargetPlayOptions?.options?.indexOf(item.card.card.id) >= 0,
+		drop: (item) => {
+			// const rect = wrapperRef.current.getBoundingClientRect();
+			props.onCardDropped?.(
+				{
+					from: item.card,
+					to: {
+						zone: CardZone.Table,
+						card: null,
+					},
+					offset: {
+						x: 0, //item.offset.x - rect.left - cardStackSpacing.horizontal,
+						y: 0, //item.offset.y - rect.top - cardStackSpacing.vertical
+					}
+				}
+			);
+		},
+		collect: (monitor) => ({
+			canDrop: monitor.canDrop(),
+			isOver: monitor.isOver(),
+		})
+	}), [props.playOptions, props.onCardDropped]);
+
 	return <div className={styles.center}>
 		<div className={styles.deck}>
 			<div className={styles.deckStack}>
@@ -107,7 +140,7 @@ export const Center = (props: {
 			</div>
 			<CardStack cards={[props.drawnCard]} />
 		</div>
-		<div className={styles.cards}>
+		<div className={clsx(styles.cards, canDrop && isOver && styles.dropPossible)} ref={drop}>
 			<div className={styles.cardRow}>
 				{props.cards
 					.filter((_, index) => index % 2 === 0)
