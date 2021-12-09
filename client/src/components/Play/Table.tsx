@@ -163,7 +163,15 @@ export const Table = ({
 			</div>
 		</div>
 		<div className={styles.center}>
-			<Center cards={table} deck={deck} drawnCard={deckFlipCard} playOptions={tablePlayOptions} previewCard={previewCard} onCardDropped={onCardDropped} />
+			<Center
+				cards={table}
+				deck={deck}
+				drawnCard={deckFlipCard}
+				playOptions={tablePlayOptions}
+				previewCard={previewCard}
+				onPreviewCardChanged={setPreviewCard}
+				onCardDropped={onCardDropped}
+			/>
 		</div>
 		<div className={clsx(styles.collection, styles.playerCollection)}>
 			<div className={styles.popup}>
@@ -176,7 +184,11 @@ export const Table = ({
 			<PlayerNameTag position={position} active={position === active} oya={position === oya} />
 		</div>
 		<div className={styles.playerArea}>
-			<PlayerHand cards={hand} onPreviewCardChanged={setPreviewCard} />
+			<PlayerHand
+				cards={hand}
+				onPreviewCardChanged={setPreviewCard}
+				canPlay={tablePlayOptions?.acceptedOriginZones?.indexOf(lovelove.PlayerCentricZone.Hand) >= 0}
+			/>
 		</div>
 	</div>;
 };

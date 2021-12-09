@@ -163,8 +163,12 @@ message PlayOption {
 	CardId originCardId = 2;
 }
 
+message PlayOptionsZoneUpdate {
+	repeated PlayerCentricZone zones = 1;
+}
+
 message PlayOptionsUpdate {
-	repeated PlayerCentricZone originZones = 1;
+	PlayOptionsZoneUpdate updatedAcceptedOriginZones = 1;
 	repeated PlayOption defunctOptions = 2;
 	repeated PlayOption newOptions = 3;
 }

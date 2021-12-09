@@ -42,7 +42,7 @@ func PlayDrawnCardMutation(game *gameState, playerPosition lovelove.PlayerPositi
 	if len(playOptions) == 1 || len(playOptions) == 3 {
 		targetCard := playOptions[0]
 		playerCollectionLocation := GetCollectionLocation(playerPosition)
-		return MoveToPlayOption(game, drawnCard.card.Id, CardLocation_Drawn, targetCard.card.Id, playerCollectionLocation)
+		return MoveToPlayOptionMutation(game, drawnCard.card.Id, CardLocation_Drawn, targetCard.card.Id, playerCollectionLocation)
 	}
 
 	return []*gameStateMutation{
@@ -86,7 +86,7 @@ func MoveToTable(game *gameState, cardId int32, cardLocation CardLocation) ([]*g
 	}, nil
 }
 
-func MoveToPlayOption(
+func MoveToPlayOptionMutation(
 	game *gameState,
 	movingCardId int32,
 	movingCardLocation CardLocation,
@@ -180,5 +180,39 @@ func PlayHandCardMutation(
 
 	playerCollectionLocation := GetCollectionLocation(playerPosition)
 
-	return MoveToPlayOption(game, request.HandCard.CardId, playerHandLocation, request.TableCard.CardId, playerCollectionLocation)
+	return MoveToPlayOptionMutation(game, request.HandCard.CardId, playerHandLocation, request.TableCard.CardId, playerCollectionLocation)
+}
+
+func SelectDrawnCardPlayOptionMutation(
+	game *gameState,
+	request *lovelove.PlayDrawnCardRequest,
+	playerPosition lovelove.PlayerPosition,
+) ([]*gameStateMutation, error) {
+	if request.TableCard == nil {
+		return nil, errors.New("No target card")
+	}
+
+	if game.state != GameState_DeckCardPlay {
+		return nil, errors.New("Game is in wrong state")
+	}
+
+	if game.activePlayer != playerPosition {
+		return nil, errors.New("Player is not active")
+	}
+
+	playerCollectionLocation := GetCollectionLocation(playerPosition)
+
+	mutation, err := MoveToPlayOptionMutation(game, game.DrawnCard().card.Id, CardLocation_Drawn, request.TableCard.CardId, playerCollectionLocation)
+	if err != nil {
+		return nil, err
+	}
+
+	return append(
+		mutation,
+		&gameStateMutation{
+			gameStateChange: &gameStateChange{
+				newState: GameState_HandCardPlay,
+			},
+		},
+	), nil
 }

@@ -5,7 +5,7 @@ import { IState } from "../../state/IState";
 import { Table } from "./Table";
 import { ApiState } from "../../rpc/ApiState";
 import { useLocation, useNavigate } from "react-router";
-import { CardMove, createRandomCard } from "./utils";
+import { CardMove, CardZone, createRandomCard } from "./utils";
 import { CardMoveContext } from "../../rpc/CardMoveContext";
 import { lovelove } from "../../rpc/proto/lovelove";
 import { InitialGameStateReceivedAction } from "../../state/actions/InitialGameStateReceivedAction";
@@ -105,22 +105,46 @@ export const GameStateConnection = () => {
 			return;
 		}
 
-
-		const request: lovelove.IPlayHandCardRequest = {
-			handCard: {
-				cardId: move.from.card.id
-			},
-		};
-
-		if (move.to.card) {
-			request.tableCard = {
-				cardId: move.to.card.id
+		if (move.from.zone === CardZone.Hand) {
+			const request: lovelove.IPlayHandCardRequest = {
+				handCard: {
+					cardId: move.from.card.id
+				},
 			};
+
+			if (move.to.card) {
+				request.tableCard = {
+					cardId: move.to.card.id
+				};
+			}
+
+			api.lovelove.playHandCard(request).then(response => {
+				if (response.status === lovelove.GenericResponseCode.Error) {
+					setMove(null);
+				}
+			});
+
+			return;
 		}
 
-		api.lovelove.playHandCard(request).then(response => console.log(response));
+		if (move.from.zone === CardZone.Drawn) {
+			const request: lovelove.IPlayDrawnCardRequest = {
+				tableCard: {
+					cardId: move.to.card.id
+				}
+			};
 
-	}, [move]);
+			api.lovelove.playDrawnCard(request).then(response => {
+				if (response.status === lovelove.GenericResponseCode.Error) {
+					setMove(null);
+				}
+			});
+
+			return;
+		}
+
+
+	}, [move, setMove]);
 
 	const onCardDropped = React.useCallback((move: CardMove) => {
 		console.log(move);

@@ -102,6 +102,7 @@ export const Center = (props: {
 	drawnCard?: lovelove.ICard;
 	cards: lovelove.ICard[];
 	playOptions: lovelove.IZonePlayOptions;
+	onPreviewCardChanged?: (card: lovelove.ICard) => void;
 	previewCard: lovelove.ICard;
 	onCardDropped?: CardDroppedHandler;
 }) => {
@@ -138,7 +139,13 @@ export const Center = (props: {
 			<div className={styles.deckStack}>
 				<CardStack cards={[...new Array(Math.min(props.deck, 3))]} concealed />
 			</div>
-			<CardStack cards={[props.drawnCard]} />
+			<CardStack
+				cards={[props.drawnCard]}
+				zone={CardZone.Drawn}
+				onCardSelected={props.onPreviewCardChanged}
+				canDrag={props.playOptions?.acceptedOriginZones?.indexOf(lovelove.PlayerCentricZone.Drawn) >= 0}
+				onMouseLeave={() => props.onPreviewCardChanged(null)}
+			/>
 		</div>
 		<div className={clsx(styles.cards, canDrop && isOver && styles.dropPossible)} ref={drop}>
 			<div className={styles.cardRow}>

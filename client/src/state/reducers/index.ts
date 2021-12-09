@@ -154,6 +154,10 @@ function mainReducer(state: IState, action: Action): IState {
 									gameState.tablePlayOptions.playOptions[newOption.targetCardId.cardId].options.push(newOption.originCardId.cardId);
 								}
 							}
+
+							if (update.playOptionsUpdate.updatedAcceptedOriginZones) {
+								gameState.tablePlayOptions.acceptedOriginZones = update.playOptionsUpdate.updatedAcceptedOriginZones.zones;
+							}
 						}
 					}
 				}),

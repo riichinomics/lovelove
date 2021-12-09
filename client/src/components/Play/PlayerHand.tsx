@@ -4,6 +4,7 @@ import { cardKey, CardZone } from "./utils";
 import { lovelove } from "../../rpc/proto/lovelove";
 import { stylesheet } from "astroturf";
 import { CardMoveContext } from "../../rpc/CardMoveContext";
+import clsx from "clsx";
 
 const styles = stylesheet`
 	.playerHand {
@@ -35,6 +36,7 @@ const styles = stylesheet`
 
 export const PlayerHand = (props: {
 	cards: lovelove.ICard[];
+	canPlay: boolean;
 	onPreviewCardChanged?: (card: lovelove.ICard) => void;
 }) => {
 	const onNoCardSelected = React.useCallback(() => props.onPreviewCardChanged?.(null), [props.onPreviewCardChanged]);
@@ -42,11 +44,11 @@ export const PlayerHand = (props: {
 	const moveOrigin = move?.from?.zone === CardZone.Hand ? move.from : null;
 	const cards = [null, ...props.cards];
 	return <div className={styles.playerHand} onMouseLeave={onNoCardSelected}>
-		{cards.map((card, index) => <div className={styles.handCard} key={cardKey(card, index)}>
+		{cards.map((card, index) => <div className={clsx(props.canPlay && styles.handCard)} key={cardKey(card, index)}>
 			<CardStack
 				cards={[(moveOrigin?.index === index - 1) ? null : card]}
 				onCardSelected={props.onPreviewCardChanged}
-				canDrag
+				canDrag={props.canPlay}
 				zone={CardZone.Hand}
 				index={index-1}
 			/>
