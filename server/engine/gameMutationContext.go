@@ -91,16 +91,57 @@ func (gameMutationContext *gameMutationContext) finalisePlayOptions() (playOptio
 				continue
 			}
 
-			playOptionsUpdateMap[position].DefunctOptions = append(
-				playOptionsUpdateMap[position].NewOptions,
-				&lovelove.PlayOption{
-					OriginCardId: &lovelove.CardId{CardId: movingCard.cardState.card.Id},
-				},
-			)
+			for _, tableCard := range tableCards {
+				if tableCard == nil {
+					continue
+				}
+
+				if movingCard.cardState.card.Id == tableCard.card.Id {
+					continue
+				}
+
+				if !WillAccept(tableCard.card, movingCard.cardState.card) {
+					continue
+				}
+
+				playOptionsUpdateMap[position].DefunctOptions = append(
+					playOptionsUpdateMap[position].DefunctOptions,
+					&lovelove.PlayOption{
+						OriginCardId: &lovelove.CardId{CardId: movingCard.cardState.card.Id},
+						TargetCardId: &lovelove.CardId{CardId: tableCard.card.Id},
+					},
+				)
+			}
 
 			for _, handCard := range handCards {
 				if !WillAccept(movingCard.cardState.card, handCard.card) {
 					continue
+				}
+
+				wasUnmatched := true
+
+				for _, tableCard := range tableCards {
+					if tableCard == nil {
+						continue
+					}
+
+					if movingCard.cardState.card.Id == tableCard.card.Id {
+						continue
+					}
+
+					if WillAccept(tableCard.card, handCard.card) {
+						wasUnmatched = false
+						break
+					}
+				}
+
+				if wasUnmatched {
+					playOptionsUpdateMap[position].DefunctOptions = append(
+						playOptionsUpdateMap[position].DefunctOptions,
+						&lovelove.PlayOption{
+							OriginCardId: &lovelove.CardId{CardId: handCard.card.Id},
+						},
+					)
 				}
 
 				playOptionsUpdateMap[position].NewOptions = append(

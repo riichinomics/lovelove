@@ -45,7 +45,7 @@ export const Card = (props: {
 
 	const [{canDrop, isOver}, drop] = useDrop(() => ({
 		accept: DragDropTypes.Card,
-		canDrop: (item: { card: CardLocation, offset: Vector2 }) => props.playOptions?.indexOf(item.card.card.id) >= 0,
+		canDrop: (item: { card: CardLocation, offset: Vector2 }) => props.playOptions?.indexOf(item.card.card.id ?? 0) >= 0,
 		drop: (item) => {
 			const rect = wrapperRef.current.getBoundingClientRect();
 			props.onCardDropped?.(
