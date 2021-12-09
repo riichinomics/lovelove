@@ -115,6 +115,43 @@ func MoveToPlayOptionMutation(
 		return nil, errors.New("Destination card can't accept moving card")
 	}
 
+	otherMatches := make([]*cardState, 0)
+
+	for _, tableCard := range game.Table() {
+		if tableCard == nil || tableCard.card.Id == destinationCardId {
+			continue
+		}
+
+		if WillAccept(tableCard.card, movingCard.card) {
+			otherMatches = append(otherMatches, tableCard)
+		}
+	}
+
+	collectMutation := &gameStateMutation{
+		cardMoves: []*cardMove{
+			{
+				cardId:      movingCardId,
+				destination: playerCollectionLocation,
+			},
+			{
+				cardId:      destinationCardId,
+				destination: playerCollectionLocation,
+			},
+		},
+	}
+
+	if len(otherMatches) == 2 {
+		for _, card := range otherMatches {
+			collectMutation.cardMoves = append(
+				collectMutation.cardMoves,
+				&cardMove{
+					cardId:      card.card.Id,
+					destination: playerCollectionLocation,
+				},
+			)
+		}
+	}
+
 	return []*gameStateMutation{
 		{
 			cardMoves: []*cardMove{
@@ -125,18 +162,7 @@ func MoveToPlayOptionMutation(
 				},
 			},
 		},
-		{
-			cardMoves: []*cardMove{
-				{
-					cardId:      movingCardId,
-					destination: playerCollectionLocation,
-				},
-				{
-					cardId:      destinationCardId,
-					destination: playerCollectionLocation,
-				},
-			},
-		},
+		collectMutation,
 	}, nil
 }
 
