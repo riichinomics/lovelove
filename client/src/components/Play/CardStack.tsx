@@ -78,7 +78,7 @@ export const Card = (props: {
 		ref={dragDropRef as any}
 		className={clsx(
 			styles.cardDropWrapper,
-			(props.obscure || (isDragging && !canDrop) || (props.card && props.previewCard && props.playOptions?.indexOf(props.previewCard.id) < 0)) && styles.previewCardNotAccepted,
+			(props.obscure ||  (props.card && props.previewCard && props.playOptions?.indexOf(props.previewCard.id) < 0)) && styles.previewCardNotAccepted,
 			isOver && canDrop && styles.cardHoverOver
 		)}
 		style={{
