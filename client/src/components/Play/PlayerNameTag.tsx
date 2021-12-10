@@ -2,7 +2,6 @@ import * as React from "react";
 import { IPlayerInfo } from "./IPlayerInfo";
 import { stylesheet } from "astroturf";
 import clsx from "clsx";
-import { lovelove } from "../../rpc/proto/lovelove";
 
 const styles = stylesheet`
 	.nameTag {

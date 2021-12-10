@@ -87,6 +87,7 @@ const styles = stylesheet`
 				}
 
 				> .collectionWrapper {
+					text-align: center;
 					flex: 1;
 					padding-top: 10px;
 					padding-bottom: 10px;
@@ -137,7 +138,8 @@ export const Table = ({
 	oya,
 	position,
 	tablePlayOptions,
-	onCardDropped
+	onCardDropped,
+	yakuInformation
 }: IGameState & {
 	onCardDropped: CardDroppedHandler
 }) => {
@@ -176,7 +178,7 @@ export const Table = ({
 		<div className={clsx(styles.collection, styles.playerCollection)}>
 			<div className={styles.popup}>
 				<div className={styles.collectionWrapper}>
-					<Collection cards={collection} />
+					<Collection cards={collection} yakuInformation={yakuInformation} />
 				</div>
 			</div>
 		</div>

@@ -182,3 +182,25 @@ export interface CardMove {
 	to: CardLocation;
 	offset: Vector2;
 }
+
+const yamuNameMap: Record<lovelove.YakuId, string> = {
+	[lovelove.YakuId.UnknownYaku]: "不明",
+	[lovelove.YakuId.Gokou]: "五光",
+	[lovelove.YakuId.Shikou]: "四光",
+	[lovelove.YakuId.Ameshikou]: "雨四光",
+	[lovelove.YakuId.Sankou]: "三光",
+	[lovelove.YakuId.Inoshikachou]: "猪鹿蝶",
+	[lovelove.YakuId.Tane]: "タネ",
+	[lovelove.YakuId.AkatanAotanNoChoufuku]: "赤短・青短の重複",
+	[lovelove.YakuId.Akatan]: "赤短",
+	[lovelove.YakuId.Aotan]: "青短",
+	[lovelove.YakuId.Tanzaku]: "短冊",
+	[lovelove.YakuId.Hanamizake]: "花見酒",
+	[lovelove.YakuId.Tsukimizake]: "月見酒",
+	[lovelove.YakuId.Tsukifuda]: "月札",
+	[lovelove.YakuId.Kasu]: "カス",
+};
+
+export function getYakuName(yakuId: lovelove.YakuId): string {
+	return yamuNameMap[yakuId];
+}

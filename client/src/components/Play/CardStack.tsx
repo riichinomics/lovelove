@@ -9,6 +9,7 @@ import { useDrag, useDrop } from "react-dnd";
 
 export const Card = (props: {
 	card?: CardWithOffset,
+	obscure?: boolean,
 } & ISharedCardProps) => {
 	const {
 		cardStackSpacing,
@@ -77,7 +78,7 @@ export const Card = (props: {
 		ref={dragDropRef as any}
 		className={clsx(
 			styles.cardDropWrapper,
-			(!isDragging && canDrop) || (props.card && props.previewCard && props.playOptions?.indexOf(props.previewCard.id) < 0) && styles.previewCardNotAccepted,
+			(props.obscure || (isDragging && !canDrop) || (props.card && props.previewCard && props.playOptions?.indexOf(props.previewCard.id) < 0)) && styles.previewCardNotAccepted,
 			isOver && canDrop && styles.cardHoverOver
 		)}
 		style={{
@@ -97,6 +98,7 @@ export const Card = (props: {
 
 const styles = stylesheet`
 	.collectionGroup {
+		user-select: none;
 		display: flex;
 		align-items: flex-start;
 		position: relative;
@@ -161,6 +163,7 @@ export const CardStack = (props: {
 	stackUpwards?: boolean,
 	stackDepth?: number,
 	move?: CardLocation,
+	highlightedCardsIds?: number[];
 	onCardSelected?: (card: lovelove.ICard) => void,
 	onMouseLeave?: () => void,
 	stunted?: boolean;
@@ -239,6 +242,7 @@ export const CardStack = (props: {
 						onCardDropped={props.onCardDropped}
 						zone={props.zone}
 						index={props.index}
+						obscure={props.highlightedCardsIds && props.highlightedCardsIds?.indexOf(card.id) < 0}
 					/>
 				</div>;
 			}))}
