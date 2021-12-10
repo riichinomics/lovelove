@@ -49,7 +49,9 @@ function mainReducer(state: IState, action: Action): IState {
 										break;
 									}
 									case lovelove.PlayerCentricZone.Table: {
-										gameState.table = removeCard(gameState.table, cardMove.movedCard.id, true);
+										if (gameState.table[cardMove.originSlot.index ?? 0]?.card) {
+											gameState.table[cardMove.originSlot.index ?? 0].card = null;
+										}
 										break;
 									}
 									case lovelove.PlayerCentricZone.Hand: {
@@ -83,10 +85,11 @@ function mainReducer(state: IState, action: Action): IState {
 										break;
 									}
 									case lovelove.PlayerCentricZone.Table: {
+										console.log(cardMove);
 										// TODO: Animation Float
-										if (!gameState.table[cardMove.destinationSlot.index]) {
-											gameState.table[cardMove.destinationSlot.index] = cardMove.movedCard;
-										}
+										gameState.table[cardMove.destinationSlot.index ?? 0] = {
+											card: cardMove.movedCard
+										};
 										break;
 									}
 									case lovelove.PlayerCentricZone.Hand: {

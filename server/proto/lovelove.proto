@@ -138,10 +138,14 @@ message YakuData {
 	repeated int32 cards = 3;
 }
 
+message CardMaybe {
+	Card card = 1;
+}
+
 message CompleteGameState {
 	int32 deck = 1;
 	Card deckFlipCard = 2;
-	repeated Card table = 3;
+	repeated CardMaybe table = 3;
 	repeated Card hand = 4;
 	repeated Card collection = 5;
 	int32 opponentHand = 6;

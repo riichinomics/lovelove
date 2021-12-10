@@ -73,7 +73,9 @@ export const GameStateConnection = () => {
 					hand: [...Array(Math.random() * 8 | 0)].map(() => createRandomCard()),
 					opponentCollection: [...Array(8 * 4)].map(() => createRandomCard()),
 					opponentHand: Math.random() * 8 | 0,
-					table: [...Array(12 + Math.random() * 6 | 0)].map(() => createRandomCard()),
+					table: [...Array(12 + Math.random() * 6 | 0)].map(() => ({
+						card: createRandomCard()
+					})),
 					oya: Math.random() * 2 | 0,
 					active: Math.random() * 2 | 0,
 				}

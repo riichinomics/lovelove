@@ -82,14 +82,10 @@ func (gameState *gameState) ToCompleteGameState(playerPosition lovelove.PlayerPo
 	}
 
 	completeGameState := &lovelove.CompleteGameState{
-		Deck:               0,
-		Table:              make([]*lovelove.Card, 0, 12*4),
-		Hand:               make([]*lovelove.Card, 0, 12*4),
-		Collection:         make([]*lovelove.Card, 0, 12*4),
-		OpponentHand:       0,
-		OpponentCollection: make([]*lovelove.Card, 0, 12*4),
-		Active:             gameState.activePlayer,
-		Oya:                gameState.oya,
+		Deck:         0,
+		OpponentHand: 0,
+		Active:       gameState.activePlayer,
+		Oya:          gameState.oya,
 	}
 
 	for zoneType, zone := range zones {
@@ -97,7 +93,7 @@ func (gameState *gameState) ToCompleteGameState(playerPosition lovelove.PlayerPo
 			return zone[i].order < zone[j].order
 		})
 
-		cards := make([]*lovelove.Card, 0, 12*4)
+		cards := make([]*lovelove.Card, 0)
 		for _, card := range zone {
 			cards = append(cards, card.card)
 		}
@@ -106,9 +102,11 @@ func (gameState *gameState) ToCompleteGameState(playerPosition lovelove.PlayerPo
 		case CardLocation_Deck:
 			completeGameState.Deck = int32(len(zone))
 		case CardLocation_Table:
-			completeGameState.Table = make([]*lovelove.Card, zone[len(zone)-1].order+1)
+			completeGameState.Table = make([]*lovelove.CardMaybe, zone[len(zone)-1].order+1)
 			for _, card := range zone {
-				completeGameState.Table[card.order] = card.card
+				completeGameState.Table[card.order] = &lovelove.CardMaybe{
+					Card: card.card,
+				}
 			}
 		case CardLocation_RedCollection:
 			if playerPosition == lovelove.PlayerPosition_Red {
@@ -393,7 +391,7 @@ func (gameState *gameState) YakuContribution(card *lovelove.Card) []*yakuContrib
 			&yakuContribution{yakuId: lovelove.YakuId_Tanzaku},
 			&yakuContribution{
 				yakuId:      lovelove.YakuId_Akatan,
-				isBonusCard: !isAotan,
+				isBonusCard: !isAkatan,
 			},
 			&yakuContribution{
 				yakuId:      lovelove.YakuId_Aotan,

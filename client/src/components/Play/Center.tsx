@@ -100,7 +100,7 @@ const CenterCardStack = (props: {
 export const Center = (props: {
 	deck: number;
 	drawnCard?: lovelove.ICard;
-	cards: lovelove.ICard[];
+	cards: lovelove.ICardMaybe[];
 	playOptions: lovelove.IZonePlayOptions;
 	onPreviewCardChanged?: (card: lovelove.ICard) => void;
 	previewCard: lovelove.ICard;
@@ -154,8 +154,8 @@ export const Center = (props: {
 					.map((card, index) => {
 						const tableIndex = (index * 2);
 						return <CenterCardStack
-							key={cardKey(card, `center_top_${index}`)}
-							card={card}
+							key={cardKey(card?.card, `center_top_${index}`)}
+							card={card?.card}
 							index={tableIndex}
 							move={tableIndex === moveDestination?.index ? move : null}
 							{...props}
@@ -168,8 +168,8 @@ export const Center = (props: {
 					.map((card, index) => {
 						const tableIndex = (index * 2 + 1);
 						return <CenterCardStack
-							key={cardKey(card, `center_bottom_${index}`)}
-							card={card}
+							key={cardKey(card?.card, `center_bottom_${index}`)}
+							card={card?.card}
 							index={tableIndex}
 							move={tableIndex === moveDestination?.index ? move : null}
 							{...props}
