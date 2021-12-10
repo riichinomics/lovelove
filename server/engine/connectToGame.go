@@ -36,7 +36,7 @@ func (server loveLoveRpcServer) ConnectToGame(context context.Context, request *
 
 	game := gameContext.GameState
 	if game == nil {
-		deck := make([]*lovelove.Card, 12*4)
+		deck := make([]*lovelove.Card, 0)
 
 		for hana := range lovelove.Hana_name {
 			if hana == 0 {
@@ -50,11 +50,11 @@ func (server loveLoveRpcServer) ConnectToGame(context context.Context, request *
 
 				id := cardIdFromCardDetails(hana, variation)
 
-				deck[id] = &lovelove.Card{
+				deck = append(deck, &lovelove.Card{
 					Id:        id,
 					Hana:      lovelove.Hana(hana),
 					Variation: lovelove.Variation(variation),
-				}
+				})
 			}
 		}
 
@@ -69,6 +69,7 @@ func (server loveLoveRpcServer) ConnectToGame(context context.Context, request *
 			activePlayer: oya,
 			cards:        make(map[int32]*cardState),
 			playerState:  make(map[string]*playerState),
+			month:        lovelove.Month_January,
 			oya:          oya,
 		}
 

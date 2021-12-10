@@ -182,7 +182,7 @@ export const CardStack = (props: {
 	}, [props.cards, stackDepth]);
 
 	const selectedLayerIndex = (layers.length + selectedLayerIndexReal) % layers.length;
-	const selectedIndex = (layers[selectedLayerIndex]?.length ?? 0 + selectedIndexReal) % (layers[selectedLayerIndex]?.length ?? 1);
+	const selectedIndex = ((layers[selectedLayerIndex]?.length ?? 0) + selectedIndexReal) % (layers[selectedLayerIndex]?.length ?? 1);
 
 	const {
 		cardStackSpacing,
@@ -209,6 +209,7 @@ export const CardStack = (props: {
 			{layers.map((layer, layerIndex) => layer.map((card, index) => {
 				const distanceToSelectedLayerIndex = Math.abs(selectedLayerIndex - layerIndex);
 				const distanceToSelectedIndex = Math.abs(selectedIndex - index);
+
 				return <div
 					className={clsx((index !== 0 || layerIndex !== 0) && styles.collectionGroupItem)}
 					key={cardKey(card, index)}
