@@ -22,27 +22,30 @@ const styles = stylesheet`
 		.yakuSelectorContainer {
 			position: absolute;
 			left: 100%;
-			min-width: 200px;
 			text-align: left;
 
-			padding-left: 16px;
-			padding-top: 4px;
+			padding-left: 12px;
+			/* padding-top: 4px; */
 
 			.yakuSelector {
 				cursor: pointer;
 				user-select: none;
 
-				display: inline-flex;
-				flex-direction: column;
-				justify-content: stretch;
+				display: flex;
+				flex-direction: row;
+				align-items: start;
 
 				> .yaku {
-					margin-bottom: 8px;
+					margin-right: 4px;
+					/* text-align: center; */
 
-					padding: 4px 18px;
+					padding: 2px;
 					border-radius: 2px;
 					background-color: #0005;
 					transition: background-color 0.1s ease-in;
+
+					display: flex;
+					flex-direction: column;
 
 					&:hover {
 						background-color: #0009;
@@ -55,18 +58,22 @@ const styles = stylesheet`
 						}
 					}
 
-					display: flex;
 
 					line-height: 24px;
 					font-size: 18px;
 
 					> .yakuName {
-						/* font-weight: bold; */
 						flex: 1;
+						flex-basis: auto;
+						writing-mode: vertical-rl;
+						padding-bottom: 4px;
+						min-width: 24px;
 					}
 
 					> .yakuValue {
-						margin-left: 32px;
+						text-align: center;
+						font-weight: bold;
+						margin-bottom: 8px;
 					}
 				}
 			}
@@ -125,8 +132,8 @@ export const Collection = (props: {
 							}
 							setSelectedYakuId(yaku.id);
 						}}>
-						<div className={styles.yakuName}>{getYakuName(yaku.id)}</div>
 						<div className={styles.yakuValue}>{yaku.value}</div>
+						<div className={styles.yakuName}>{getYakuName(yaku.id)}</div>
 					</div>
 				)}
 			</div>
