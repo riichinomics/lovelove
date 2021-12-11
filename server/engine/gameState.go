@@ -201,7 +201,7 @@ func (gameState *gameState) GetYakuData(playerPosition lovelove.PlayerPosition) 
 	return yakuData
 }
 
-func (gameState *gameState) GetPlayOptionsOriginZoneUpdate(playerPosition lovelove.PlayerPosition) (originZones []lovelove.PlayerCentricZone) {
+func (gameState *gameState) GetPlayOptionsAcceptedOriginZones(playerPosition lovelove.PlayerPosition) (originZones []lovelove.PlayerCentricZone) {
 	originZones = make([]lovelove.PlayerCentricZone, 0)
 	switch gameState.state {
 	case GameState_HandCardPlay:
@@ -237,7 +237,7 @@ func (gameState *gameState) PlayableCards(playerPosition lovelove.PlayerPosition
 
 func (gameState *gameState) GetTablePlayOptions(playerPosition lovelove.PlayerPosition) (action *lovelove.ZonePlayOptions) {
 	action = &lovelove.ZonePlayOptions{
-		AcceptedOriginZones: gameState.GetPlayOptionsOriginZoneUpdate(playerPosition),
+		AcceptedOriginZones: gameState.GetPlayOptionsAcceptedOriginZones(playerPosition),
 		PlayOptions:         make(map[int32]*lovelove.PlayOptions),
 		NoTargetPlayOptions: &lovelove.PlayOptions{
 			Options: make([]int32, 0),

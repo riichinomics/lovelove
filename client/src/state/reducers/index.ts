@@ -182,6 +182,7 @@ function mainReducer(state: IState, action: Action): IState {
 								}
 
 								existingYaku.cards.push(...newOrUpdatedYaku.cardIds);
+								existingYaku.value = newOrUpdatedYaku.value;
 							}
 						}
 					}

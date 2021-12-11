@@ -388,7 +388,7 @@ func (gameMutationContext *gameMutationContext) applyGameStateChange(gameStateCh
 		if actionUpdate != nil {
 			updatesMap[position] = &lovelove.PlayOptionsUpdate{
 				UpdatedAcceptedOriginZones: &lovelove.PlayOptionsZoneUpdate{
-					Zones: gameMutationContext.gameState.GetPlayOptionsOriginZoneUpdate(position),
+					Zones: gameMutationContext.gameState.GetPlayOptionsAcceptedOriginZones(position),
 				},
 			}
 		}
