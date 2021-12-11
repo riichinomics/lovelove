@@ -51,6 +51,7 @@ func (server loveLoveRpcServer) PlayDrawnCard(context context.Context, request *
 	}
 
 	mutationContext := NewGameMutationContext(gameContext.GameState)
+	mutationContext.TrackYaku()
 	defer mutationContext.BroadcastUpdates()
 
 	mutationContext.Apply(mutation)

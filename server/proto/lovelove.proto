@@ -197,11 +197,23 @@ message CardMoveUpdate {
 	CardSlot destinationSlot = 3;
 }
 
+message YakuUpdatePart {
+	YakuId yakuId = 1;
+	int32 value = 2;
+	repeated int32 cardIds = 3;
+}
+
+message YakuUpdate {
+	repeated YakuId deletedYaku = 1;
+	repeated YakuUpdatePart newOrUpdatedYaku = 2;
+}
+
 message GameStateUpdatePart {
 	repeated CardMoveUpdate cardMoveUpdates = 1;
 	ActivePlayerUpdate activePlayerUpdate = 2;
 	PlayOptionsUpdate playOptionsUpdate = 3;
-
+	YakuUpdate yakuUpdate = 4;
+	YakuUpdate opponentYakuUpdate = 5;
 }
 
 message ActivePlayerUpdate {

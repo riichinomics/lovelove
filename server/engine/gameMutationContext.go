@@ -10,9 +10,10 @@ type cardMoveMeta struct {
 }
 
 type gameMutationContext struct {
-	gameState   *gameState
-	movingCards map[int32]*cardMoveMeta
-	updatesMap  map[lovelove.PlayerPosition][]*lovelove.GameStateUpdatePart
+	gameState       *gameState
+	movingCards     map[int32]*cardMoveMeta
+	updatesMap      map[lovelove.PlayerPosition][]*lovelove.GameStateUpdatePart
+	initialYakuData map[lovelove.PlayerPosition][]*lovelove.YakuData
 }
 
 func NewGameMutationContext(gameState *gameState) (context *gameMutationContext) {
@@ -28,6 +29,19 @@ func NewGameMutationContext(gameState *gameState) (context *gameMutationContext)
 	}
 
 	return
+}
+
+func (context *gameMutationContext) TrackYaku() {
+	context.initialYakuData = make(map[lovelove.PlayerPosition][]*lovelove.YakuData)
+
+	for p, _ := range lovelove.PlayerPosition_name {
+		position := lovelove.PlayerPosition(p)
+		if position == lovelove.PlayerPosition_UnknownPosition {
+			continue
+		}
+
+		context.initialYakuData[position] = context.gameState.GetYakuData(position)
+	}
 }
 
 func (gameMutationContext *gameMutationContext) finalisePlayOptions() (playOptionsUpdateMap map[lovelove.PlayerPosition]*lovelove.PlayOptionsUpdate) {
@@ -198,6 +212,115 @@ func (gameMutationContext *gameMutationContext) finalisePlayOptions() (playOptio
 	return
 }
 
+func (context *gameMutationContext) finaliseYaku() (yakuUpdateMap map[lovelove.PlayerPosition]*lovelove.YakuUpdate) {
+	yakuUpdateMap = make(map[lovelove.PlayerPosition]*lovelove.YakuUpdate)
+	if context.initialYakuData == nil {
+		return
+	}
+
+	for p, _ := range lovelove.PlayerPosition_name {
+		position := lovelove.PlayerPosition(p)
+		if position == lovelove.PlayerPosition_UnknownPosition {
+			continue
+		}
+
+		collectionLocation := GetCollectionLocation(position)
+		collectedCards := make([]*cardState, 0)
+
+		for _, card := range context.movingCards {
+			if card.cardState.location == collectionLocation {
+				collectedCards = append(collectedCards, card.cardState)
+			}
+		}
+
+		if len(collectedCards) == 0 {
+			continue
+		}
+
+		deletedYaku := make(map[lovelove.YakuId]bool)
+		newOrUpdatedYaku := make(map[lovelove.YakuId]*lovelove.YakuUpdatePart)
+
+		yakuInfo := context.gameState.GetYakuData(position)
+		for _, card := range collectedCards {
+			yakuContribution := YakuContribution(card.card, context.gameState)
+			for _, possibleYaku := range yakuContribution {
+				for _, yaku := range yakuInfo {
+					if possibleYaku.yakuId != yaku.Id {
+						continue
+					}
+
+					yakuCategory := CategoryFor(yaku.Id)
+					sameCategoryExisted := false
+					sameCategoryYakuId := lovelove.YakuId_UnknownYaku
+					yakuExisted := false
+					for _, existingYaku := range context.initialYakuData[position] {
+						if yakuCategory != YakuCategory_Other && yakuCategory == CategoryFor(existingYaku.Id) {
+							sameCategoryExisted = true
+							sameCategoryYakuId = existingYaku.Id
+
+							if existingYaku.Id == yaku.Id {
+								yakuExisted = true
+							}
+
+							break
+						}
+
+						if existingYaku.Id == yaku.Id {
+							yakuExisted = true
+							sameCategoryExisted = true
+							sameCategoryYakuId = existingYaku.Id
+							break
+						}
+					}
+
+					if !yakuExisted && sameCategoryExisted {
+						deletedYaku[sameCategoryYakuId] = true
+					}
+
+					existingUpdate, updateExisted := newOrUpdatedYaku[yaku.Id]
+					if !updateExisted {
+						existingUpdate = &lovelove.YakuUpdatePart{
+							YakuId: yaku.Id,
+							Value:  yaku.Value,
+						}
+						newOrUpdatedYaku[yaku.Id] = existingUpdate
+					}
+
+					if yakuExisted {
+						if existingUpdate.CardIds == nil {
+							existingUpdate.CardIds = make([]int32, 0)
+						}
+						existingUpdate.CardIds = append(existingUpdate.CardIds, card.card.Id)
+						continue
+					}
+
+					existingUpdate.CardIds = yaku.Cards
+				}
+			}
+		}
+
+		if len(deletedYaku) == 0 && len(newOrUpdatedYaku) == 0 {
+			continue
+		}
+
+		update := &lovelove.YakuUpdate{
+			DeletedYaku:      make([]lovelove.YakuId, 0),
+			NewOrUpdatedYaku: make([]*lovelove.YakuUpdatePart, 0),
+		}
+		yakuUpdateMap[position] = update
+
+		for yaku := range deletedYaku {
+			update.DeletedYaku = append(update.DeletedYaku, yaku)
+		}
+
+		for _, yaku := range newOrUpdatedYaku {
+			update.NewOrUpdatedYaku = append(update.NewOrUpdatedYaku, yaku)
+		}
+	}
+
+	return
+}
+
 func (gameMutationContext *gameMutationContext) applyCardMoves(cardMoves []*cardMove) (
 	cardMoveUpdateMap map[lovelove.PlayerPosition][]*lovelove.CardMoveUpdate,
 ) {
@@ -297,11 +420,14 @@ func (gameMutationContext *gameMutationContext) Apply(mutations []*gameStateMuta
 
 func (gameMutationContext *gameMutationContext) BroadcastUpdates() {
 	playOptionsUpdateMap := gameMutationContext.finalisePlayOptions()
+	yakuUpdateMap := gameMutationContext.finaliseYaku()
 	for p, _ := range lovelove.PlayerPosition_name {
 		position := lovelove.PlayerPosition(p)
 
 		updatePart := &lovelove.GameStateUpdatePart{
-			PlayOptionsUpdate: playOptionsUpdateMap[position],
+			PlayOptionsUpdate:  playOptionsUpdateMap[position],
+			YakuUpdate:         yakuUpdateMap[position],
+			OpponentYakuUpdate: yakuUpdateMap[getOpponentPosition(position)],
 		}
 
 		gameMutationContext.updatesMap[position] = append(gameMutationContext.updatesMap[position], updatePart)

@@ -85,7 +85,6 @@ function mainReducer(state: IState, action: Action): IState {
 										break;
 									}
 									case lovelove.PlayerCentricZone.Table: {
-										console.log(cardMove);
 										// TODO: Animation Float
 										gameState.table[cardMove.destinationSlot.index ?? 0] = {
 											card: cardMove.movedCard
@@ -160,6 +159,29 @@ function mainReducer(state: IState, action: Action): IState {
 
 							if (update.playOptionsUpdate.updatedAcceptedOriginZones) {
 								gameState.tablePlayOptions.acceptedOriginZones = update.playOptionsUpdate.updatedAcceptedOriginZones.zones;
+							}
+						}
+
+						if (update.yakuUpdate) {
+							for (const deletedYaku of update.yakuUpdate.deletedYaku) {
+								const indexOfYaku = gameState.yakuInformation.findIndex(yaku => yaku.id == deletedYaku);
+								if (indexOfYaku >= 0) {
+									gameState.yakuInformation.splice(indexOfYaku, 1);
+								}
+							}
+
+							for (const newOrUpdatedYaku of update.yakuUpdate.newOrUpdatedYaku) {
+								const existingYaku = gameState.yakuInformation.find(yaku => yaku.id == newOrUpdatedYaku.yakuId);
+								if (!existingYaku) {
+									gameState.yakuInformation.push({
+										id: newOrUpdatedYaku.yakuId,
+										cards: newOrUpdatedYaku.cardIds,
+										value: newOrUpdatedYaku.value,
+									});
+									continue;
+								}
+
+								existingYaku.cards.push(...newOrUpdatedYaku.cardIds);
 							}
 						}
 					}
