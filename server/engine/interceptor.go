@@ -6,6 +6,7 @@ import (
 	"sync"
 
 	"google.golang.org/grpc"
+	"google.golang.org/protobuf/proto"
 	lovelove "hanafuda.moe/lovelove/proto"
 	"hanafuda.moe/lovelove/rpc"
 )
@@ -36,6 +37,7 @@ type loveloveRpcServerContextKey struct {
 type gameContext struct {
 	id           string
 	GameState    *gameState
+	listeners    map[string][]chan proto.Message
 	requestQueue chan func()
 }
 
@@ -78,6 +80,7 @@ func (interceptor *loveLoveRpcInterceptor) Interceptor(context context.Context, 
 			game = &gameContext{
 				id:           roomId,
 				requestQueue: make(chan func()),
+				listeners:    make(map[string][]chan proto.Message),
 			}
 
 			interceptor.games[roomId] = game
@@ -139,4 +142,26 @@ func GetConnectionMeta(context context.Context) *connectionMeta {
 		return nil
 	}
 	return value
+}
+
+func (context *gameContext) BroadcastUpdates(gameUpdates map[lovelove.PlayerPosition][]*lovelove.GameStateUpdatePart) {
+	for playerId, listeners := range context.listeners {
+		playerState, playerInGame := context.GameState.playerState[playerId]
+		if !playerInGame {
+			continue
+		}
+
+		updates, updatesExist := gameUpdates[playerState.position]
+		if !updatesExist {
+			continue
+		}
+
+		payload := &lovelove.GameStateUpdate{
+			Updates: updates,
+		}
+
+		for _, listener := range listeners {
+			listener <- payload
+		}
+	}
 }

@@ -1,7 +1,6 @@
 package engine
 
 import (
-	"google.golang.org/protobuf/proto"
 	lovelove "hanafuda.moe/lovelove/proto"
 )
 
@@ -26,12 +25,6 @@ type cardState struct {
 	location CardLocation
 	order    int
 	card     *lovelove.Card
-}
-
-type playerState struct {
-	id        string
-	position  lovelove.PlayerPosition
-	listeners []chan proto.Message
 }
 
 var hanaToMonthMap = map[lovelove.Hana]lovelove.Month{

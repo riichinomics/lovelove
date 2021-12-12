@@ -50,11 +50,11 @@ func (server loveLoveRpcServer) PlayDrawnCard(context context.Context, request *
 		Status: lovelove.GenericResponseCode_Ok,
 	}
 
-	mutationContext := NewGameMutationContext(gameContext.GameState)
-	mutationContext.TrackYaku()
-	defer mutationContext.BroadcastUpdates()
+	broadcastBuilder := NewBroadcastBuilder(gameContext)
+	broadcastBuilder.TrackYaku()
+	defer broadcastBuilder.Broadcast()
 
-	mutationContext.Apply(mutation)
+	broadcastBuilder.gameMutationContext.Apply(mutation)
 
 	return
 }

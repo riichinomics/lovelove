@@ -6,6 +6,11 @@ import (
 	lovelove "hanafuda.moe/lovelove/proto"
 )
 
+type playerState struct {
+	id       string
+	position lovelove.PlayerPosition
+}
+
 type gameState struct {
 	state        GameState
 	activePlayer lovelove.PlayerPosition
@@ -270,21 +275,4 @@ func (gameState *gameState) GetTablePlayOptions(playerPosition lovelove.PlayerPo
 		}
 	}
 	return
-}
-
-func (game *gameState) BroadcastUpdates(gameUpdates map[lovelove.PlayerPosition][]*lovelove.GameStateUpdatePart) {
-	for _, playerState := range game.playerState {
-		updates, updatesExist := gameUpdates[playerState.position]
-		if !updatesExist {
-			continue
-		}
-
-		payload := &lovelove.GameStateUpdate{
-			Updates: updates,
-		}
-
-		for _, listener := range playerState.listeners {
-			listener <- payload
-		}
-	}
 }

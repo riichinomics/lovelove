@@ -6,7 +6,7 @@ import (
 	"log"
 	"math/rand"
 
-	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/reflect/protoreflect"
 	lovelove "hanafuda.moe/lovelove/proto"
 	"hanafuda.moe/lovelove/rpc"
 )
@@ -76,9 +76,8 @@ func (server loveLoveRpcServer) ConnectToGame(context context.Context, request *
 		gameContext.GameState = game
 
 		game.playerState[connMeta.userId] = &playerState{
-			id:        connMeta.userId,
-			position:  lovelove.PlayerPosition(rand.Intn(1) + 1),
-			listeners: make([]chan proto.Message, 0),
+			id:       connMeta.userId,
+			position: lovelove.PlayerPosition(rand.Intn(1) + 1),
 		}
 
 		moveCards(game.cards, deck[0:8], CardLocation_Table)
@@ -89,9 +88,8 @@ func (server loveLoveRpcServer) ConnectToGame(context context.Context, request *
 		_, playerExists := game.playerState[connMeta.userId]
 		if !playerExists {
 			newPlayer := &playerState{
-				id:        connMeta.userId,
-				position:  lovelove.PlayerPosition_UnknownPosition,
-				listeners: make([]chan proto.Message, 0),
+				id:       connMeta.userId,
+				position: lovelove.PlayerPosition_UnknownPosition,
 			}
 			game.playerState[connMeta.userId] = newPlayer
 
@@ -115,11 +113,23 @@ func (server loveLoveRpcServer) ConnectToGame(context context.Context, request *
 	}
 
 	playerState := game.playerState[connMeta.userId]
-	playerState.listeners = append(playerState.listeners, rpcConnMeta.Messages)
+	if _, ok := gameContext.listeners[playerState.id]; !ok {
+		gameContext.listeners[playerState.id] = make([]chan protoreflect.ProtoMessage, 0)
+	}
+	gameContext.listeners[playerState.id] = append(gameContext.listeners[playerState.id], rpcConnMeta.Messages)
 	rpcConnMeta.Closed.DoOnCompleted(func() {
-		for i, listener := range playerState.listeners {
+		listeners, ok := gameContext.listeners[playerState.id]
+		if !ok {
+			return
+		}
+
+		if len(listeners) == 1 {
+			delete(gameContext.listeners, playerState.id)
+		}
+
+		for i, listener := range listeners {
 			if listener == rpcConnMeta.Messages {
-				playerState.listeners = append(playerState.listeners[:i], playerState.listeners[i+1:]...)
+				gameContext.listeners[playerState.id] = append(listeners[:i], listeners[i+1:]...)
 				return
 			}
 		}
