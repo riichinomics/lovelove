@@ -9,6 +9,7 @@ import { stylesheet } from "astroturf";
 import { PlayerNameTag } from "./PlayerNameTag";
 import { CardDroppedHandler, oppositePosition } from "./utils";
 import { CardMoveContext } from "../../rpc/CardMoveContext";
+import { IShoubuOpportunityHandlers, ShoubuOpportunityDisplay } from "./ShoubuOpportunityDisplay";
 
 const styles = stylesheet`
 	$collection-peek: 100px;
@@ -31,6 +32,15 @@ const styles = stylesheet`
 			&.playerNameTag {
 				border-top: $border-weight solid black;
 			}
+		}
+
+		.modalArea {
+			position: fixed;
+			top: 0;
+			right: 0;
+			bottom: 0;
+			left: 0;
+			z-index: 999;
 		}
 
 		.collection {
@@ -139,8 +149,11 @@ export const Table = ({
 	position,
 	tablePlayOptions,
 	onCardDropped,
-	yakuInformation
-}: IGameState & {
+	yakuInformation,
+	shoubuOpportunity,
+	koikoiChosen,
+	shoubuChosen,
+}: IGameState & IShoubuOpportunityHandlers & {
 	onCardDropped: CardDroppedHandler
 }) => {
 	const opponentPosition = oppositePosition(position);
@@ -151,6 +164,16 @@ export const Table = ({
 	}, [!!move]);
 
 	return <div className={styles.table}>
+		{ shoubuOpportunity &&
+			<div className={styles.modalArea}>
+				<ShoubuOpportunityDisplay
+					yakuInformation={yakuInformation}
+					collection={collection}
+					koikoiChosen={koikoiChosen}
+					shoubuChosen={shoubuChosen}
+				/>
+			</div>
+		}
 		<div className={styles.opponentHand}>
 			<OpponentHand cards={opponentHand} />
 		</div>

@@ -185,6 +185,10 @@ function mainReducer(state: IState, action: Action): IState {
 								existingYaku.value = newOrUpdatedYaku.value;
 							}
 						}
+
+						if (update.shoubuOpportunityUpdate) {
+							gameState.shoubuOpportunity = update.shoubuOpportunityUpdate.available;
+						}
 					}
 				}),
 			};

@@ -64,6 +64,7 @@ import yanagi3 from "../mantia/yanagi/3.svg";
 import yanagi4 from "../mantia/yanagi/4.svg";
 
 import { lovelove } from "../../rpc/proto/lovelove";
+import clsx from "clsx";
 
 const SVG_MAP: Record<lovelove.Hana, Record<lovelove.Variation, string>> = {
 	[lovelove.Hana.UnknownSeason]: {
@@ -161,7 +162,7 @@ const SVG_MAP: Record<lovelove.Hana, Record<lovelove.Variation, string>> = {
 
 const styles = stylesheet`
 	.card {
-		width: 100px;
+		min-width: 100px;
 		> img {
 			display: block;
 
@@ -170,7 +171,7 @@ const styles = stylesheet`
 `;
 
 export const CardComponent: React.FC<CardProps> = (props) => {
-	return <div className={styles.card}>
+	return <div className={clsx(styles.card, props.className)}>
 		<img draggable={false} src={SVG_MAP[props.hana][props.variation]} />
 	</div>;
 };

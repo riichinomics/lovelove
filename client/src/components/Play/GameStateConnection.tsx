@@ -153,11 +153,22 @@ export const GameStateConnection = () => {
 		setMove(move);
 	}, [setMove]);
 
+
+	const koikoiChosen  = React.useCallback(() => {
+		api.lovelove.resolveShoubuOpportunity({});
+	}, [api]);
+
+	const shoubuChosen  = React.useCallback(() => {
+		api.lovelove.resolveShoubuOpportunity({shoubu: true});
+	}, [api]);
+
 	return <CardMoveContext.Provider value={{move}}>
 		<Table
 			{...gameState}
 			position={position}
 			onCardDropped={onCardDropped}
+			koikoiChosen={koikoiChosen}
+			shoubuChosen={shoubuChosen}
 		/>
 	</CardMoveContext.Provider>;
 };
