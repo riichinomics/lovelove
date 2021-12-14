@@ -10,7 +10,6 @@ const styles = stylesheet`
 
 		bottom: 100%;
 		left: 0;
-		right: 0;
 		padding: 10px;
 		&.opponent {
 			bottom: auto;

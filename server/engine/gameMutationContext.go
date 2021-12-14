@@ -86,9 +86,11 @@ func (gameMutationContext *gameMutationContext) applyCardMoves(cardMoves []*card
 func (gameMutationContext *gameMutationContext) applyGameStateChange(gameStateChange *gameStateChange) (
 	actionUpdateMap map[lovelove.PlayerPosition]*lovelove.PlayOptionsUpdate,
 	shoubuOpportunityUpdateMap map[lovelove.PlayerPosition]*lovelove.ShoubuOpportunityUpdate,
+	activePlayerUpdates map[lovelove.PlayerPosition]*lovelove.ActivePlayerUpdate,
 ) {
 	actionUpdateMap = make(map[lovelove.PlayerPosition]*lovelove.PlayOptionsUpdate)
 	shoubuOpportunityUpdateMap = make(map[lovelove.PlayerPosition]*lovelove.ShoubuOpportunityUpdate)
+	activePlayerUpdates = make(map[lovelove.PlayerPosition]*lovelove.ActivePlayerUpdate)
 
 	if gameStateChange == nil {
 		return
@@ -96,6 +98,10 @@ func (gameMutationContext *gameMutationContext) applyGameStateChange(gameStateCh
 
 	previousGameState := gameMutationContext.gameState.state
 	gameMutationContext.gameState.state = gameStateChange.newState
+
+	if gameStateChange.activePlayer != lovelove.PlayerPosition_UnknownPosition {
+		gameMutationContext.gameState.activePlayer = gameStateChange.activePlayer
+	}
 
 	for p, _ := range lovelove.PlayerPosition_name {
 		position := lovelove.PlayerPosition(p)
@@ -119,6 +125,55 @@ func (gameMutationContext *gameMutationContext) applyGameStateChange(gameStateCh
 				}
 			}
 		}
+
+		activePlayerUpdates[position] = &lovelove.ActivePlayerUpdate{
+			Position: gameStateChange.activePlayer,
+		}
+	}
+
+	return
+}
+
+func (gameMutationContext *gameMutationContext) applyKoikoiChanges(koikoiChanges map[lovelove.PlayerPosition]*koikoiChange) (
+	koikoiUpdates map[lovelove.PlayerPosition]*lovelove.KoikoiUpdate,
+) {
+	koikoiUpdates = make(map[lovelove.PlayerPosition]*lovelove.KoikoiUpdate)
+	if koikoiChanges == nil {
+		return
+	}
+
+	for p, _ := range lovelove.PlayerPosition_name {
+		position := lovelove.PlayerPosition(p)
+		opponentPosition := getOpponentPosition(position)
+
+		for _, player := range gameMutationContext.gameState.playerState {
+			koikoiChange, koikoiChangeExists := koikoiChanges[player.position]
+			if !koikoiChangeExists {
+				continue
+			}
+
+			player.koikoi = koikoiChange.koikoiStatus
+
+			if koikoiChange.koikoiStatus && !player.koikoi {
+				existingUpdate, updateExists := koikoiUpdates[position]
+				if !updateExists {
+					existingUpdate = &lovelove.KoikoiUpdate{}
+					koikoiUpdates[position] = existingUpdate
+				}
+
+				if player.position == position {
+					existingUpdate.Self = true
+					continue
+				}
+
+				if player.position == opponentPosition {
+					existingUpdate.Opponent = true
+					continue
+				}
+			}
+
+			player.koikoi = koikoiChange.koikoiStatus
+		}
 	}
 
 	return
@@ -135,7 +190,8 @@ func (gameMutationContext *gameMutationContext) Apply(mutations []*gameStateMuta
 
 	for _, mutation := range mutations {
 		cardUpdatesMap := gameMutationContext.applyCardMoves(mutation.cardMoves)
-		actionUpdatesMap, shoubuOpportunityUpdateMap := gameMutationContext.applyGameStateChange(mutation.gameStateChange)
+		actionUpdatesMap, shoubuOpportunityUpdateMap, activePlayerUpdates := gameMutationContext.applyGameStateChange(mutation.gameStateChange)
+		koikoiUpdates := gameMutationContext.applyKoikoiChanges(mutation.koikoiChange)
 
 		for p, _ := range lovelove.PlayerPosition_name {
 			position := lovelove.PlayerPosition(p)
@@ -152,6 +208,14 @@ func (gameMutationContext *gameMutationContext) Apply(mutations []*gameStateMuta
 
 			if shoubuOpportunityUpdate, ok := shoubuOpportunityUpdateMap[position]; ok {
 				updatePart.ShoubuOpportunityUpdate = shoubuOpportunityUpdate
+			}
+
+			if koikoiUpdate, ok := koikoiUpdates[position]; ok {
+				updatePart.KoikoiUpdate = koikoiUpdate
+			}
+
+			if activePlayerUpdate, ok := activePlayerUpdates[position]; ok {
+				updatePart.ActivePlayerUpdate = activePlayerUpdate
 			}
 		}
 	}

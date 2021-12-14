@@ -154,11 +154,14 @@ export const Table = ({
 	tablePlayOptions,
 	onCardDropped,
 	yakuInformation,
+	opponentYakuInformation,
 	shoubuOpportunity,
 	koikoiChosen,
 	shoubuChosen,
 	score,
 	opponentScore,
+	koikoi,
+	opponentKoikoi
 }: IGameState & IShoubuOpportunityHandlers & {
 	onCardDropped: CardDroppedHandler
 }) => {
@@ -185,13 +188,22 @@ export const Table = ({
 		</div>
 		<div className={clsx(styles.nameTag, styles.opponentNameTag)}>
 			<PlayerNameTag active={opponentPosition === active}>
-				<PlayerMetadataZone opponent oya={opponentPosition === oya} score={opponentScore} />
+				<PlayerMetadataZone
+					opponent
+					oya={opponentPosition === oya}
+					score={opponentScore}
+					koikoi={opponentKoikoi}
+				/>
 			</PlayerNameTag>
 		</div>
 		<div className={clsx(styles.collection, styles.opponentCollection)}>
 			<div className={styles.popup}>
 				<div className={styles.collectionWrapper}>
-					<Collection cards={opponentCollection} stackUpwards />
+					<Collection
+						cards={opponentCollection}
+						yakuInformation={opponentYakuInformation}
+						stackUpwards
+					/>
 				</div>
 			</div>
 		</div>
@@ -215,7 +227,11 @@ export const Table = ({
 		</div>
 		<div className={clsx(styles.nameTag, styles.playerNameTag)}>
 			<PlayerNameTag active={position === active}>
-				<PlayerMetadataZone oya={position === oya} score={score} />
+				<PlayerMetadataZone
+					oya={position === oya}
+					score={score}
+					koikoi={koikoi}
+				/>
 			</PlayerNameTag>
 		</div>
 		<div className={styles.playerArea}>

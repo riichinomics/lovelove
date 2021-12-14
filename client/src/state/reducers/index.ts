@@ -189,6 +189,20 @@ function mainReducer(state: IState, action: Action): IState {
 						if (update.shoubuOpportunityUpdate) {
 							gameState.shoubuOpportunity = update.shoubuOpportunityUpdate.available;
 						}
+
+						if (update.activePlayerUpdate) {
+							gameState.active = update.activePlayerUpdate.position;
+						}
+
+						if (update.koikoiUpdate) {
+							if (update.koikoiUpdate.self) {
+								gameState.koikoi = true;
+							}
+
+							if (update.koikoiUpdate.opponent) {
+								gameState.opponentKoikoi = true;
+							}
+						}
 					}
 				}),
 			};

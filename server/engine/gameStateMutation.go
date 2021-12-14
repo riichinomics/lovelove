@@ -13,12 +13,22 @@ type cardMove struct {
 }
 
 type gameStateChange struct {
-	newState GameState
+	newState     GameState
+	activePlayer lovelove.PlayerPosition
+}
+
+type activePlayerChange struct {
+	activePlayer lovelove.PlayerPosition
+}
+
+type koikoiChange struct {
+	koikoiStatus bool
 }
 
 type gameStateMutation struct {
 	cardMoves       []*cardMove
 	gameStateChange *gameStateChange
+	koikoiChange    map[lovelove.PlayerPosition]*koikoiChange
 }
 
 func PlayDrawnCardMutation(game *gameState, playerPosition lovelove.PlayerPosition) ([]*gameStateMutation, error) {
@@ -252,9 +262,10 @@ func TurnEndMutation(
 	game *gameState,
 ) ([]*gameStateMutation, error) {
 	return []*gameStateMutation{
-		&gameStateMutation{
+		{
 			gameStateChange: &gameStateChange{
-				newState: GameState_HandCardPlay,
+				newState:     GameState_HandCardPlay,
+				activePlayer: getOpponentPosition(game.activePlayer),
 			},
 		},
 	}, nil

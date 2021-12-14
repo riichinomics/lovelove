@@ -22,18 +22,41 @@ const styles = stylesheet`
 		.yakuSelectorContainer {
 			position: absolute;
 			left: 100%;
+			bottom: 0;
+			top: 0;
 			text-align: left;
 
 			padding-left: 12px;
 			/* padding-top: 4px; */
 
 			.yakuSelector {
+				height: 100%;
 				cursor: pointer;
 				user-select: none;
 
 				display: flex;
 				flex-direction: row;
 				align-items: start;
+
+				&.stackUpwards {
+					align-items: end;
+
+					> .yaku {
+						color: black;
+						background-color: #fff9;
+
+						&:hover {
+							background-color: #fffb;
+						}
+
+						&.yakuSelected{
+							background-color: #ffff;
+							&:hover {
+								background-color: #fffd;
+							}
+						}
+					}
+				}
 
 				> .yaku {
 					margin-right: 4px;
@@ -118,7 +141,7 @@ export const Collection = (props: {
 
 	return <div className={styles.collection}>
 		<div className={styles.yakuSelectorContainer}>
-			<div className={styles.yakuSelector}>
+			<div className={clsx(styles.yakuSelector, props.stackUpwards && styles.stackUpwards)}>
 				{(props.yakuInformation ?? []).map(yaku =>
 					<div
 						key={yaku.id}

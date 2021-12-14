@@ -236,6 +236,7 @@ message GameStateUpdatePart {
 	YakuUpdate opponentYakuUpdate = 5;
 	ShoubuOpportunityUpdate shoubuOpportunityUpdate = 6;
 	RoundEndResult roundEndResult = 7;
+	KoikoiUpdate koikoiUpdate = 8;
 }
 
 message ActivePlayerUpdate {
@@ -263,6 +264,11 @@ message GameStateUpdate {
 
 message ShoubuOpportunityUpdate {
 	bool available = 1;
+}
+
+message KoikoiUpdate {
+	bool self = 1;
+	bool opponent = 2;
 }
 
 message RoundEndResult {
