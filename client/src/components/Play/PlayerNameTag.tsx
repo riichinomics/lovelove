@@ -1,25 +1,21 @@
 import * as React from "react";
-import { IPlayerInfo } from "./IPlayerInfo";
 import { stylesheet } from "astroturf";
 import clsx from "clsx";
 
 const styles = stylesheet`
 	.nameTag {
 		box-sizing: border-box;
-		min-height: 10px;
-
-		background-color: white;
-
-		&.red {
-			background-color: red;
-		}
+		position: relative;
 
 		&.active {
 			min-height: 20px;
+			background-color: #d81e1e;
 		}
 	}
 `;
 
-export const PlayerNameTag = (props: IPlayerInfo) => {
-	return <div className={clsx(styles.nameTag, props.oya && styles.red, props.active && styles.active)} />;
+export const PlayerNameTag: React.FC<{active?: boolean}> = (props) => {
+	return <div className={clsx(styles.nameTag, props.active && styles.active)}>
+		{props.children}
+	</div>;
 };

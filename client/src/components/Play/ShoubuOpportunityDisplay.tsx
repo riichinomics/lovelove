@@ -82,7 +82,7 @@ const styles = stylesheet`
 				}
 
 				.koikoi {
-					background-color: red;
+					background-color: #d81e1e;
 				}
 
 				.shoubu {

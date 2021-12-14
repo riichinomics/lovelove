@@ -10,6 +10,7 @@ import { PlayerNameTag } from "./PlayerNameTag";
 import { CardDroppedHandler, oppositePosition } from "./utils";
 import { CardMoveContext } from "../../rpc/CardMoveContext";
 import { IShoubuOpportunityHandlers, ShoubuOpportunityDisplay } from "./ShoubuOpportunityDisplay";
+import { PlayerMetadataZone } from "./PlayerMetadataZone";
 
 const styles = stylesheet`
 	$collection-peek: 100px;
@@ -25,6 +26,7 @@ const styles = stylesheet`
 
 		.nameTag {
 			z-index: 100;
+			flex-basis: auto;
 			&.opponentNameTag {
 				border-bottom: $border-weight solid black;
 			}
@@ -47,7 +49,7 @@ const styles = stylesheet`
 			position: relative;
 			box-sizing: border-box;
 
-			min-height: 40px;
+			min-height: 64px;
 
 			display: flex;
 			flex-direction: column;
@@ -136,6 +138,8 @@ type IGameState = lovelove.ICompleteGameState & {
 	position: lovelove.PlayerPosition
 }
 
+
+
 export const Table = ({
 	collection = [],
 	deck = 0,
@@ -153,6 +157,8 @@ export const Table = ({
 	shoubuOpportunity,
 	koikoiChosen,
 	shoubuChosen,
+	score,
+	opponentScore,
 }: IGameState & IShoubuOpportunityHandlers & {
 	onCardDropped: CardDroppedHandler
 }) => {
@@ -178,7 +184,9 @@ export const Table = ({
 			<OpponentHand cards={opponentHand} />
 		</div>
 		<div className={clsx(styles.nameTag, styles.opponentNameTag)}>
-			<PlayerNameTag position={opponentPosition} active={opponentPosition === active} oya={opponentPosition === oya} />
+			<PlayerNameTag active={opponentPosition === active}>
+				<PlayerMetadataZone opponent oya={opponentPosition === oya} score={opponentScore} />
+			</PlayerNameTag>
 		</div>
 		<div className={clsx(styles.collection, styles.opponentCollection)}>
 			<div className={styles.popup}>
@@ -206,7 +214,9 @@ export const Table = ({
 			</div>
 		</div>
 		<div className={clsx(styles.nameTag, styles.playerNameTag)}>
-			<PlayerNameTag position={position} active={position === active} oya={position === oya} />
+			<PlayerNameTag active={position === active}>
+				<PlayerMetadataZone oya={position === oya} score={score} />
+			</PlayerNameTag>
 		</div>
 		<div className={styles.playerArea}>
 			<PlayerHand
