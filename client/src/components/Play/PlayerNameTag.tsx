@@ -6,10 +6,13 @@ const styles = stylesheet`
 	.nameTag {
 		box-sizing: border-box;
 		position: relative;
+		min-height: 0;
+
+		transition: min-height 0.3s ease-in;
+		background-color: #d81e1e;
 
 		&.active {
 			min-height: 20px;
-			background-color: #d81e1e;
 		}
 	}
 `;
