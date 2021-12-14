@@ -233,12 +233,29 @@ func SelectDrawnCardPlayOptionMutation(
 		return nil, err
 	}
 
-	return append(
-		mutation,
+	return mutation, nil
+}
+
+func ShoubuOpportunityMutation(
+	game *gameState,
+) ([]*gameStateMutation, error) {
+	return []*gameStateMutation{
+		&gameStateMutation{
+			gameStateChange: &gameStateChange{
+				newState: GameState_ShoubuOpportunity,
+			},
+		},
+	}, nil
+}
+
+func TurnEndMutation(
+	game *gameState,
+) ([]*gameStateMutation, error) {
+	return []*gameStateMutation{
 		&gameStateMutation{
 			gameStateChange: &gameStateChange{
 				newState: GameState_HandCardPlay,
 			},
 		},
-	), nil
+	}, nil
 }

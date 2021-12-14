@@ -14,33 +14,22 @@ type MovedCardsMeta map[int32]*cardMoveMeta
 type gameMutationContext struct {
 	gameState   *gameState
 	movingCards MovedCardsMeta
-	updatesMap  map[lovelove.PlayerPosition][]*lovelove.GameStateUpdatePart
 }
 
 func (context *gameMutationContext) MovedCards() MovedCardsMeta {
 	return context.movingCards
 }
 
-// Updates to game state, different positions see different things because of hidden zones
-// The position key determines who the update is for
-func (context *gameMutationContext) UpdatesByPosition() map[lovelove.PlayerPosition][]*lovelove.GameStateUpdatePart {
-	return context.updatesMap
-}
-
 func NewGameMutationContext(gameState *gameState) (context *gameMutationContext) {
 	context = &gameMutationContext{
 		gameState:   gameState,
 		movingCards: make(map[int32]*cardMoveMeta),
-		updatesMap:  make(map[lovelove.PlayerPosition][]*lovelove.GameStateUpdatePart),
-	}
-
-	for p, _ := range lovelove.PlayerPosition_name {
-		position := lovelove.PlayerPosition(p)
-		context.updatesMap[position] = make([]*lovelove.GameStateUpdatePart, 0)
 	}
 
 	return
 }
+
+type GameUpdateMap map[lovelove.PlayerPosition][]*lovelove.GameStateUpdatePart
 
 func (gameMutationContext *gameMutationContext) applyCardMoves(cardMoves []*cardMove) (
 	cardMoveUpdateMap map[lovelove.PlayerPosition][]*lovelove.CardMoveUpdate,
@@ -94,23 +83,40 @@ func (gameMutationContext *gameMutationContext) applyCardMoves(cardMoves []*card
 	return
 }
 
-func (gameMutationContext *gameMutationContext) applyGameStateChange(gameStateChange *gameStateChange) (updatesMap map[lovelove.PlayerPosition]*lovelove.PlayOptionsUpdate) {
-	updatesMap = make(map[lovelove.PlayerPosition]*lovelove.PlayOptionsUpdate)
+func (gameMutationContext *gameMutationContext) applyGameStateChange(gameStateChange *gameStateChange) (
+	actionUpdateMap map[lovelove.PlayerPosition]*lovelove.PlayOptionsUpdate,
+	shoubuOpportunityUpdateMap map[lovelove.PlayerPosition]*lovelove.ShoubuOpportunityUpdate,
+) {
+	actionUpdateMap = make(map[lovelove.PlayerPosition]*lovelove.PlayOptionsUpdate)
+	shoubuOpportunityUpdateMap = make(map[lovelove.PlayerPosition]*lovelove.ShoubuOpportunityUpdate)
 
 	if gameStateChange == nil {
 		return
 	}
 
+	previousGameState := gameMutationContext.gameState.state
 	gameMutationContext.gameState.state = gameStateChange.newState
 
 	for p, _ := range lovelove.PlayerPosition_name {
 		position := lovelove.PlayerPosition(p)
 		actionUpdate := gameMutationContext.gameState.GetTablePlayOptions(position)
 		if actionUpdate != nil {
-			updatesMap[position] = &lovelove.PlayOptionsUpdate{
+			actionUpdateMap[position] = &lovelove.PlayOptionsUpdate{
 				UpdatedAcceptedOriginZones: &lovelove.PlayOptionsZoneUpdate{
 					Zones: gameMutationContext.gameState.GetPlayOptionsAcceptedOriginZones(position),
 				},
+			}
+		}
+
+		if position == gameMutationContext.gameState.activePlayer {
+			if gameStateChange.newState == GameState_ShoubuOpportunity {
+				shoubuOpportunityUpdateMap[position] = &lovelove.ShoubuOpportunityUpdate{
+					Available: true,
+				}
+			} else if previousGameState == GameState_ShoubuOpportunity {
+				shoubuOpportunityUpdateMap[position] = &lovelove.ShoubuOpportunityUpdate{
+					Available: false,
+				}
 			}
 		}
 	}
@@ -118,15 +124,23 @@ func (gameMutationContext *gameMutationContext) applyGameStateChange(gameStateCh
 	return
 }
 
-func (gameMutationContext *gameMutationContext) Apply(mutations []*gameStateMutation) {
+// Updates to game state, different positions see different things because of hidden zones
+// The position key determines who the update is for
+func (gameMutationContext *gameMutationContext) Apply(mutations []*gameStateMutation) (updatesMap GameUpdateMap) {
+	updatesMap = make(GameUpdateMap)
+	for p, _ := range lovelove.PlayerPosition_name {
+		position := lovelove.PlayerPosition(p)
+		updatesMap[position] = make([]*lovelove.GameStateUpdatePart, 0)
+	}
+
 	for _, mutation := range mutations {
 		cardUpdatesMap := gameMutationContext.applyCardMoves(mutation.cardMoves)
-		actionUpdatesMap := gameMutationContext.applyGameStateChange(mutation.gameStateChange)
+		actionUpdatesMap, shoubuOpportunityUpdateMap := gameMutationContext.applyGameStateChange(mutation.gameStateChange)
 
 		for p, _ := range lovelove.PlayerPosition_name {
 			position := lovelove.PlayerPosition(p)
 			updatePart := &lovelove.GameStateUpdatePart{}
-			gameMutationContext.updatesMap[position] = append(gameMutationContext.updatesMap[position], updatePart)
+			updatesMap[position] = append(updatesMap[position], updatePart)
 
 			if cardUpdate, ok := cardUpdatesMap[position]; ok {
 				updatePart.CardMoveUpdates = cardUpdate
@@ -135,6 +149,196 @@ func (gameMutationContext *gameMutationContext) Apply(mutations []*gameStateMuta
 			if actionUpdate, ok := actionUpdatesMap[position]; ok {
 				updatePart.PlayOptionsUpdate = actionUpdate
 			}
+
+			if shoubuOpportunityUpdate, ok := shoubuOpportunityUpdateMap[position]; ok {
+				updatePart.ShoubuOpportunityUpdate = shoubuOpportunityUpdate
+			}
 		}
 	}
+
+	return
+}
+
+// Play options are private per player, the position key indicates which player should receive the update
+func (context *gameMutationContext) buildPlayOptionsUpdate() (playOptionsUpdateMap map[lovelove.PlayerPosition]*lovelove.PlayOptionsUpdate) {
+	playOptionsUpdateMap = make(map[lovelove.PlayerPosition]*lovelove.PlayOptionsUpdate)
+
+	for p, _ := range lovelove.PlayerPosition_name {
+		position := lovelove.PlayerPosition(p)
+		playOptionsUpdateMap[position] = &lovelove.PlayOptionsUpdate{
+			DefunctOptions: make([]*lovelove.PlayOption, 0),
+			NewOptions:     make([]*lovelove.PlayOption, 0),
+		}
+	}
+
+	tableCards := context.gameState.Table()
+
+	for _, movingCard := range context.movingCards {
+		if movingCard.cardState.location != CardLocation_Drawn {
+			continue
+		}
+
+		foundMatch := false
+
+		for _, tableCard := range tableCards {
+			if tableCard == nil || !WillAccept(tableCard.card, movingCard.cardState.card) {
+				continue
+			}
+
+			foundMatch = true
+
+			for _, playOptions := range playOptionsUpdateMap {
+				playOptions.NewOptions = append(
+					playOptions.NewOptions,
+					&lovelove.PlayOption{
+						OriginCardId: &lovelove.CardId{CardId: movingCard.cardState.card.Id},
+						TargetCardId: &lovelove.CardId{CardId: tableCard.card.Id},
+					},
+				)
+			}
+		}
+
+		if !foundMatch {
+			for _, playOptions := range playOptionsUpdateMap {
+				playOptions.NewOptions = append(
+					playOptions.NewOptions,
+					&lovelove.PlayOption{
+						OriginCardId: &lovelove.CardId{CardId: movingCard.cardState.card.Id},
+					},
+				)
+			}
+		}
+
+		break
+	}
+
+	for p, _ := range lovelove.PlayerPosition_name {
+		position := lovelove.PlayerPosition(p)
+		handCards := context.gameState.Hand(position)
+
+		for _, movingCard := range context.movingCards {
+			if movingCard.cardState.location != CardLocation_Table {
+				continue
+			}
+
+			for _, tableCard := range tableCards {
+				if tableCard == nil {
+					continue
+				}
+
+				if movingCard.cardState.card.Id == tableCard.card.Id {
+					continue
+				}
+
+				if !WillAccept(tableCard.card, movingCard.cardState.card) {
+					continue
+				}
+
+				playOptionsUpdateMap[position].DefunctOptions = append(
+					playOptionsUpdateMap[position].DefunctOptions,
+					&lovelove.PlayOption{
+						OriginCardId: &lovelove.CardId{CardId: movingCard.cardState.card.Id},
+						TargetCardId: &lovelove.CardId{CardId: tableCard.card.Id},
+					},
+				)
+			}
+
+			for _, handCard := range handCards {
+				if !WillAccept(movingCard.cardState.card, handCard.card) {
+					continue
+				}
+
+				wasUnmatched := true
+
+				for _, tableCard := range tableCards {
+					if tableCard == nil {
+						continue
+					}
+
+					if movingCard.cardState.card.Id == tableCard.card.Id {
+						continue
+					}
+
+					if WillAccept(tableCard.card, handCard.card) {
+						wasUnmatched = false
+						break
+					}
+				}
+
+				if wasUnmatched {
+					playOptionsUpdateMap[position].DefunctOptions = append(
+						playOptionsUpdateMap[position].DefunctOptions,
+						&lovelove.PlayOption{
+							OriginCardId: &lovelove.CardId{CardId: handCard.card.Id},
+						},
+					)
+				}
+
+				playOptionsUpdateMap[position].NewOptions = append(
+					playOptionsUpdateMap[position].NewOptions,
+					&lovelove.PlayOption{
+						OriginCardId: &lovelove.CardId{CardId: handCard.card.Id},
+						TargetCardId: &lovelove.CardId{CardId: movingCard.cardState.card.Id},
+					},
+				)
+			}
+		}
+
+		for _, movingCard := range context.movingCards {
+			if movingCard.originalLocation != CardLocation_Table {
+				continue
+			}
+
+			playOptionsUpdateMap[position].DefunctOptions = append(
+				playOptionsUpdateMap[position].DefunctOptions,
+				&lovelove.PlayOption{
+					TargetCardId: &lovelove.CardId{
+						CardId: movingCard.cardState.card.Id,
+					},
+				},
+			)
+
+			cardsForValidation := make([]*cardState, 0)
+			for _, handCard := range handCards {
+				if WillAccept(movingCard.cardState.card, handCard.card) {
+					cardsForValidation = append(cardsForValidation, handCard)
+				}
+			}
+
+		CARD_REVALIDATION:
+			for _, card := range cardsForValidation {
+				for _, tableCard := range tableCards {
+					if tableCard != nil && WillAccept(tableCard.card, card.card) {
+						continue CARD_REVALIDATION
+					}
+				}
+
+				playOptionsUpdateMap[position].NewOptions = append(
+					playOptionsUpdateMap[position].NewOptions,
+					&lovelove.PlayOption{
+						OriginCardId: &lovelove.CardId{
+							CardId: card.card.Id,
+						},
+					},
+				)
+			}
+		}
+	}
+
+	return
+}
+
+func (context *gameMutationContext) BuildPlayOptions() (updatesMap GameUpdateMap) {
+	updatesMap = make(GameUpdateMap)
+	playOptionsUpdateMap := context.buildPlayOptionsUpdate()
+
+	for p, _ := range lovelove.PlayerPosition_name {
+		position := lovelove.PlayerPosition(p)
+		updatePart := &lovelove.GameStateUpdatePart{
+			PlayOptionsUpdate: playOptionsUpdateMap[position],
+		}
+
+		updatesMap[position] = append(updatesMap[position], updatePart)
+	}
+	return
 }

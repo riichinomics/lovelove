@@ -98,6 +98,8 @@ service LoveLove {
 	rpc PlayHandCard (PlayHandCardRequest) returns (PlayHandCardResponse) {}
 
 	rpc PlayDrawnCard (PlayDrawnCardRequest) returns (PlayDrawnCardResponse) {}
+
+	rpc ResolveShoubuOpportunity (ResolveShoubuOpportunityRequest) returns (ResolveShoubuOpportunityResponse) {}
 }
 
 message Wrapper {
@@ -105,15 +107,6 @@ message Wrapper {
 	int32 sequence = 2;
 	string contentType = 3;
 	bytes data = 4;
-}
-
-message ConnectToGameRequest {
-	string roomId = 1;
-}
-
-message ConnectToGameResponse {
-	PlayerPosition position = 1;
-	CompleteGameState gameState = 2;
 }
 
 message Card {
@@ -156,13 +149,30 @@ message CompleteGameState {
 	ZonePlayOptions tablePlayOptions = 11;
 	repeated YakuData yakuInformation = 12;
 	repeated YakuData opponentYakuInformation = 13;
+	bool shoubuOpportunity = 14;
+	int32 score = 15;
+	int32 opponentScore = 16;
+	bool koikoi = 17;
+	bool opponentKoikoi = 18;
 }
+
+// Requests
 
 message AuthenticateRequest {
 	string userId = 1;
 }
 
 message AuthenticateResponse {
+}
+
+
+message ConnectToGameRequest {
+	string roomId = 1;
+}
+
+message ConnectToGameResponse {
+	PlayerPosition position = 1;
+	CompleteGameState gameState = 2;
 }
 
 message CardId {
@@ -185,6 +195,16 @@ message PlayDrawnCardRequest {
 message PlayDrawnCardResponse {
 	GenericResponseCode status = 1;
 }
+
+message ResolveShoubuOpportunityRequest {
+	bool shoubu = 1;
+}
+
+message ResolveShoubuOpportunityResponse {
+	GenericResponseCode status = 1;
+}
+
+// Updates
 
 message CardSlot {
 	PlayerCentricZone zone = 1;
@@ -214,6 +234,8 @@ message GameStateUpdatePart {
 	PlayOptionsUpdate playOptionsUpdate = 3;
 	YakuUpdate yakuUpdate = 4;
 	YakuUpdate opponentYakuUpdate = 5;
+	ShoubuOpportunityUpdate shoubuOpportunityUpdate = 6;
+	RoundEndResult roundEndResult = 7;
 }
 
 message ActivePlayerUpdate {
@@ -237,4 +259,14 @@ message PlayOptionsUpdate {
 
 message GameStateUpdate {
 	repeated GameStateUpdatePart updates = 1;
+}
+
+message ShoubuOpportunityUpdate {
+	bool available = 1;
+}
+
+message RoundEndResult {
+	PlayerPosition winner = 1;
+	int32 winnings = 2;
+	CompleteGameState nextRound = 3;
 }

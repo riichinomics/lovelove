@@ -8,6 +8,8 @@ import (
 
 type playerState struct {
 	id       string
+	score    int32
+	koikoi   bool
 	position lovelove.PlayerPosition
 }
 
@@ -144,8 +146,25 @@ func (gameState *gameState) ToCompleteGameState(playerPosition lovelove.PlayerPo
 
 	completeGameState.TablePlayOptions = gameState.GetTablePlayOptions(playerPosition)
 
+	opponentPosition := getOpponentPosition(playerPosition)
+
 	completeGameState.YakuInformation = gameState.GetYakuData(playerPosition)
-	completeGameState.OpponentYakuInformation = gameState.GetYakuData(getOpponentPosition(playerPosition))
+	completeGameState.OpponentYakuInformation = gameState.GetYakuData(opponentPosition)
+
+	for _, playerState := range gameState.playerState {
+		switch playerState.position {
+		case playerPosition:
+			completeGameState.Score = playerState.score
+			completeGameState.Koikoi = playerState.koikoi
+		case opponentPosition:
+			completeGameState.OpponentScore = playerState.score
+			completeGameState.OpponentKoikoi = playerState.koikoi
+		}
+	}
+
+	if gameState.state == GameState_ShoubuOpportunity && playerPosition == gameState.activePlayer {
+		completeGameState.ShoubuOpportunity = true
+	}
 
 	return completeGameState
 }

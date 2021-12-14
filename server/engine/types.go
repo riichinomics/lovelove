@@ -9,7 +9,7 @@ type GameState int64
 const (
 	GameState_HandCardPlay GameState = iota
 	GameState_DeckCardPlay
-	GameState_DeclareWin
+	GameState_ShoubuOpportunity
 )
 
 type YakuCategory int64

@@ -51,10 +51,33 @@ func (server loveLoveRpcServer) PlayDrawnCard(context context.Context, request *
 	}
 
 	broadcastBuilder := NewBroadcastBuilder(gameContext)
-	broadcastBuilder.TrackYaku()
 	defer broadcastBuilder.Broadcast()
 
-	broadcastBuilder.gameMutationContext.Apply(mutation)
+	gameMutationContext := NewGameMutationContext(gameContext.GameState)
+	defer func() {
+		broadcastBuilder.QueueUpdates(gameMutationContext.BuildPlayOptions())
+	}()
+
+	yakuTracker := NewYakuTracker(gameContext.GameState)
+
+	broadcastBuilder.QueueUpdates(gameMutationContext.Apply(mutation))
+
+	yakuUpdates := yakuTracker.BuildYakuUpdate(gameMutationContext.MovedCards())
+	broadcastBuilder.QueueUpdates(yakuUpdates.gameUpdate)
+
+	_, hasYakuUpdate := yakuUpdates.yakuUpdatesMap[playerState.position]
+	if !hasYakuUpdate {
+		TurnEndMutation(gameContext.GameState)
+		return
+	}
+
+	mutation, err = ShoubuOpportunityMutation(gameContext.GameState)
+
+	if err != nil {
+		return
+	}
+
+	broadcastBuilder.QueueUpdates(gameMutationContext.Apply(mutation))
 
 	return
 }

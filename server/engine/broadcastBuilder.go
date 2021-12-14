@@ -3,45 +3,34 @@ package engine
 import lovelove "hanafuda.moe/lovelove/proto"
 
 type broadcastBuilder struct {
-	gameContext         *gameContext
-	yakuTracker         *yakuTracker
-	gameMutationContext *gameMutationContext
+	gameContext *gameContext
+	gameUpdates map[lovelove.PlayerPosition][]*lovelove.GameStateUpdatePart
 }
 
 func NewBroadcastBuilder(gameContext *gameContext) *broadcastBuilder {
 	return &broadcastBuilder{
-		gameContext:         gameContext,
-		gameMutationContext: NewGameMutationContext(gameContext.GameState),
+		gameContext: gameContext,
+		gameUpdates: make(map[lovelove.PlayerPosition][]*lovelove.GameStateUpdatePart),
 	}
 }
 
-func (builder *broadcastBuilder) TrackYaku() {
-	builder.yakuTracker = NewYakuTracker(builder.gameContext.GameState)
+func (builder *broadcastBuilder) QueueUpdates(updates GameUpdateMap) {
+	for position, update := range updates {
+		if update == nil {
+			continue
+		}
+
+		existingUpdates, updatesExist := builder.gameUpdates[position]
+
+		if !updatesExist {
+			builder.gameUpdates[position] = update
+			continue
+		}
+
+		builder.gameUpdates[position] = append(existingUpdates, update...)
+	}
 }
 
 func (builder *broadcastBuilder) Broadcast() {
-	movedCards := builder.gameMutationContext.MovedCards()
-
-	playOptionsUpdateMap := buildPlayOptionsUpdate(builder.gameContext.GameState, movedCards)
-
-	updates := builder.gameMutationContext.UpdatesByPosition()
-
-	yakuUpdates := make(map[lovelove.PlayerPosition]*lovelove.YakuUpdate)
-	if builder.yakuTracker != nil {
-		yakuUpdates = builder.yakuTracker.GetYakuUpdates(builder.gameMutationContext.MovedCards())
-	}
-
-	for p, _ := range lovelove.PlayerPosition_name {
-		position := lovelove.PlayerPosition(p)
-
-		updatePart := &lovelove.GameStateUpdatePart{
-			PlayOptionsUpdate:  playOptionsUpdateMap[position],
-			YakuUpdate:         yakuUpdates[position],
-			OpponentYakuUpdate: yakuUpdates[getOpponentPosition(position)],
-		}
-
-		updates[position] = append(updates[position], updatePart)
-	}
-
-	builder.gameContext.BroadcastUpdates(updates)
+	builder.gameContext.BroadcastUpdates(builder.gameUpdates)
 }

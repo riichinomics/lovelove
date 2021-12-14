@@ -25,7 +25,10 @@ func NewYakuTracker(gameState *gameState) (tracker *yakuTracker) {
 }
 
 // Yaku updates are visible to both players, so the position determines who's yaku is being updated
-func (tracker *yakuTracker) GetYakuUpdates(movedCards MovedCardsMeta) (yakuUpdateMap map[lovelove.PlayerPosition]*lovelove.YakuUpdate) {
+func (tracker *yakuTracker) buildYakuUpdate(movedCards MovedCardsMeta) (
+	yakuUpdateMap map[lovelove.PlayerPosition]*lovelove.YakuUpdate,
+	yakuInfo []*lovelove.YakuData,
+) {
 	yakuUpdateMap = make(map[lovelove.PlayerPosition]*lovelove.YakuUpdate)
 	if tracker.initialYakuData == nil {
 		return
@@ -53,7 +56,7 @@ func (tracker *yakuTracker) GetYakuUpdates(movedCards MovedCardsMeta) (yakuUpdat
 		deletedYaku := make(map[lovelove.YakuId]bool)
 		newOrUpdatedYaku := make(map[lovelove.YakuId]*lovelove.YakuUpdatePart)
 
-		yakuInfo := tracker.gameState.GetYakuData(position)
+		yakuInfo = tracker.gameState.GetYakuData(position)
 		for _, card := range collectedCards {
 			yakuContribution := YakuContribution(card.card, tracker.gameState)
 			for _, possibleYaku := range yakuContribution {
@@ -132,4 +135,38 @@ func (tracker *yakuTracker) GetYakuUpdates(movedCards MovedCardsMeta) (yakuUpdat
 	}
 
 	return
+}
+
+type yakuUpdate struct {
+	gameUpdate       GameUpdateMap
+	completeYakuInfo []*lovelove.YakuData
+	yakuUpdatesMap   map[lovelove.PlayerPosition]*lovelove.YakuUpdate
+}
+
+func (tracker *yakuTracker) BuildYakuUpdate(movedCards MovedCardsMeta) *yakuUpdate {
+	yakuUpdatesMap, completeYakuUpdate := tracker.buildYakuUpdate(movedCards)
+
+	gameUpdate := make(GameUpdateMap)
+	for p, _ := range lovelove.PlayerPosition_name {
+		position := lovelove.PlayerPosition(p)
+
+		yakuUpdate := yakuUpdatesMap[position]
+		opponentYakuUpdate := yakuUpdatesMap[getOpponentPosition(position)]
+		if yakuUpdate == nil && opponentYakuUpdate == nil {
+			continue
+		}
+
+		gameUpdate[position] = []*lovelove.GameStateUpdatePart{
+			{
+				YakuUpdate:         yakuUpdate,
+				OpponentYakuUpdate: opponentYakuUpdate,
+			},
+		}
+	}
+
+	return &yakuUpdate{
+		gameUpdate,
+		completeYakuUpdate,
+		yakuUpdatesMap,
+	}
 }
