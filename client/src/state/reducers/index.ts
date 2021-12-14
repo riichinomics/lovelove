@@ -4,7 +4,6 @@ import { Action } from "../actions/Action";
 import { ActionType } from "../actions/ActionType";
 import { IState } from "../IState";
 
-
 function removeCard(zone: lovelove.ICard[], cardId: number, leaveSpace?: boolean): lovelove.ICard[] {
 	if (!zone) {
 		return zone;
@@ -20,6 +19,30 @@ function removeCard(zone: lovelove.ICard[], cardId: number, leaveSpace?: boolean
 	}
 
 	return [...zone.slice(0, index), ...zone.slice(index + 1)];
+}
+
+function applyYakuUpdate(yakuInformation: lovelove.IYakuData[], yakuUpdate: lovelove.IYakuUpdate) {
+	for (const deletedYaku of yakuUpdate.deletedYaku) {
+		const indexOfYaku = yakuInformation.findIndex(yaku => yaku.id == deletedYaku);
+		if (indexOfYaku >= 0) {
+			yakuInformation.splice(indexOfYaku, 1);
+		}
+	}
+
+	for (const newOrUpdatedYaku of yakuUpdate.newOrUpdatedYaku) {
+		const existingYaku = yakuInformation.find(yaku => yaku.id == newOrUpdatedYaku.yakuId);
+		if (!existingYaku) {
+			yakuInformation.push({
+				id: newOrUpdatedYaku.yakuId,
+				cards: newOrUpdatedYaku.cardIds,
+				value: newOrUpdatedYaku.value,
+			});
+			continue;
+		}
+
+		existingYaku.cards.push(...newOrUpdatedYaku.cardIds);
+		existingYaku.value = newOrUpdatedYaku.value;
+	}
 }
 
 function mainReducer(state: IState, action: Action): IState {
@@ -163,27 +186,11 @@ function mainReducer(state: IState, action: Action): IState {
 						}
 
 						if (update.yakuUpdate) {
-							for (const deletedYaku of update.yakuUpdate.deletedYaku) {
-								const indexOfYaku = gameState.yakuInformation.findIndex(yaku => yaku.id == deletedYaku);
-								if (indexOfYaku >= 0) {
-									gameState.yakuInformation.splice(indexOfYaku, 1);
-								}
-							}
+							applyYakuUpdate(gameState.yakuInformation, update.yakuUpdate);
+						}
 
-							for (const newOrUpdatedYaku of update.yakuUpdate.newOrUpdatedYaku) {
-								const existingYaku = gameState.yakuInformation.find(yaku => yaku.id == newOrUpdatedYaku.yakuId);
-								if (!existingYaku) {
-									gameState.yakuInformation.push({
-										id: newOrUpdatedYaku.yakuId,
-										cards: newOrUpdatedYaku.cardIds,
-										value: newOrUpdatedYaku.value,
-									});
-									continue;
-								}
-
-								existingYaku.cards.push(...newOrUpdatedYaku.cardIds);
-								existingYaku.value = newOrUpdatedYaku.value;
-							}
+						if (update.opponentYakuUpdate) {
+							applyYakuUpdate(gameState.opponentYakuInformation, update.opponentYakuUpdate);
 						}
 
 						if (update.shoubuOpportunityUpdate) {
