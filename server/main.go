@@ -27,7 +27,7 @@ func main() {
 
 	lovelove.RegisterLoveLoveServer(websocketRpcServer, loveloveRpcServer)
 
-	addr := flag.String("addr", "localhost:6482", "http service address")
+	addr := flag.String("addr", "0.0.0.0:6482", "http service address")
 
 	upgrader := websocket.Upgrader{
 		CheckOrigin: func(request *http.Request) bool {

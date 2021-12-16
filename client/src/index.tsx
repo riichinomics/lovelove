@@ -38,7 +38,7 @@ const store = createStore(
 	composeEnhancers()
 );
 
-const api = new Api({url: "localhost:6482"});
+const api = new Api({url: window.location.hostname + ":6482"});
 api.init().then(() => {
 	api.lovelove.authenticate({
 		userId,
