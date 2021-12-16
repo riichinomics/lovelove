@@ -180,6 +180,51 @@ func (gameMutationContext *gameMutationContext) applyKoikoiChanges(koikoiChanges
 	return
 }
 
+func (gameMutationContext *gameMutationContext) applyRoundEndChange(roundEndChange *roundEndChange) (
+	roundEndUpdates map[lovelove.PlayerPosition]*lovelove.RoundEndResult,
+) {
+	roundEndUpdates = make(map[lovelove.PlayerPosition]*lovelove.RoundEndResult)
+	if roundEndChange == nil {
+		return
+	}
+
+	shoubuValue := int32(0)
+
+	if roundEndChange.winner != lovelove.PlayerPosition_UnknownPosition {
+		yakuInfo := gameMutationContext.gameState.GetYakuData(roundEndChange.winner)
+		shoubuValue = gameMutationContext.gameState.GetShoubuValue(yakuInfo, roundEndChange.winner)
+
+		gameMutationContext.gameState.oya = roundEndChange.winner
+
+		for _, player := range gameMutationContext.gameState.playerState {
+			player.koikoi = false
+			if player.position != roundEndChange.winner {
+				continue
+			}
+
+			player.score += shoubuValue
+		}
+	}
+
+	gameMutationContext.gameState.month = lovelove.Month(int(gameMutationContext.gameState.month+1) % len(lovelove.Month_name))
+
+	gameMutationContext.gameState.activePlayer = gameMutationContext.gameState.oya
+	gameMutationContext.gameState.state = GameState_HandCardPlay
+
+	gameMutationContext.gameState.Deal()
+
+	for p, _ := range lovelove.PlayerPosition_name {
+		position := lovelove.PlayerPosition(p)
+		roundEndUpdates[position] = &lovelove.RoundEndResult{
+			Winner:    roundEndChange.winner,
+			Winnings:  shoubuValue,
+			NextRound: gameMutationContext.gameState.ToCompleteGameState(position),
+		}
+	}
+
+	return
+}
+
 // Updates to game state, different positions see different things because of hidden zones
 // The position key determines who the update is for
 func (gameMutationContext *gameMutationContext) Apply(mutations []*gameStateMutation) (updatesMap GameUpdateMap) {
@@ -193,6 +238,7 @@ func (gameMutationContext *gameMutationContext) Apply(mutations []*gameStateMuta
 		cardUpdatesMap := gameMutationContext.applyCardMoves(mutation.cardMoves)
 		actionUpdatesMap, shoubuOpportunityUpdateMap, activePlayerUpdates := gameMutationContext.applyGameStateChange(mutation.gameStateChange)
 		koikoiUpdates := gameMutationContext.applyKoikoiChanges(mutation.koikoiChange)
+		roundEndUpdatesMap := gameMutationContext.applyRoundEndChange(mutation.roundEndChange)
 
 		for p, _ := range lovelove.PlayerPosition_name {
 			position := lovelove.PlayerPosition(p)
@@ -217,6 +263,10 @@ func (gameMutationContext *gameMutationContext) Apply(mutations []*gameStateMuta
 
 			if activePlayerUpdate, ok := activePlayerUpdates[position]; ok {
 				updatePart.ActivePlayerUpdate = activePlayerUpdate
+			}
+
+			if roundEndUpdates, ok := roundEndUpdatesMap[position]; ok {
+				updatePart.RoundEndResult = roundEndUpdates
 			}
 		}
 	}

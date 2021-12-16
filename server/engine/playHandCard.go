@@ -75,9 +75,7 @@ func (server loveLoveRpcServer) PlayHandCard(context context.Context, request *l
 	}
 
 	broadcastBuilder.QueueUpdates(gameMutationContext.Apply(mutation))
-	defer func() {
-		broadcastBuilder.QueueUpdates(gameMutationContext.BuildPlayOptions())
-	}()
+	broadcastBuilder.QueueUpdates(gameMutationContext.BuildPlayOptions())
 
 	if mutation[0].gameStateChange != nil {
 		return

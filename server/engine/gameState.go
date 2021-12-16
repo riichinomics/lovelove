@@ -1,6 +1,8 @@
 package engine
 
 import (
+	"math"
+	"math/rand"
 	"sort"
 
 	lovelove "hanafuda.moe/lovelove/proto"
@@ -318,4 +320,59 @@ func (gameState *gameState) GetShoubuValue(yakuData []*lovelove.YakuData, player
 	}
 
 	return
+}
+
+func (gameState *gameState) ShuffleDeck() {
+	deck := gameState.Deck()
+
+	rand.Shuffle(len(deck), func(i, j int) {
+		deck[i].order = j
+		deck[j].order = i
+	})
+}
+
+func (gameState *gameState) MoveAllCardsToDeck() {
+	order := 0
+	for _, card := range gameState.cards {
+		card.location = CardLocation_Deck
+		card.order = order
+		order++
+	}
+}
+
+func (gameState *gameState) DrawCards(cardsToDraw int, location CardLocation) (cards []*cardState) {
+	cards = make([]*cardState, 0)
+
+	if location == CardLocation_Deck {
+		return
+	}
+
+	deck := gameState.Deck()
+	draw := int(math.Min(float64(len(deck)), float64(cardsToDraw)))
+	cards = deck[(len(deck) - draw):]
+
+	order := len(gameState.getZoneOrdered(location))
+
+	for _, card := range cards {
+		card.location = location
+		card.order = order
+		order++
+	}
+
+	return
+}
+
+func (gameState *gameState) Deal() {
+	for {
+		gameState.MoveAllCardsToDeck()
+		gameState.ShuffleDeck()
+		table := gameState.DrawCards(8, CardLocation_Table)
+		if GetTeyaku(table) != lovelove.TeyakuId_Unknown_Teyaku {
+			continue
+		}
+
+		gameState.DrawCards(8, CardLocation_RedHand)
+		gameState.DrawCards(8, CardLocation_WhiteHand)
+		break
+	}
 }

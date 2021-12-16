@@ -90,6 +90,12 @@ enum MessageType {
 	Broadcast = 1;
 }
 
+enum TeyakuId {
+	Unknown_Teyaku = 0;
+	Teshi = 1;
+	Kuttsuki = 2;
+}
+
 service LoveLove {
 	rpc Authenticate (AuthenticateRequest) returns (AuthenticateResponse) {}
 

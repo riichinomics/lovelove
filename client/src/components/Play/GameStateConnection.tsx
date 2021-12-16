@@ -24,6 +24,7 @@ export const GameStateConnection = () => {
 
 	const position = useSelector((state: IState) => state.gamePosition);
 	const gameState = useSelector((state: IState) => state.gameState);
+	const roundEndView = useSelector((state: IState) => state.roundEndView);
 	const [move, setMove] = React.useState<CardMove>();
 
 	React.useEffect(() => {
@@ -164,11 +165,12 @@ export const GameStateConnection = () => {
 
 	return <CardMoveContext.Provider value={{move}}>
 		<Table
-			{...gameState}
+			{...(roundEndView?.gameState ?? gameState)}
 			position={position}
 			onCardDropped={onCardDropped}
 			koikoiChosen={koikoiChosen}
 			shoubuChosen={shoubuChosen}
+			roundEndView={roundEndView}
 		/>
 	</CardMoveContext.Provider>;
 };

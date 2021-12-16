@@ -36,8 +36,7 @@ func (server loveLoveRpcServer) ConnectToGame(context context.Context, request *
 
 	game := gameContext.GameState
 	if game == nil {
-		deck := make([]*lovelove.Card, 0)
-
+		cards := make(map[int32]*cardState)
 		for hana := range lovelove.Hana_name {
 			if hana == 0 {
 				continue
@@ -50,24 +49,24 @@ func (server loveLoveRpcServer) ConnectToGame(context context.Context, request *
 
 				id := cardIdFromCardDetails(hana, variation)
 
-				deck = append(deck, &lovelove.Card{
-					Id:        id,
-					Hana:      lovelove.Hana(hana),
-					Variation: lovelove.Variation(variation),
-				})
+				cards[id] = &cardState{
+					location: CardLocation_Deck,
+					order:    len(cards),
+					card: &lovelove.Card{
+						Id:        id,
+						Hana:      lovelove.Hana(hana),
+						Variation: lovelove.Variation(variation),
+					},
+				}
 			}
 		}
 
-		rand.Shuffle(len(deck), func(i, j int) {
-			deck[i], deck[j] = deck[j], deck[i]
-		})
-
-		oya := lovelove.PlayerPosition(rand.Intn(1) + 1)
+		oya := lovelove.PlayerPosition(rand.Intn(2) + 1)
 
 		game = &gameState{
 			state:        GameState_HandCardPlay,
 			activePlayer: oya,
-			cards:        make(map[int32]*cardState),
+			cards:        cards,
 			playerState:  make(map[string]*playerState),
 			month:        lovelove.Month_January,
 			oya:          oya,
@@ -77,13 +76,11 @@ func (server loveLoveRpcServer) ConnectToGame(context context.Context, request *
 
 		game.playerState[connMeta.userId] = &playerState{
 			id:       connMeta.userId,
-			position: lovelove.PlayerPosition(rand.Intn(1) + 1),
+			position: lovelove.PlayerPosition(rand.Intn(2) + 1),
 		}
 
-		moveCards(game.cards, deck[0:8], CardLocation_Table)
-		moveCards(game.cards, deck[8:16], CardLocation_RedHand)
-		moveCards(game.cards, deck[16:24], CardLocation_WhiteHand)
-		moveCards(game.cards, deck[24:], CardLocation_Deck)
+		game.Deal()
+
 	} else {
 		_, playerExists := game.playerState[connMeta.userId]
 		if !playerExists {

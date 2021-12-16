@@ -26,10 +26,15 @@ type koikoiChange struct {
 	koikoiStatus bool
 }
 
+type roundEndChange struct {
+	winner lovelove.PlayerPosition
+}
+
 type gameStateMutation struct {
 	cardMoves       []*cardMove
 	gameStateChange *gameStateChange
 	koikoiChange    map[lovelove.PlayerPosition]*koikoiChange
+	roundEndChange  *roundEndChange
 }
 
 func PlayDrawnCardMutation(game *gameState, playerPosition lovelove.PlayerPosition) ([]*gameStateMutation, error) {
@@ -253,7 +258,7 @@ func ShoubuOpportunityMutation(
 	yakuUpdate *yakuUpdate,
 ) ([]*gameStateMutation, error) {
 	return []*gameStateMutation{
-		&gameStateMutation{
+		{
 			gameStateChange: &gameStateChange{
 				newState:               GameState_ShoubuOpportunity,
 				shoubuOpportunityValue: gameState.GetShoubuValue(yakuUpdate.completeYakuInfo, playerPosition),
@@ -262,9 +267,23 @@ func ShoubuOpportunityMutation(
 	}, nil
 }
 
+func RoundEndMutation(winner lovelove.PlayerPosition) ([]*gameStateMutation, error) {
+	return []*gameStateMutation{
+		{
+			roundEndChange: &roundEndChange{
+				winner: winner,
+			},
+		},
+	}, nil
+}
+
 func TurnEndMutation(
 	game *gameState,
 ) ([]*gameStateMutation, error) {
+	if len(game.Hand(lovelove.PlayerPosition_Red)) == 0 && len(game.Hand(lovelove.PlayerPosition_White)) == 0 {
+		return RoundEndMutation(lovelove.PlayerPosition_UnknownPosition)
+	}
+
 	return []*gameStateMutation{
 		{
 			gameStateChange: &gameStateChange{

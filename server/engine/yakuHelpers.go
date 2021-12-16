@@ -277,3 +277,40 @@ func YakuContribution(card *lovelove.Card, gameState *gameState) []*yakuContribu
 
 	return yaku
 }
+
+func GetTeyaku(cards []*cardState) lovelove.TeyakuId {
+	hanaMap := make(map[lovelove.Hana][]*cardState)
+
+	for _, card := range cards {
+		hanaCards, hanaExists := hanaMap[card.card.Hana]
+
+		if !hanaExists {
+			hanaCards = make([]*cardState, 0)
+		}
+
+		hanaMap[card.card.Hana] = append(hanaCards, card)
+	}
+
+	completeSets := 0
+	pairs := 0
+
+	for _, hanaCards := range hanaMap {
+		if len(hanaCards) >= 4 {
+			completeSets++
+		}
+
+		if len(hanaCards) >= 2 {
+			pairs++
+		}
+	}
+
+	if completeSets >= 2 {
+		return lovelove.TeyakuId_Teshi
+	}
+
+	if pairs >= 4 {
+		return lovelove.TeyakuId_Kuttsuki
+	}
+
+	return lovelove.TeyakuId_Unknown_Teyaku
+}

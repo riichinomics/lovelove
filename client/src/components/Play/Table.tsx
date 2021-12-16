@@ -11,6 +11,7 @@ import { CardDroppedHandler, oppositePosition } from "./utils";
 import { CardMoveContext } from "../../rpc/CardMoveContext";
 import { IShoubuOpportunityHandlers, ShoubuOpportunityDisplay } from "./ShoubuOpportunityDisplay";
 import { PlayerMetadataZone } from "./PlayerMetadataZone";
+import { RoundEndInformation } from "../../state/IState";
 
 const styles = stylesheet`
 	$collection-peek: 100px;
@@ -161,9 +162,11 @@ export const Table = ({
 	score,
 	opponentScore,
 	koikoi,
-	opponentKoikoi
+	opponentKoikoi,
+	roundEndView
 }: IGameState & IShoubuOpportunityHandlers & {
-	onCardDropped: CardDroppedHandler
+	onCardDropped: CardDroppedHandler,
+	roundEndView?: RoundEndInformation,
 }) => {
 	const opponentPosition = oppositePosition(position);
 	const [previewCard, setPreviewCard] = React.useState<lovelove.ICard>();
@@ -173,15 +176,17 @@ export const Table = ({
 	}, [!!move]);
 
 	return <div className={styles.table}>
-		{ shoubuOpportunity &&
+		{ (shoubuOpportunity || roundEndView) &&
 			<div className={styles.modalArea}>
-				<ShoubuOpportunityDisplay
-					yakuInformation={yakuInformation}
-					collection={collection}
-					shoubuValue={shoubuOpportunity.value}
-					koikoiChosen={koikoiChosen}
-					shoubuChosen={shoubuChosen}
-				/>
+				{shoubuOpportunity &&
+					<ShoubuOpportunityDisplay
+						yakuInformation={yakuInformation}
+						collection={collection}
+						shoubuValue={shoubuOpportunity.value}
+						koikoiChosen={koikoiChosen}
+						shoubuChosen={shoubuChosen}
+					/>
+				}
 			</div>
 		}
 		<div className={styles.opponentHand}>
