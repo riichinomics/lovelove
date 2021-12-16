@@ -45,6 +45,11 @@ function applyYakuUpdate(yakuInformation: lovelove.IYakuData[], yakuUpdate: love
 	}
 }
 
+function immerate<T>(object: T): T{
+	(object as any)[immerable] = true;
+	return object;
+}
+
 function mainReducer(state: IState, action: Action): IState {
 	// eslint-disable-next-line no-empty
 	switch (action.type) {
@@ -54,11 +59,10 @@ function mainReducer(state: IState, action: Action): IState {
 				apiState: action.apiState
 			};
 		} case ActionType.InitialGameStateReceived: {
-			(action.gameState as any)[immerable] = true;
 			return {
 				...state,
 				gamePosition: action.position,
-				gameState: action.gameState
+				gameState: immerate(action.gameState)
 			};
 		} case ActionType.GameUpdateReceived: {
 			return produce(state, state => {
@@ -223,7 +227,7 @@ function mainReducer(state: IState, action: Action): IState {
 							winnings: update.roundEndResult.winnings,
 						};
 
-						state.gameState = update.roundEndResult.nextRound;
+						state.gameState = immerate(update.roundEndResult.nextRound);
 
 					}
 				}
