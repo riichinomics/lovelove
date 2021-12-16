@@ -85,8 +85,7 @@ func (server loveLoveRpcServer) ConnectToGame(context context.Context, request *
 		_, playerExists := game.playerState[connMeta.userId]
 		if !playerExists {
 			newPlayer := &playerState{
-				id:       connMeta.userId,
-				position: lovelove.PlayerPosition_UnknownPosition,
+				id: connMeta.userId,
 			}
 			game.playerState[connMeta.userId] = newPlayer
 

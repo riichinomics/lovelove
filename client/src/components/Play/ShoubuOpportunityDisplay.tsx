@@ -29,6 +29,12 @@ const styles = stylesheet`
 			padding: 40px;
 			background-color: #000e;
 
+			.ryuukyoku {
+				text-align: center;
+				font-size: 30px;
+				line-height: 30px;
+			}
+
 			.yaku {
 				display: flex;
 				align-items: center;
@@ -104,8 +110,9 @@ const styles = stylesheet`
 `;
 
 export interface IShoubuOpportunityHandlers {
-	koikoiChosen: () => void,
-	shoubuChosen: () => void,
+	koikoiChosen?: () => void,
+	shoubuChosen?: () => void,
+	continueChosen?: () => void,
 }
 
 export const ShoubuOpportunityDisplay = (props: {
@@ -117,30 +124,38 @@ export const ShoubuOpportunityDisplay = (props: {
 	const CardComponent = context.theme.CardComponent;
 	return <div className={styles.shoubuOpportunityContainer}>
 		<div className={styles.shoubuOpportunity}>
-			{props.yakuInformation.map(yaku => <div key={yaku.id} className={styles.yaku}>
-				<div className={styles.yakuName}>{getYakuName(yaku.id)}</div>
-				<div className={styles.yakuValue}>{yaku.value}</div>
-				<div className={styles.yakuCards}>
-					{yaku.cards.map(cardId =>
-						<CardComponent
-							key={cardId}
-							{...props.collection.find(collectedCard => collectedCard.id === cardId)}
-							className={styles.yakuCard}
-						/>
-					)}
-				</div>
-			</div>)}
-			<div className={styles.shoubuValueRow}>
+			{props.yakuInformation
+				? props.yakuInformation.map(yaku => <div key={yaku.id} className={styles.yaku}>
+					<div className={styles.yakuName}>{getYakuName(yaku.id)}</div>
+					<div className={styles.yakuValue}>{yaku.value}</div>
+					<div className={styles.yakuCards}>
+						{yaku.cards.map(cardId =>
+							<CardComponent
+								key={cardId}
+								{...props.collection.find(collectedCard => collectedCard.id === cardId)}
+								className={styles.yakuCard}
+							/>
+						)}
+					</div>
+				</div>)
+				: <div className={styles.ryuukyoku}>流局</div>
+			}
+			{ props.shoubuValue > 0 && <div className={styles.shoubuValueRow}>
 				<div>合計</div>
 				<div className={styles.shoubuValue}>{props.shoubuValue}</div>
-			</div>
+			</div>}
 			<div className={styles.actionButtons}>
-				<div className={styles.koikoi} onClick={props.koikoiChosen}>
+				{props.koikoiChosen && <div className={styles.koikoi} onClick={props.koikoiChosen}>
 					こいこい
-				</div>
-				<div className={styles.shoubu} onClick={props.shoubuChosen}>
+				</div>}
+
+				{props.shoubuChosen && <div className={styles.shoubu} onClick={props.shoubuChosen}>
 					勝負
-				</div>
+				</div>}
+
+				{props.continueChosen && <div className={styles.shoubu} onClick={props.continueChosen}>
+					確認
+				</div>}
 			</div>
 		</div>
 	</div>;

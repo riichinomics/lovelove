@@ -139,35 +139,39 @@ type IGameState = lovelove.ICompleteGameState & {
 	position: lovelove.PlayerPosition
 }
 
-
-
-export const Table = ({
-	collection = [],
-	deck = 0,
-	deckFlipCard,
-	hand = [],
-	opponentCollection = [],
-	opponentHand = 0,
-	table = [],
-	active,
-	oya,
-	position,
-	tablePlayOptions,
-	onCardDropped,
-	yakuInformation,
-	opponentYakuInformation,
-	shoubuOpportunity,
-	koikoiChosen,
-	shoubuChosen,
-	score,
-	opponentScore,
-	koikoi,
-	opponentKoikoi,
-	roundEndView
-}: IGameState & IShoubuOpportunityHandlers & {
+export const Table = (props: IGameState & IShoubuOpportunityHandlers & {
+	gameState: lovelove.ICompleteGameState,
 	onCardDropped: CardDroppedHandler,
 	roundEndView?: RoundEndInformation,
 }) => {
+	const {
+		position,
+		onCardDropped,
+		koikoiChosen,
+		shoubuChosen,
+		continueChosen,
+		roundEndView,
+		gameState: {
+			collection = [],
+			deck = 0,
+			deckFlipCard,
+			hand = [],
+			opponentCollection = [],
+			opponentHand = 0,
+			table = [],
+			active,
+			oya,
+			tablePlayOptions,
+			yakuInformation,
+			opponentYakuInformation,
+			shoubuOpportunity,
+			score,
+			opponentScore,
+			koikoi,
+			opponentKoikoi,
+		} = {}
+	} = props;
+
 	const opponentPosition = oppositePosition(position);
 	const [previewCard, setPreviewCard] = React.useState<lovelove.ICard>();
 	const { move } = React.useContext(CardMoveContext);
@@ -185,6 +189,22 @@ export const Table = ({
 						shoubuValue={shoubuOpportunity.value}
 						koikoiChosen={koikoiChosen}
 						shoubuChosen={shoubuChosen}
+					/>
+				}
+				{roundEndView &&
+					<ShoubuOpportunityDisplay
+						yakuInformation={roundEndView.winner == lovelove.PlayerPosition.UnknownPosition
+							? null
+							: roundEndView.winner == position
+								? yakuInformation
+								: opponentYakuInformation}
+						collection={roundEndView.winner == lovelove.PlayerPosition.UnknownPosition
+							? null
+							: roundEndView.winner == position
+								? collection
+								: opponentCollection}
+						shoubuValue={roundEndView.winnings}
+						continueChosen={continueChosen}
 					/>
 				}
 			</div>

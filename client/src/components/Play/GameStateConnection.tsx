@@ -11,12 +11,13 @@ import { lovelove } from "../../rpc/proto/lovelove";
 import { InitialGameStateReceivedAction } from "../../state/actions/InitialGameStateReceivedAction";
 import { ActionType } from "../../state/actions/ActionType";
 import { GameUpdateReceivedAction } from "../../state/actions/GameUpdateReceivedAction";
+import { RoundEndClearedAction } from "../../state/actions/RoundEndClearedAction";
 
 
 export const GameStateConnection = () => {
 	const { api } = React.useContext(ApiContext);
 
-	const dispatch = useDispatch<React.Dispatch<InitialGameStateReceivedAction | GameUpdateReceivedAction>>();
+	const dispatch = useDispatch<React.Dispatch<InitialGameStateReceivedAction | GameUpdateReceivedAction | RoundEndClearedAction>>();
 
 	const roomId = useLocation().hash?.slice(1);
 	const navigate = useNavigate();
@@ -155,22 +156,29 @@ export const GameStateConnection = () => {
 	}, [setMove]);
 
 
-	const koikoiChosen  = React.useCallback(() => {
+	const koikoiChosen = React.useCallback(() => {
 		api.lovelove.resolveShoubuOpportunity({});
 	}, [api]);
 
-	const shoubuChosen  = React.useCallback(() => {
+	const shoubuChosen = React.useCallback(() => {
 		api.lovelove.resolveShoubuOpportunity({shoubu: true});
 	}, [api]);
 
+	const continueChosen = React.useCallback(() => {
+		dispatch({
+			type: ActionType.RoundEndCleared,
+		});
+	}, [dispatch]);
+
 	return <CardMoveContext.Provider value={{move}}>
 		<Table
-			{...(roundEndView?.gameState ?? gameState)}
+			gameState={roundEndView?.gameState ?? gameState}
 			position={position}
 			onCardDropped={onCardDropped}
 			koikoiChosen={koikoiChosen}
 			shoubuChosen={shoubuChosen}
 			roundEndView={roundEndView}
+			continueChosen={continueChosen}
 		/>
 	</CardMoveContext.Provider>;
 };

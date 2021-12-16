@@ -2,9 +2,11 @@ import { ApiStateChangedAction } from "./ApiStateChangedAction";
 import { GameUpdateReceivedAction } from "./GameUpdateReceivedAction";
 import { InitialGameStateReceivedAction } from "./InitialGameStateReceivedAction";
 import { PreviewCardChangedAction } from "./PreviewCardChangedAction";
+import { RoundEndClearedAction } from "./RoundEndClearedAction";
 
 export type Action =
 	ApiStateChangedAction
 	| InitialGameStateReceivedAction
 	| GameUpdateReceivedAction
-	| PreviewCardChangedAction;
+	| PreviewCardChangedAction
+	| RoundEndClearedAction;

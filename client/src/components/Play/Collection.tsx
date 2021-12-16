@@ -55,6 +55,17 @@ const styles = stylesheet`
 								background-color: #fffd;
 							}
 						}
+
+						> .yakuName {
+							padding-top: 4px;
+							padding-bottom: 0;
+						}
+
+						> .yakuValue {
+							order: 1;
+							margin-top: 8px;
+							margin-bottom: 0;
+						}
 					}
 				}
 

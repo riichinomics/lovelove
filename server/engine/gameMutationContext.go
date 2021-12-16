@@ -99,6 +99,7 @@ func (gameMutationContext *gameMutationContext) applyGameStateChange(gameStateCh
 	previousGameState := gameMutationContext.gameState.state
 	gameMutationContext.gameState.state = gameStateChange.newState
 
+	previousActivePlayer := gameMutationContext.gameState.activePlayer
 	if gameStateChange.activePlayer != lovelove.PlayerPosition_UnknownPosition {
 		gameMutationContext.gameState.activePlayer = gameStateChange.activePlayer
 	}
@@ -114,7 +115,7 @@ func (gameMutationContext *gameMutationContext) applyGameStateChange(gameStateCh
 			}
 		}
 
-		if position == gameMutationContext.gameState.activePlayer {
+		if position == previousActivePlayer {
 			if gameStateChange.newState == GameState_ShoubuOpportunity {
 				shoubuOpportunityUpdateMap[position] = &lovelove.ShoubuOpportunityUpdate{
 					Available: true,
@@ -139,41 +140,38 @@ func (gameMutationContext *gameMutationContext) applyKoikoiChanges(koikoiChanges
 	koikoiUpdates map[lovelove.PlayerPosition]*lovelove.KoikoiUpdate,
 ) {
 	koikoiUpdates = make(map[lovelove.PlayerPosition]*lovelove.KoikoiUpdate)
-	if koikoiChanges == nil {
+	if len(koikoiChanges) == 0 {
 		return
 	}
 
 	for p, _ := range lovelove.PlayerPosition_name {
 		position := lovelove.PlayerPosition(p)
-		opponentPosition := getOpponentPosition(position)
+		koikoiUpdates[position] = &lovelove.KoikoiUpdate{}
+	}
 
-		for _, player := range gameMutationContext.gameState.playerState {
-			koikoiChange, koikoiChangeExists := koikoiChanges[player.position]
-			if !koikoiChangeExists {
-				continue
-			}
+	for _, player := range gameMutationContext.gameState.playerState {
+		koikoiChange, koikoiChangeExists := koikoiChanges[player.position]
+		if !koikoiChangeExists {
+			continue
+		}
 
-			player.koikoi = koikoiChange.koikoiStatus
+		previousKoikoiStatus := player.koikoi
+		player.koikoi = koikoiChange.koikoiStatus
 
-			if koikoiChange.koikoiStatus && !player.koikoi {
-				existingUpdate, updateExists := koikoiUpdates[position]
-				if !updateExists {
-					existingUpdate = &lovelove.KoikoiUpdate{}
-					koikoiUpdates[position] = existingUpdate
-				}
+		if koikoiChange.koikoiStatus && !previousKoikoiStatus {
+			for position, update := range koikoiUpdates {
+				opponentPosition := getOpponentPosition(position)
 
 				if player.position == position {
-					existingUpdate.Self = true
+					update.Self = true
 					continue
 				}
 
 				if player.position == opponentPosition {
-					existingUpdate.Opponent = true
+					update.Opponent = true
 					continue
 				}
 			}
-
-			player.koikoi = koikoiChange.koikoiStatus
 		}
 	}
 
@@ -193,17 +191,16 @@ func (gameMutationContext *gameMutationContext) applyRoundEndChange(roundEndChan
 	if roundEndChange.winner != lovelove.PlayerPosition_UnknownPosition {
 		yakuInfo := gameMutationContext.gameState.GetYakuData(roundEndChange.winner)
 		shoubuValue = gameMutationContext.gameState.GetShoubuValue(yakuInfo, roundEndChange.winner)
-
 		gameMutationContext.gameState.oya = roundEndChange.winner
+	}
 
-		for _, player := range gameMutationContext.gameState.playerState {
-			player.koikoi = false
-			if player.position != roundEndChange.winner {
-				continue
-			}
-
-			player.score += shoubuValue
+	for _, player := range gameMutationContext.gameState.playerState {
+		player.koikoi = false
+		if player.position != roundEndChange.winner {
+			continue
 		}
+
+		player.score += shoubuValue
 	}
 
 	gameMutationContext.gameState.month = lovelove.Month(int(gameMutationContext.gameState.month+1) % len(lovelove.Month_name))

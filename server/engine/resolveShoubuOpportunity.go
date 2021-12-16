@@ -66,17 +66,13 @@ func (server loveLoveRpcServer) ResolveShoubuOpportunity(
 		return
 	}
 
-	koikoi := make(map[lovelove.PlayerPosition]*koikoiChange)
-	koikoi[playerState.position] = &koikoiChange{
-		koikoiStatus: true,
-	}
-
 	broadcastBuilder.QueueUpdates(gameMutationContext.Apply([]*gameStateMutation{
 		{
-			gameStateChange: &gameStateChange{
-				newState: GameState_HandCardPlay,
+			koikoiChange: map[lovelove.PlayerPosition]*koikoiChange{
+				playerState.position: {
+					koikoiStatus: true,
+				},
 			},
-			koikoiChange: koikoi,
 		},
 	}))
 

@@ -3,4 +3,5 @@ export enum ActionType {
 	InitialGameStateReceived = "InitialGameStateReceived",
 	GameUpdateReceived = "GameUpdateReceived",
 	PreviewCardChanged = "PreviewCardChanged",
+	RoundEndCleared = "RoundEndCleared",
 }

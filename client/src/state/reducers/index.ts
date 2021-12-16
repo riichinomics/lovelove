@@ -232,6 +232,11 @@ function mainReducer(state: IState, action: Action): IState {
 			return {
 				...state,
 			};
+		} case ActionType.RoundEndCleared: {
+			return {
+				...state,
+				roundEndView: null,
+			};
 		}
 	}
 
