@@ -194,7 +194,13 @@ function mainReducer(state: IState, action: Action): IState {
 						}
 
 						if (update.shoubuOpportunityUpdate) {
-							gameState.shoubuOpportunity = update.shoubuOpportunityUpdate.available;
+							if (!update.shoubuOpportunityUpdate.available) {
+								gameState.shoubuOpportunity = null;
+							} else {
+								gameState.shoubuOpportunity = {
+									value: update.shoubuOpportunityUpdate.value ?? 0
+								};
+							}
 						}
 
 						if (update.activePlayerUpdate) {

@@ -13,8 +13,9 @@ type cardMove struct {
 }
 
 type gameStateChange struct {
-	newState     GameState
-	activePlayer lovelove.PlayerPosition
+	newState               GameState
+	activePlayer           lovelove.PlayerPosition
+	shoubuOpportunityValue int32
 }
 
 type activePlayerChange struct {
@@ -247,12 +248,15 @@ func SelectDrawnCardPlayOptionMutation(
 }
 
 func ShoubuOpportunityMutation(
-	game *gameState,
+	gameState *gameState,
+	playerPosition lovelove.PlayerPosition,
+	yakuUpdate *yakuUpdate,
 ) ([]*gameStateMutation, error) {
 	return []*gameStateMutation{
 		&gameStateMutation{
 			gameStateChange: &gameStateChange{
-				newState: GameState_ShoubuOpportunity,
+				newState:               GameState_ShoubuOpportunity,
+				shoubuOpportunityValue: gameState.GetShoubuValue(yakuUpdate.completeYakuInfo, playerPosition),
 			},
 		},
 	}, nil
@@ -269,4 +273,16 @@ func TurnEndMutation(
 			},
 		},
 	}, nil
+}
+
+func CheckForYakuMutation(yakuUpdates *yakuUpdate, playerState *playerState, gameState *gameState) (mutation []*gameStateMutation, err error) {
+	mutation = make([]*gameStateMutation, 0)
+	_, hasYakuUpdate := yakuUpdates.yakuUpdatesMap[playerState.position]
+	if !hasYakuUpdate {
+		mutation, err = TurnEndMutation(gameState)
+		return
+	}
+
+	mutation, err = ShoubuOpportunityMutation(gameState, playerState.position, yakuUpdates)
+	return
 }

@@ -56,6 +56,15 @@ const styles = stylesheet`
 				}
 			}
 
+			.shoubuValueRow {
+				margin-top: 40px;
+				display: flex;
+				.shoubuValue {
+					text-align: right;
+					flex: 1;
+				}
+			}
+
 			.actionButtons {
 				margin-top: 40px;
 				display: flex;
@@ -102,6 +111,7 @@ export interface IShoubuOpportunityHandlers {
 export const ShoubuOpportunityDisplay = (props: {
 	collection: lovelove.ICard[],
 	yakuInformation: lovelove.IYakuData[],
+	shoubuValue: number
 } & IShoubuOpportunityHandlers) => {
 	const context = useContext(ThemeContext);
 	const CardComponent = context.theme.CardComponent;
@@ -120,6 +130,10 @@ export const ShoubuOpportunityDisplay = (props: {
 					)}
 				</div>
 			</div>)}
+			<div className={styles.shoubuValueRow}>
+				<div>合計</div>
+				<div className={styles.shoubuValue}>{props.shoubuValue}</div>
+			</div>
 			<div className={styles.actionButtons}>
 				<div className={styles.koikoi} onClick={props.koikoiChosen}>
 					こいこい

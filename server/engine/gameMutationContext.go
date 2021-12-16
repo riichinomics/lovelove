@@ -118,6 +118,7 @@ func (gameMutationContext *gameMutationContext) applyGameStateChange(gameStateCh
 			if gameStateChange.newState == GameState_ShoubuOpportunity {
 				shoubuOpportunityUpdateMap[position] = &lovelove.ShoubuOpportunityUpdate{
 					Available: true,
+					Value:     gameStateChange.shoubuOpportunityValue,
 				}
 			} else if previousGameState == GameState_ShoubuOpportunity {
 				shoubuOpportunityUpdateMap[position] = &lovelove.ShoubuOpportunityUpdate{

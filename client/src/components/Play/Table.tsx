@@ -178,6 +178,7 @@ export const Table = ({
 				<ShoubuOpportunityDisplay
 					yakuInformation={yakuInformation}
 					collection={collection}
+					shoubuValue={shoubuOpportunity.value}
 					koikoiChosen={koikoiChosen}
 					shoubuChosen={shoubuChosen}
 				/>

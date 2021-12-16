@@ -163,7 +163,9 @@ func (gameState *gameState) ToCompleteGameState(playerPosition lovelove.PlayerPo
 	}
 
 	if gameState.state == GameState_ShoubuOpportunity && playerPosition == gameState.activePlayer {
-		completeGameState.ShoubuOpportunity = true
+		completeGameState.ShoubuOpportunity = &lovelove.ShoubuOpportunity{
+			Value: gameState.GetShoubuValue(completeGameState.YakuInformation, playerPosition),
+		}
 	}
 
 	return completeGameState
@@ -293,5 +295,27 @@ func (gameState *gameState) GetTablePlayOptions(playerPosition lovelove.PlayerPo
 			action.NoTargetPlayOptions.Options = append(action.NoTargetPlayOptions.Options, playable.card.Id)
 		}
 	}
+	return
+}
+
+func (gameState *gameState) GetShoubuValue(yakuData []*lovelove.YakuData, playerPosition lovelove.PlayerPosition) (value int32) {
+	for _, yaku := range yakuData {
+		value += yaku.Value
+	}
+
+	if value >= 7 {
+		value *= 2
+	}
+
+	opponentPosition := getOpponentPosition(playerPosition)
+	for _, player := range gameState.playerState {
+		if player.position == opponentPosition {
+			if player.koikoi {
+				value *= 2
+			}
+			break
+		}
+	}
+
 	return
 }
