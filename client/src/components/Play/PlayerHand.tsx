@@ -1,6 +1,6 @@
 import * as React from "react";
 import { CardStack } from "./CardStack";
-import { cardKey, CardZone } from "./utils";
+import { cardKey, CardZone } from "../../utils";
 import { lovelove } from "../../rpc/proto/lovelove";
 import { stylesheet } from "astroturf";
 import { CardMoveContext } from "../../rpc/CardMoveContext";

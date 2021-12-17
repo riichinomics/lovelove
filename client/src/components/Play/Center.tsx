@@ -1,6 +1,6 @@
 import * as React from "react";
 import { CardStack } from "./CardStack";
-import { CardDroppedHandler, cardKey, CardLocation, CardMove, CardWithOffset, CardZone, Vector2 } from "./utils";
+import { CardDroppedHandler, cardKey, CardLocation, CardMove, CardWithOffset, CardZone, Vector2 } from "../../utils";
 import { lovelove } from "../../rpc/proto/lovelove";
 import { stylesheet } from "astroturf";
 import { CardMoveContext } from "../../rpc/CardMoveContext";

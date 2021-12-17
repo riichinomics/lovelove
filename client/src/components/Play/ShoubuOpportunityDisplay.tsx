@@ -3,7 +3,7 @@ import { stylesheet } from "astroturf";
 import { useContext } from "react";
 import { lovelove } from "../../rpc/proto/lovelove";
 import { ThemeContext } from "../../themes/ThemeContext";
-import { getYakuName } from "./utils";
+import { getYakuName } from "../../utils";
 
 const styles = stylesheet`
 	.shoubuOpportunityContainer {
@@ -135,6 +135,7 @@ export const ShoubuOpportunityDisplay = (props: {
 						{yaku.cards.map(cardId =>
 							<CardComponent
 								key={cardId}
+								hideHints
 								{...props.collection.find(collectedCard => collectedCard.id === cardId)}
 								className={styles.yakuCard}
 							/>

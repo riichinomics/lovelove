@@ -7,7 +7,7 @@ import clsx from "clsx";
 import { lovelove } from "../../rpc/proto/lovelove";
 import { stylesheet } from "astroturf";
 import { PlayerNameTag } from "./PlayerNameTag";
-import { CardDroppedHandler, oppositePosition } from "./utils";
+import { CardDroppedHandler, oppositePosition } from "../../utils";
 import { CardMoveContext } from "../../rpc/CardMoveContext";
 import { IShoubuOpportunityHandlers, ShoubuOpportunityDisplay } from "./ShoubuOpportunityDisplay";
 import { PlayerMetadataZone } from "./PlayerMetadataZone";

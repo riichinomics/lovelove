@@ -5,7 +5,7 @@ import { IState } from "../../state/IState";
 import { Table } from "./Table";
 import { ApiState } from "../../rpc/ApiState";
 import { useLocation, useNavigate } from "react-router";
-import { CardMove, CardZone, createRandomCard } from "./utils";
+import { CardMove, CardZone, createRandomCard } from "../../utils";
 import { CardMoveContext } from "../../rpc/CardMoveContext";
 import { lovelove } from "../../rpc/proto/lovelove";
 import { InitialGameStateReceivedAction } from "../../state/actions/InitialGameStateReceivedAction";

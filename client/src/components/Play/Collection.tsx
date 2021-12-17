@@ -1,5 +1,5 @@
 import * as React from "react";
-import { CardType, getCardType, getSeasonMonth, getYakuName } from "./utils";
+import { CardType, getCardType, getSeasonMonth, getYakuName } from "../../utils";
 import { CardStack } from "./CardStack";
 import { lovelove } from "../../rpc/proto/lovelove";
 import { stylesheet } from "astroturf";

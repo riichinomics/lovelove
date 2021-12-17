@@ -65,6 +65,7 @@ import yanagi4 from "../mantia/yanagi/4.svg";
 
 import { lovelove } from "../../rpc/proto/lovelove";
 import clsx from "clsx";
+import { getCardType, getCardTypeName, getHanaName } from "../../utils";
 
 const SVG_MAP: Record<lovelove.Hana, Record<lovelove.Variation, string>> = {
 	[lovelove.Hana.UnknownSeason]: {
@@ -162,16 +163,48 @@ const SVG_MAP: Record<lovelove.Hana, Record<lovelove.Variation, string>> = {
 
 const styles = stylesheet`
 	.card {
+		position: relative;
+
 		min-width: 100px;
 		> img {
 			display: block;
 
 		}
+
+		font-size: 16px;
+		line-height: 16px;
+
+		> .tag {
+			position: absolute;
+			writing-mode: vertical-rl;
+			visibility: hidden;
+			background-color: #000a;
+			padding: 4px 4px;
+		}
+
+		&:hover.showHints > .tag {
+			visibility: visible;
+		}
+
+		> .hana {
+			bottom: 10px;
+			left: 10px;
+		}
+
+		> .type {
+			top: 10px;
+			right: 10px;
+		}
 	}
 `;
 
 export const CardComponent: React.FC<CardProps> = (props) => {
-	return <div className={clsx(styles.card, props.className)}>
+	return <div className={clsx(styles.card, props.className, props.hideHints || styles.showHints)}>
+		<div className={clsx(styles.tag, styles.hana)}>{getHanaName(props.hana)}</div>
+		<div className={clsx(styles.tag, styles.type)}>{getCardTypeName(getCardType(props))}</div>
 		<img draggable={false} src={SVG_MAP[props.hana][props.variation]} />
 	</div>;
 };
+
+
+

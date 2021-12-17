@@ -1,6 +1,6 @@
-import { Month } from "../../themes/Month";
-import { lovelove } from "../../rpc/proto/lovelove";
-import { CardProps } from "../../themes/CardProps";
+import { Month } from "./themes/Month";
+import { lovelove } from "./rpc/proto/lovelove";
+import { CardProps } from "./themes/CardProps";
 
 export enum CardType {
 	None,
@@ -118,7 +118,7 @@ const CARD_TYPE_MAP: Record<lovelove.Hana, Record<lovelove.Variation, CardType>>
 export function getCardType(card: lovelove.ICard): CardType {
 	const type = CARD_TYPE_MAP[card.hana][card.variation];
 	if (type === undefined) {
-		console.log(card);
+		console.error("undefined card type", card);
 	}
 	return type;
 }
@@ -203,4 +203,53 @@ const yamuNameMap: Record<lovelove.YakuId, string> = {
 
 export function getYakuName(yakuId: lovelove.YakuId): string {
 	return yamuNameMap[yakuId];
+}
+
+const hanaNameMap: Record<lovelove.Hana, string> = {
+	[lovelove.Hana.UnknownSeason]: "不明",
+	[lovelove.Hana.Ayame]: "あやめ",
+	[lovelove.Hana.Botan]: "ぼたん",
+	[lovelove.Hana.Fuji]: "ふじ",
+	[lovelove.Hana.Hagi]: "はぎ",
+	[lovelove.Hana.Kiku]: "きく",
+	[lovelove.Hana.Kiri]: "きり",
+	[lovelove.Hana.Matsu]: "まつ",
+	[lovelove.Hana.Momiji]: "もみじ",
+	[lovelove.Hana.Sakura]: "さくら",
+	[lovelove.Hana.Susuki]: "すすき",
+	[lovelove.Hana.Ume]: "うめ",
+	[lovelove.Hana.Yanagi]: "やなぎ",
+};
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const hanaKanjiMap: Record<lovelove.Hana, string> = {
+	[lovelove.Hana.UnknownSeason]: "不明",
+	[lovelove.Hana.Ayame]: "菖蒲",
+	[lovelove.Hana.Botan]: "牡丹",
+	[lovelove.Hana.Fuji]: "藤",
+	[lovelove.Hana.Hagi]: "萩",
+	[lovelove.Hana.Kiku]: "菊",
+	[lovelove.Hana.Kiri]: "桐",
+	[lovelove.Hana.Matsu]: "松",
+	[lovelove.Hana.Momiji]: "紅葉",
+	[lovelove.Hana.Sakura]: "桜",
+	[lovelove.Hana.Susuki]: "芒",
+	[lovelove.Hana.Ume]: "梅",
+	[lovelove.Hana.Yanagi]: "柳",
+};
+
+export function getHanaName(hana: lovelove.Hana): string {
+	return hanaKanjiMap[hana];
+}
+
+const typeNameMap: Record<CardType, string> = {
+	[CardType.None]: "不明",
+	[CardType.Kasu]: "カス",
+	[CardType.Tane]: "タネ",
+	[CardType.Tanzaku]: "短冊",
+	[CardType.Hikari]: "光",
+};
+
+export function getCardTypeName(cardType: CardType): string {
+	return typeNameMap[cardType];
 }

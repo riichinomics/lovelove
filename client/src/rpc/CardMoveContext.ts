@@ -1,5 +1,5 @@
 import * as React from "react";
-import { CardMove } from "../components/Play/utils";
+import { CardMove } from "../utils";
 
 interface CardMoveContext {
 	move?: CardMove;
