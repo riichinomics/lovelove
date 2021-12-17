@@ -280,15 +280,7 @@ func YakuContribution(card *lovelove.Card, gameState *gameState) []*yakuContribu
 
 func GetTeyaku(cards []*cardState) lovelove.TeyakuId {
 	if len(cards) < 8 {
-		return lovelove.TeyakuId_Unknown_Teyaku
-	}
-
-	if cards[0].location == CardLocation_RedHand {
-		return lovelove.TeyakuId_Kuttsuki
-	}
-
-	if cards[0].location == CardLocation_WhiteHand {
-		return lovelove.TeyakuId_Teshi
+		return lovelove.TeyakuId_UnknownTeyaku
 	}
 
 	hanaMap := make(map[lovelove.Hana][]*cardState)
@@ -324,5 +316,5 @@ func GetTeyaku(cards []*cardState) lovelove.TeyakuId {
 		return lovelove.TeyakuId_Kuttsuki
 	}
 
-	return lovelove.TeyakuId_Unknown_Teyaku
+	return lovelove.TeyakuId_UnknownTeyaku
 }

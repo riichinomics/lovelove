@@ -9,9 +9,9 @@ import { stylesheet } from "astroturf";
 import { PlayerNameTag } from "./PlayerNameTag";
 import { CardDroppedHandler, oppositePosition } from "../../utils";
 import { CardMoveContext } from "../../rpc/CardMoveContext";
-import { IShoubuOpportunityHandlers, ShoubuOpportunityDisplay } from "./ShoubuOpportunityDisplay";
 import { PlayerMetadataZone } from "./PlayerMetadataZone";
 import { RoundEndInformation } from "../../state/IState";
+import { GameActionModal, IGameModalActions } from "./GameActionModal/GameActionModal";
 
 const styles = stylesheet`
 	$collection-peek: 100px;
@@ -140,7 +140,7 @@ type IGameState = lovelove.ICompleteGameState & {
 	position: lovelove.PlayerPosition
 }
 
-export const Table = (props: IGameState & IShoubuOpportunityHandlers & {
+export const Table = (props: IGameState & IGameModalActions & {
 	gameState: lovelove.ICompleteGameState,
 	onCardDropped: CardDroppedHandler,
 	roundEndView?: RoundEndInformation,
@@ -148,9 +148,10 @@ export const Table = (props: IGameState & IShoubuOpportunityHandlers & {
 	const {
 		position,
 		onCardDropped,
-		koikoiChosen,
-		shoubuChosen,
-		continueChosen,
+		onKoikoiChosen,
+		onShoubuChosen,
+		onContinueChosen,
+		teyakuResolved,
 		roundEndView,
 		gameState: {
 			collection = [],
@@ -172,6 +173,7 @@ export const Table = (props: IGameState & IShoubuOpportunityHandlers & {
 			opponentKoikoi,
 			month,
 			monthHana,
+			teyaku,
 		} = {}
 	} = props;
 
@@ -184,31 +186,21 @@ export const Table = (props: IGameState & IShoubuOpportunityHandlers & {
 
 	return <div className={styles.table}>
 		<div className={styles.modalArea}>
-			{shoubuOpportunity &&
-				<ShoubuOpportunityDisplay
-					yakuInformation={yakuInformation}
-					collection={collection}
-					shoubuValue={shoubuOpportunity.value}
-					koikoiChosen={koikoiChosen}
-					shoubuChosen={shoubuChosen}
-				/>
-			}
-			{roundEndView &&
-				<ShoubuOpportunityDisplay
-					yakuInformation={roundEndView.winner == lovelove.PlayerPosition.UnknownPosition
-						? null
-						: roundEndView.winner == position
-							? yakuInformation
-							: opponentYakuInformation}
-					collection={roundEndView.winner == lovelove.PlayerPosition.UnknownPosition
-						? null
-						: roundEndView.winner == position
-							? collection
-							: opponentCollection}
-					shoubuValue={roundEndView.winnings}
-					continueChosen={continueChosen}
-				/>
-			}
+			<GameActionModal
+				onKoikoiChosen={onKoikoiChosen}
+				onShoubuChosen={onShoubuChosen}
+				onContinueChosen={onContinueChosen}
+				roundEndView={roundEndView}
+				shoubuOpportunity={shoubuOpportunity}
+				teyaku={teyaku}
+				collection={collection}
+				opponentCollection={opponentCollection}
+				yakuInformation={yakuInformation}
+				opponentYakuInformation={opponentYakuInformation}
+				hand={hand}
+				position={position}
+				teyakuResolved={teyakuResolved}
+			/>
 		</div>
 		<div className={styles.opponentHand}>
 			<OpponentHand cards={opponentHand} />

@@ -183,7 +183,7 @@ export interface CardMove {
 	offset: Vector2;
 }
 
-const yamuNameMap: Record<lovelove.YakuId, string> = {
+const yakuNameMap: Record<lovelove.YakuId, string> = {
 	[lovelove.YakuId.UnknownYaku]: "不明",
 	[lovelove.YakuId.Gokou]: "五光",
 	[lovelove.YakuId.Shikou]: "四光",
@@ -202,7 +202,17 @@ const yamuNameMap: Record<lovelove.YakuId, string> = {
 };
 
 export function getYakuName(yakuId: lovelove.YakuId): string {
-	return yamuNameMap[yakuId];
+	return yakuNameMap[yakuId];
+}
+
+const teyakuNameMap: Record<lovelove.TeyakuId, string> = {
+	[lovelove.TeyakuId.UnknownTeyaku]: "不明",
+	[lovelove.TeyakuId.Kuttsuki]: "喰付",
+	[lovelove.TeyakuId.Teshi]: "手四",
+};
+
+export function getTeyakuName(teyakuId: lovelove.TeyakuId): string {
+	return teyakuNameMap[teyakuId];
 }
 
 const hanaNameMap: Record<lovelove.Hana, string> = {

@@ -27,6 +27,7 @@ export const GameStateConnection = () => {
 	const gameState = useSelector((state: IState) => state.gameState);
 	const roundEndView = useSelector((state: IState) => state.roundEndView);
 	const [move, setMove] = React.useState<CardMove>();
+	const [teyakuResolved, setTeyakuResolved] = React.useState(false);
 
 	React.useEffect(() => {
 		if (roomId == null || roomId === "") {
@@ -47,6 +48,7 @@ export const GameStateConnection = () => {
 			switch (message.$type.name) {
 				case lovelove.GameStateUpdate.name: {
 					setMove(null);
+					setTeyakuResolved(false);
 
 					const gameStateUpdate = message as any as lovelove.GameStateUpdate;
 					dispatch({
@@ -156,15 +158,23 @@ export const GameStateConnection = () => {
 	}, [setMove]);
 
 
-	const koikoiChosen = React.useCallback(() => {
+	const onKoikoiChosen = React.useCallback(() => {
 		api.lovelove.resolveShoubuOpportunity({});
 	}, [api]);
 
-	const shoubuChosen = React.useCallback(() => {
+	const onShoubuChosen = React.useCallback((teyaku: boolean) => {
+		if (teyaku) {
+			api.lovelove.resolveTeyaku({}).then((response) => {
+				if (response.status != lovelove.GenericResponseCode.Error) {
+					setTeyakuResolved(true);
+				}
+			});
+			return;
+		}
 		api.lovelove.resolveShoubuOpportunity({shoubu: true});
 	}, [api]);
 
-	const continueChosen = React.useCallback(() => {
+	const onContinueChosen = React.useCallback(() => {
 		dispatch({
 			type: ActionType.RoundEndCleared,
 		});
@@ -175,10 +185,11 @@ export const GameStateConnection = () => {
 			gameState={roundEndView?.gameState ?? gameState}
 			position={position}
 			onCardDropped={onCardDropped}
-			koikoiChosen={koikoiChosen}
-			shoubuChosen={shoubuChosen}
+			onKoikoiChosen={onKoikoiChosen}
+			onShoubuChosen={onShoubuChosen}
 			roundEndView={roundEndView}
-			continueChosen={continueChosen}
+			onContinueChosen={onContinueChosen}
+			teyakuResolved={teyakuResolved}
 		/>
 	</CardMoveContext.Provider>;
 };

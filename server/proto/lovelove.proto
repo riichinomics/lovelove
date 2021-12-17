@@ -91,7 +91,7 @@ enum MessageType {
 }
 
 enum TeyakuId {
-	Unknown_Teyaku = 0;
+	UnknownTeyaku = 0;
 	Teshi = 1;
 	Kuttsuki = 2;
 }

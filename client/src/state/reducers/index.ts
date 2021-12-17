@@ -225,6 +225,7 @@ function mainReducer(state: IState, action: Action): IState {
 							gameState: gameState,
 							winner: update.roundEndResult.winner,
 							winnings: update.roundEndResult.winnings,
+							teyaku: update.roundEndResult.teyakuInformation,
 						};
 
 						state.gameState = immerate(update.roundEndResult.nextRound);

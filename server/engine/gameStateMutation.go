@@ -291,14 +291,11 @@ func TurnEndMutation(
 	}, nil
 }
 
-func CheckForYakuMutation(yakuUpdates *yakuUpdate, playerState *playerState, gameState *gameState) (mutation []*gameStateMutation, err error) {
-	mutation = make([]*gameStateMutation, 0)
+func CheckForYakuMutation(yakuUpdates *yakuUpdate, playerState *playerState, gameState *gameState) ([]*gameStateMutation, error) {
 	_, hasYakuUpdate := yakuUpdates.yakuUpdatesMap[playerState.position]
 	if !hasYakuUpdate {
-		mutation, err = TurnEndMutation(gameState)
-		return
+		return TurnEndMutation(gameState)
 	}
 
-	mutation, err = ShoubuOpportunityMutation(gameState, playerState.position, yakuUpdates)
-	return
+	return ShoubuOpportunityMutation(gameState, playerState.position, yakuUpdates)
 }

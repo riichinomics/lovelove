@@ -5,6 +5,7 @@ export interface RoundEndInformation {
 	winner: lovelove.PlayerPosition;
 	winnings: number;
 	gameState: lovelove.ICompleteGameState;
+	teyaku: lovelove.IRoundEndResultTeyakuInformation[];
 }
 
 export interface IState {

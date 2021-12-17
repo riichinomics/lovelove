@@ -371,7 +371,7 @@ func (gameState *gameState) Deal() {
 		gameState.MoveAllCardsToDeck()
 		gameState.ShuffleDeck()
 		table := gameState.DrawCards(8, CardLocation_Table)
-		if GetTeyaku(table) != lovelove.TeyakuId_Unknown_Teyaku {
+		if GetTeyaku(table) != lovelove.TeyakuId_UnknownTeyaku {
 			continue
 		}
 
@@ -403,7 +403,7 @@ func (gameState *gameState) GetTeyaku() (teyakuMap map[lovelove.PlayerPosition]*
 		}
 
 		teyaku := GetTeyaku(gameState.Hand(position))
-		if confirmed || teyaku != lovelove.TeyakuId_Unknown_Teyaku {
+		if confirmed || teyaku != lovelove.TeyakuId_UnknownTeyaku {
 			teyakuMap[position] = &teyakuInformation{
 				confirmed,
 				teyaku,
