@@ -52,10 +52,7 @@ export const PlayerMetadataZone = (props: {
 	koikoi?: boolean,
 }) => {
 	return <div className={clsx(styles.metadataZone, props.opponent && styles.opponent)}>
-		<div className={styles.metadataBubble}>
-			{props.score ?? 0}
-			点
-		</div>
+		<div className={styles.metadataBubble}>{props.score ?? 0}</div>
 		{props.oya && <div className={clsx(styles.metadataBubble, styles.oya)}>親</div>}
 		{props.koikoi && <div className={clsx(styles.metadataBubble, styles.koikoi)}>こいこい</div>}
 	</div>;
