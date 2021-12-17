@@ -9,19 +9,18 @@ import { useDrop } from "react-dnd";
 import clsx from "clsx";
 
 const styles = stylesheet`
+	@keyframes deckPulseAnimation {
+		0% {
+			background: white;
+		}
+		50% {
+			background: #bbb;
+		}
+	}
+
 	.center {
 		display: flex;
 		flex: 1;
-
-		/* > * {
-			&:not(:last-child) {
-				margin-right: 20px;
-			}
-
-			> *:not(:last-child) {
-				margin-bottom: 20px;
-			}
-		} */
 
 		.deck {
 			padding-top: 20px;
@@ -36,6 +35,12 @@ const styles = stylesheet`
 			border-right: 2px solid black;
 			.deckStack {
 				margin-bottom: 20px;
+			}
+
+			&.active {
+				animation-name: deckPulseAnimation;
+				animation-duration: 3s;
+				animation-iteration-count: infinite;
 			}
 		}
 
@@ -61,8 +66,10 @@ const styles = stylesheet`
 				}
 			}
 
+			transition: background-color 0.2s ease-in;
+
 			&.dropPossible {
-				background-color: pink;
+				background-color: #ffb85a;
 			}
 		}
 	}
@@ -135,7 +142,7 @@ export const Center = (props: {
 	}), [props.playOptions, props.onCardDropped]);
 
 	return <div className={styles.center}>
-		<div className={styles.deck}>
+		<div className={clsx(styles.deck, props.drawnCard && styles.active)}>
 			<div className={styles.deckStack}>
 				<CardStack cards={[...new Array(Math.min(props.deck, 3))]} concealed />
 			</div>

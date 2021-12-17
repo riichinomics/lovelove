@@ -7,9 +7,24 @@ import { CardMoveContext } from "../../rpc/CardMoveContext";
 import clsx from "clsx";
 
 const styles = stylesheet`
+	@keyframes handPulseAnimation {
+		0% {
+			background: #222;
+		}
+		50% {
+			background: #4a4a4a;
+		}
+	}
+
 	.playerHand {
 		background-color: #222;
 		border-top: 2px solid black;
+
+		&.active {
+			animation-name: handPulseAnimation;
+			animation-duration: 3s;
+			animation-iteration-count: infinite;
+		}
 
 		padding-top: 10px;
 		padding-bottom: 10px;
@@ -43,7 +58,7 @@ export const PlayerHand = (props: {
 	const { move } = React.useContext(CardMoveContext);
 	const moveOrigin = move?.from?.zone === CardZone.Hand ? move.from : null;
 	const cards = [null, ...props.cards];
-	return <div className={styles.playerHand} onMouseLeave={onNoCardSelected}>
+	return <div className={clsx(styles.playerHand, props.canPlay && styles.active)} onMouseLeave={onNoCardSelected}>
 		{cards.map((card, index) => <div className={clsx(props.canPlay && styles.handCard)} key={cardKey(card, index)}>
 			<CardStack
 				cards={[(moveOrigin?.index === index - 1) ? null : card]}

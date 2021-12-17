@@ -239,7 +239,7 @@ const hanaKanjiMap: Record<lovelove.Hana, string> = {
 };
 
 export function getHanaName(hana: lovelove.Hana): string {
-	return hanaKanjiMap[hana];
+	return hanaNameMap[hana];
 }
 
 const typeNameMap: Record<CardType, string> = {
