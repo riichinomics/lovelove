@@ -84,16 +84,22 @@ func (gameMutationContext *gameMutationContext) applyCardMoves(cardMoves []*card
 }
 
 func (gameMutationContext *gameMutationContext) applyGameStateChange(gameStateChange *gameStateChange) (
-	actionUpdateMap map[lovelove.PlayerPosition]*lovelove.PlayOptionsUpdate,
+	playOptionsUpdateMap map[lovelove.PlayerPosition]*lovelove.PlayOptionsUpdate,
 	shoubuOpportunityUpdateMap map[lovelove.PlayerPosition]*lovelove.ShoubuOpportunityUpdate,
 	activePlayerUpdates map[lovelove.PlayerPosition]*lovelove.ActivePlayerUpdate,
 ) {
-	actionUpdateMap = make(map[lovelove.PlayerPosition]*lovelove.PlayOptionsUpdate)
+	playOptionsUpdateMap = make(map[lovelove.PlayerPosition]*lovelove.PlayOptionsUpdate)
 	shoubuOpportunityUpdateMap = make(map[lovelove.PlayerPosition]*lovelove.ShoubuOpportunityUpdate)
 	activePlayerUpdates = make(map[lovelove.PlayerPosition]*lovelove.ActivePlayerUpdate)
 
 	if gameStateChange == nil {
 		return
+	}
+
+	if gameMutationContext.gameState.state == gameStateChange.newState {
+		if gameStateChange.activePlayer == lovelove.PlayerPosition_UnknownPosition || gameMutationContext.gameState.activePlayer == gameStateChange.activePlayer {
+			return
+		}
 	}
 
 	previousGameState := gameMutationContext.gameState.state
@@ -106,13 +112,10 @@ func (gameMutationContext *gameMutationContext) applyGameStateChange(gameStateCh
 
 	for p, _ := range lovelove.PlayerPosition_name {
 		position := lovelove.PlayerPosition(p)
-		actionUpdate := gameMutationContext.gameState.GetTablePlayOptions(position)
-		if actionUpdate != nil {
-			actionUpdateMap[position] = &lovelove.PlayOptionsUpdate{
-				UpdatedAcceptedOriginZones: &lovelove.PlayOptionsZoneUpdate{
-					Zones: gameMutationContext.gameState.GetPlayOptionsAcceptedOriginZones(position),
-				},
-			}
+		playOptionsUpdateMap[position] = &lovelove.PlayOptionsUpdate{
+			UpdatedAcceptedOriginZones: &lovelove.PlayOptionsZoneUpdate{
+				Zones: gameMutationContext.gameState.GetPlayOptionsAcceptedOriginZones(position),
+			},
 		}
 
 		if position == previousActivePlayer {
@@ -128,8 +131,10 @@ func (gameMutationContext *gameMutationContext) applyGameStateChange(gameStateCh
 			}
 		}
 
-		activePlayerUpdates[position] = &lovelove.ActivePlayerUpdate{
-			Position: gameStateChange.activePlayer,
+		if gameStateChange.activePlayer != lovelove.PlayerPosition_UnknownPosition {
+			activePlayerUpdates[position] = &lovelove.ActivePlayerUpdate{
+				Position: gameStateChange.activePlayer,
+			}
 		}
 	}
 
@@ -233,7 +238,7 @@ func (gameMutationContext *gameMutationContext) Apply(mutations []*gameStateMuta
 
 	for _, mutation := range mutations {
 		cardUpdatesMap := gameMutationContext.applyCardMoves(mutation.cardMoves)
-		actionUpdatesMap, shoubuOpportunityUpdateMap, activePlayerUpdates := gameMutationContext.applyGameStateChange(mutation.gameStateChange)
+		playOptionsUpdateMap, shoubuOpportunityUpdateMap, activePlayerUpdates := gameMutationContext.applyGameStateChange(mutation.gameStateChange)
 		koikoiUpdates := gameMutationContext.applyKoikoiChanges(mutation.koikoiChange)
 		roundEndUpdatesMap := gameMutationContext.applyRoundEndChange(mutation.roundEndChange)
 
@@ -246,7 +251,7 @@ func (gameMutationContext *gameMutationContext) Apply(mutations []*gameStateMuta
 				updatePart.CardMoveUpdates = cardUpdate
 			}
 
-			if actionUpdate, ok := actionUpdatesMap[position]; ok {
+			if actionUpdate, ok := playOptionsUpdateMap[position]; ok {
 				updatePart.PlayOptionsUpdate = actionUpdate
 			}
 
