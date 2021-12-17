@@ -170,6 +170,8 @@ export const Table = (props: IGameState & IShoubuOpportunityHandlers & {
 			opponentScore,
 			koikoi,
 			opponentKoikoi,
+			month,
+			monthHana,
 		} = {}
 	} = props;
 
@@ -234,6 +236,8 @@ export const Table = (props: IGameState & IShoubuOpportunityHandlers & {
 		</div>
 		<div className={styles.center}>
 			<Center
+				month={month}
+				monthHana={monthHana}
 				cards={table}
 				deck={deck}
 				drawnCard={deckFlipCard}

@@ -7,6 +7,7 @@ import { CardMoveContext } from "../../rpc/CardMoveContext";
 import { DragDropTypes } from "./DragDropTypes";
 import { useDrop } from "react-dnd";
 import clsx from "clsx";
+import { Deck } from "./Deck";
 
 const styles = stylesheet`
 	@keyframes deckPulseAnimation {
@@ -104,10 +105,15 @@ const CenterCardStack = (props: {
 	/>;
 };
 
+
+
+
 export const Center = (props: {
 	deck: number;
 	drawnCard?: lovelove.ICard;
 	cards: lovelove.ICardMaybe[];
+	monthHana: lovelove.Hana,
+	month: lovelove.Month,
 	playOptions: lovelove.IZonePlayOptions;
 	onPreviewCardChanged?: (card: lovelove.ICard) => void;
 	previewCard: lovelove.ICard;
@@ -144,7 +150,7 @@ export const Center = (props: {
 	return <div className={styles.center}>
 		<div className={clsx(styles.deck, props.drawnCard && styles.active)}>
 			<div className={styles.deckStack}>
-				<CardStack cards={[...new Array(Math.min(props.deck, 3))]} concealed />
+				<Deck month={props.month} monthHana={props.monthHana} cards={props.deck} />
 			</div>
 			<CardStack
 				cards={[props.drawnCard]}

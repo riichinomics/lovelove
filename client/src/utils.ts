@@ -253,3 +253,27 @@ const typeNameMap: Record<CardType, string> = {
 export function getCardTypeName(cardType: CardType): string {
 	return typeNameMap[cardType];
 }
+
+export function jpNumeral(value: number): string {
+	let rep = "";
+	if (value < 0) {
+		value *= -1;
+		rep += "-";
+	}
+
+	for (const counters = ["", "十", "百", "千", "万"]; value > 0 && counters.length > 0; counters.shift(), value = (value / 10) | 0) {
+		let digit = value % 10;
+		if (digit === 0) {
+			continue;
+		}
+
+		if (digit === 1 && counters[0].length > 0) {
+			digit = 0;
+		}
+
+		const stringDigit = digit > 0 ? (digit).toLocaleString("zh-u-nu-hanidec") : "";
+
+		rep = `${stringDigit}${counters[0]}${rep}`;
+	}
+	return rep;
+}

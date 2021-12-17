@@ -27,24 +27,24 @@ type cardState struct {
 	card     *lovelove.Card
 }
 
-var hanaToMonthMap = map[lovelove.Hana]lovelove.Month{
-	lovelove.Hana_UnknownSeason: lovelove.Month_UnknownMonth,
-	lovelove.Hana_Matsu:         lovelove.Month_January,
-	lovelove.Hana_Ume:           lovelove.Month_February,
-	lovelove.Hana_Sakura:        lovelove.Month_March,
-	lovelove.Hana_Fuji:          lovelove.Month_April,
-	lovelove.Hana_Ayame:         lovelove.Month_May,
-	lovelove.Hana_Botan:         lovelove.Month_June,
-	lovelove.Hana_Hagi:          lovelove.Month_July,
-	lovelove.Hana_Susuki:        lovelove.Month_August,
-	lovelove.Hana_Kiku:          lovelove.Month_September,
-	lovelove.Hana_Momiji:        lovelove.Month_October,
-	lovelove.Hana_Yanagi:        lovelove.Month_November,
-	lovelove.Hana_Kiri:          lovelove.Month_December,
+var monthToHanaMap = map[lovelove.Month]lovelove.Hana{
+	lovelove.Month_UnknownMonth: lovelove.Hana_UnknownSeason,
+	lovelove.Month_January:      lovelove.Hana_Matsu,
+	lovelove.Month_February:     lovelove.Hana_Ume,
+	lovelove.Month_March:        lovelove.Hana_Sakura,
+	lovelove.Month_April:        lovelove.Hana_Fuji,
+	lovelove.Month_May:          lovelove.Hana_Ayame,
+	lovelove.Month_June:         lovelove.Hana_Botan,
+	lovelove.Month_July:         lovelove.Hana_Hagi,
+	lovelove.Month_August:       lovelove.Hana_Susuki,
+	lovelove.Month_September:    lovelove.Hana_Kiku,
+	lovelove.Month_October:      lovelove.Hana_Momiji,
+	lovelove.Month_November:     lovelove.Hana_Yanagi,
+	lovelove.Month_December:     lovelove.Hana_Kiri,
 }
 
-func getMonth(hana lovelove.Hana) lovelove.Month {
-	return hanaToMonthMap[hana]
+func getHana(month lovelove.Month) lovelove.Hana {
+	return monthToHanaMap[month]
 }
 
 func getOpponentPosition(playerPosition lovelove.PlayerPosition) lovelove.PlayerPosition {

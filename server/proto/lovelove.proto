@@ -155,7 +155,7 @@ message CompleteGameState {
 	repeated Card opponentCollection = 7;
 	PlayerPosition oya = 8;
 	PlayerPosition active = 9;
-	Month month = 10;
+	Hana monthHana = 10;
 	ZonePlayOptions tablePlayOptions = 11;
 	repeated YakuData yakuInformation = 12;
 	repeated YakuData opponentYakuInformation = 13;
@@ -164,6 +164,7 @@ message CompleteGameState {
 	int32 opponentScore = 16;
 	bool koikoi = 17;
 	bool opponentKoikoi = 18;
+	Month month = 19;
 }
 
 // Requests

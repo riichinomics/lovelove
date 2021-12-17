@@ -60,7 +60,7 @@ const styles = stylesheet`
 					display: flex;
 					.yakuCard {
 						margin-left: 10px;
-						min-width: 50px;
+						width: 50px;
 					}
 				}
 			}
@@ -133,12 +133,12 @@ export const ShoubuOpportunityDisplay = (props: {
 					<div className={styles.yakuValue}>{yaku.value}</div>
 					<div className={styles.yakuCards}>
 						{yaku.cards.map(cardId =>
-							<CardComponent
-								key={cardId}
-								hideHints
-								{...props.collection.find(collectedCard => collectedCard.id === cardId)}
-								className={styles.yakuCard}
-							/>
+							<div key={cardId} className={styles.yakuCard}>
+								<CardComponent
+									hideHints
+									{...props.collection.find(collectedCard => collectedCard.id === cardId)}
+								/>
+							</div>
 						)}
 					</div>
 				</div>)

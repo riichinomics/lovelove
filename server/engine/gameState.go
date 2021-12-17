@@ -95,6 +95,8 @@ func (gameState *gameState) ToCompleteGameState(playerPosition lovelove.PlayerPo
 		OpponentHand: 0,
 		Active:       gameState.activePlayer,
 		Oya:          gameState.oya,
+		MonthHana:    getHana(gameState.month),
+		Month:        gameState.month,
 	}
 
 	for zoneType, zone := range zones {

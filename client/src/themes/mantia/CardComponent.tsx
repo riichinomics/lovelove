@@ -165,7 +165,8 @@ const styles = stylesheet`
 	.card {
 		position: relative;
 
-		min-width: 100px;
+		width: 100px;
+		max-width: 100%;
 		> img {
 			display: block;
 
@@ -199,7 +200,7 @@ const styles = stylesheet`
 `;
 
 export const CardComponent: React.FC<CardProps> = (props) => {
-	return <div className={clsx(styles.card, props.className, props.hideHints || styles.showHints)}>
+	return <div className={clsx(styles.card, props.hideHints || styles.showHints)}>
 		<div className={clsx(styles.tag, styles.hana)}>{getHanaName(props.hana)}</div>
 		<div className={clsx(styles.tag, styles.type)}>{getCardTypeName(getCardType(props))}</div>
 		<img draggable={false} src={SVG_MAP[props.hana][props.variation]} />

@@ -210,7 +210,7 @@ type yakuContribution struct {
 
 func YakuContribution(card *lovelove.Card, gameState *gameState) []*yakuContribution {
 	yaku := make([]*yakuContribution, 0)
-	if getMonth(card.Hana) == gameState.month {
+	if card.Hana == getHana(gameState.month) {
 		yaku = append(yaku, &yakuContribution{yakuId: lovelove.YakuId_Tsukifuda})
 	}
 
