@@ -27,7 +27,8 @@ type koikoiChange struct {
 }
 
 type roundEndChange struct {
-	winner lovelove.PlayerPosition
+	winner            lovelove.PlayerPosition
+	teyakuInformation map[lovelove.PlayerPosition]*teyakuInformation
 }
 
 type gameStateMutation struct {
@@ -267,21 +268,17 @@ func ShoubuOpportunityMutation(
 	}, nil
 }
 
-func RoundEndMutation(winner lovelove.PlayerPosition) ([]*gameStateMutation, error) {
-	return []*gameStateMutation{
-		{
-			roundEndChange: &roundEndChange{
-				winner: winner,
-			},
-		},
-	}, nil
-}
-
 func TurnEndMutation(
 	game *gameState,
 ) ([]*gameStateMutation, error) {
 	if len(game.Hand(lovelove.PlayerPosition_Red)) == 0 && len(game.Hand(lovelove.PlayerPosition_White)) == 0 {
-		return RoundEndMutation(lovelove.PlayerPosition_UnknownPosition)
+		return []*gameStateMutation{
+			{
+				roundEndChange: &roundEndChange{
+					winner: lovelove.PlayerPosition_UnknownPosition,
+				},
+			},
+		}, nil
 	}
 
 	return []*gameStateMutation{

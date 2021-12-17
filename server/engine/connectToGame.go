@@ -81,6 +81,10 @@ func (server loveLoveRpcServer) ConnectToGame(context context.Context, request *
 
 		game.Deal()
 
+		if len(game.GetTeyaku()) > 0 {
+			game.state = GameState_Teyaku
+		}
+
 	} else {
 		_, playerExists := game.playerState[connMeta.userId]
 		if !playerExists {

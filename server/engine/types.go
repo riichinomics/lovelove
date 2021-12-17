@@ -7,7 +7,8 @@ import (
 type GameState int64
 
 const (
-	GameState_HandCardPlay GameState = iota
+	GameState_Teyaku GameState = iota
+	GameState_HandCardPlay
 	GameState_DeckCardPlay
 	GameState_ShoubuOpportunity
 )

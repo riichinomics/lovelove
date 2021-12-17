@@ -58,11 +58,9 @@ func (server loveLoveRpcServer) ResolveShoubuOpportunity(
 	gameMutationContext := NewGameMutationContext(gameContext.GameState)
 
 	if request.Shoubu {
-		mutation, err := RoundEndMutation(playerState.position)
-		if err == nil {
-			broadcastBuilder.QueueUpdates(gameMutationContext.Apply(mutation))
-		}
-
+		broadcastBuilder.QueueUpdates(EndRound(gameContext.GameState, &roundEndChange{
+			winner: playerState.position,
+		}))
 		return
 	}
 
@@ -83,6 +81,5 @@ func (server loveLoveRpcServer) ResolveShoubuOpportunity(
 	}
 
 	broadcastBuilder.QueueUpdates(gameMutationContext.Apply(mutation))
-
 	return
 }

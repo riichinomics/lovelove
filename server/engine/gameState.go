@@ -9,10 +9,11 @@ import (
 )
 
 type playerState struct {
-	id       string
-	score    int32
-	koikoi   bool
-	position lovelove.PlayerPosition
+	id              string
+	score           int32
+	koikoi          bool
+	position        lovelove.PlayerPosition
+	confirmedTeyaku bool
 }
 
 type gameState struct {
@@ -97,6 +98,7 @@ func (gameState *gameState) ToCompleteGameState(playerPosition lovelove.PlayerPo
 		Oya:          gameState.oya,
 		MonthHana:    getHana(gameState.month),
 		Month:        gameState.month,
+		Teyaku:       GetTeyaku(gameState.Hand(playerPosition)),
 	}
 
 	for zoneType, zone := range zones {
@@ -377,4 +379,36 @@ func (gameState *gameState) Deal() {
 		gameState.DrawCards(8, CardLocation_WhiteHand)
 		break
 	}
+}
+
+type teyakuInformation struct {
+	confirmed bool
+	id        lovelove.TeyakuId
+}
+
+func (gameState *gameState) GetTeyaku() (teyakuMap map[lovelove.PlayerPosition]*teyakuInformation) {
+	teyakuMap = make(map[lovelove.PlayerPosition]*teyakuInformation)
+	for p := range lovelove.PlayerPosition_name {
+		position := lovelove.PlayerPosition(p)
+		if position == lovelove.PlayerPosition_UnknownPosition {
+			continue
+		}
+
+		confirmed := false
+		for _, player := range gameState.playerState {
+			if player.position == position {
+				confirmed = player.confirmedTeyaku
+				break
+			}
+		}
+
+		teyaku := GetTeyaku(gameState.Hand(position))
+		if confirmed || teyaku != lovelove.TeyakuId_Unknown_Teyaku {
+			teyakuMap[position] = &teyakuInformation{
+				confirmed,
+				teyaku,
+			}
+		}
+	}
+	return
 }
