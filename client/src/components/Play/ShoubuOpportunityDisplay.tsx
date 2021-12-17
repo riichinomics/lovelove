@@ -16,7 +16,10 @@ const styles = stylesheet`
 		justify-content: center;
 		align-items: center;
 
+		pointer-events: none;
+
 		.shoubuOpportunity {
+			pointer-events: auto;
 			font-size: 24px;
 			line-height: 24px;
 			font-weight: bold;

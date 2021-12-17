@@ -38,6 +38,7 @@ const styles = stylesheet`
 		}
 
 		.modalArea {
+			pointer-events: none;
 			position: fixed;
 			top: 0;
 			right: 0;
@@ -180,35 +181,33 @@ export const Table = (props: IGameState & IShoubuOpportunityHandlers & {
 	}, [!!move]);
 
 	return <div className={styles.table}>
-		{ (shoubuOpportunity || roundEndView) &&
-			<div className={styles.modalArea}>
-				{shoubuOpportunity &&
-					<ShoubuOpportunityDisplay
-						yakuInformation={yakuInformation}
-						collection={collection}
-						shoubuValue={shoubuOpportunity.value}
-						koikoiChosen={koikoiChosen}
-						shoubuChosen={shoubuChosen}
-					/>
-				}
-				{roundEndView &&
-					<ShoubuOpportunityDisplay
-						yakuInformation={roundEndView.winner == lovelove.PlayerPosition.UnknownPosition
-							? null
-							: roundEndView.winner == position
-								? yakuInformation
-								: opponentYakuInformation}
-						collection={roundEndView.winner == lovelove.PlayerPosition.UnknownPosition
-							? null
-							: roundEndView.winner == position
-								? collection
-								: opponentCollection}
-						shoubuValue={roundEndView.winnings}
-						continueChosen={continueChosen}
-					/>
-				}
-			</div>
-		}
+		<div className={styles.modalArea}>
+			{shoubuOpportunity &&
+				<ShoubuOpportunityDisplay
+					yakuInformation={yakuInformation}
+					collection={collection}
+					shoubuValue={shoubuOpportunity.value}
+					koikoiChosen={koikoiChosen}
+					shoubuChosen={shoubuChosen}
+				/>
+			}
+			{roundEndView &&
+				<ShoubuOpportunityDisplay
+					yakuInformation={roundEndView.winner == lovelove.PlayerPosition.UnknownPosition
+						? null
+						: roundEndView.winner == position
+							? yakuInformation
+							: opponentYakuInformation}
+					collection={roundEndView.winner == lovelove.PlayerPosition.UnknownPosition
+						? null
+						: roundEndView.winner == position
+							? collection
+							: opponentCollection}
+					shoubuValue={roundEndView.winnings}
+					continueChosen={continueChosen}
+				/>
+			}
+		</div>
 		<div className={styles.opponentHand}>
 			<OpponentHand cards={opponentHand} />
 		</div>
