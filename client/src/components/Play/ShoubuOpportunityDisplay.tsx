@@ -82,7 +82,7 @@ const styles = stylesheet`
 				justify-content: center;
 
 				> * {
-					padding: 2px 8px 4px;
+					padding: 2px 8px 8px;
 					min-width: 160px;
 					cursor: pointer;
 

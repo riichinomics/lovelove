@@ -180,7 +180,7 @@ const styles = stylesheet`
 			writing-mode: vertical-rl;
 			visibility: hidden;
 			background-color: #000a;
-			padding: 4px 4px;
+			padding: 4px 0;
 		}
 
 		&:hover.showHints > .tag {

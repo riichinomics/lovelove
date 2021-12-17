@@ -51,7 +51,7 @@ const styles = stylesheet`
 			position: relative;
 			box-sizing: border-box;
 
-			min-height: 64px;
+			min-height: 68px;
 
 			display: flex;
 			flex-direction: column;
