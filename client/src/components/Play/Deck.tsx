@@ -30,7 +30,6 @@ const styles = stylesheet`
 					}
 
 					.monthName {
-						line-height: 16px;
 						font-size: 16px;
 						writing-mode: vertical-rl;
 					}

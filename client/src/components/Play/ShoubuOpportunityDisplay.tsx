@@ -21,8 +21,7 @@ const styles = stylesheet`
 		.shoubuOpportunity {
 			pointer-events: auto;
 			font-size: 24px;
-			line-height: 24px;
-			font-weight: bold;
+			font-weight: 800;
 
 
 			display: flex;
@@ -35,7 +34,6 @@ const styles = stylesheet`
 			.ryuukyoku {
 				text-align: center;
 				font-size: 30px;
-				line-height: 30px;
 			}
 
 			.yaku {
@@ -55,6 +53,7 @@ const styles = stylesheet`
 				}
 
 				.yakuCards {
+					margin-left: 60px;
 					flex: 1;
 					justify-content: flex-end;
 					display: flex;
@@ -75,6 +74,7 @@ const styles = stylesheet`
 			}
 
 			.actionButtons {
+				font-size: 32px;
 				margin-top: 40px;
 				display: flex;
 				text-align: center;
@@ -82,7 +82,7 @@ const styles = stylesheet`
 				justify-content: center;
 
 				> * {
-					padding: 16px;
+					padding: 2px 8px 4px;
 					min-width: 160px;
 					cursor: pointer;
 

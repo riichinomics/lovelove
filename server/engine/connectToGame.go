@@ -112,6 +112,8 @@ func (server loveLoveRpcServer) ConnectToGame(context context.Context, request *
 	if _, ok := gameContext.listeners[playerState.id]; !ok {
 		gameContext.listeners[playerState.id] = make([]chan protoreflect.ProtoMessage, 0)
 	}
+
+	// TODO: race condition on listeners?
 	gameContext.listeners[playerState.id] = append(gameContext.listeners[playerState.id], rpcConnMeta.Messages)
 	rpcConnMeta.Closed.DoOnCompleted(func() {
 		listeners, ok := gameContext.listeners[playerState.id]

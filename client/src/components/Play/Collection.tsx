@@ -15,9 +15,9 @@ const styles = stylesheet`
 		> * {
 			&:not(:last-child) {
 				margin-right: 10px;
+
 			}
 		}
-
 
 		.yakuSelectorContainer {
 			position: absolute;
@@ -27,7 +27,6 @@ const styles = stylesheet`
 			text-align: left;
 
 			padding-left: 12px;
-			/* padding-top: 4px; */
 
 			.yakuSelector {
 				height: 100%;
@@ -38,12 +37,15 @@ const styles = stylesheet`
 				flex-direction: row;
 				align-items: start;
 
+				font-weight: 500;
+
 				&.stackUpwards {
 					align-items: end;
 
 					> .yaku {
-						color: black;
 						background-color: #fff9;
+						color: black;
+						font-weight: 700;
 
 						&:hover {
 							background-color: #fffb;
@@ -63,7 +65,7 @@ const styles = stylesheet`
 
 						> .yakuValue {
 							order: 1;
-							margin-top: 8px;
+							margin-top: 2px;
 							margin-bottom: 0;
 						}
 					}
@@ -100,14 +102,14 @@ const styles = stylesheet`
 						flex: 1;
 						flex-basis: auto;
 						writing-mode: vertical-rl;
-						padding-bottom: 4px;
+						padding-bottom: 6px;
 						min-width: 24px;
 					}
 
 					> .yakuValue {
 						text-align: center;
-						font-weight: bold;
-						margin-bottom: 8px;
+						font-weight: 800;
+						margin-bottom: 4px;
 					}
 				}
 			}

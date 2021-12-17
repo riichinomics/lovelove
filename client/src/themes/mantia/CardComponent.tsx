@@ -172,8 +172,8 @@ const styles = stylesheet`
 
 		}
 
+		font-weight: 400;
 		font-size: 16px;
-		line-height: 16px;
 
 		> .tag {
 			position: absolute;

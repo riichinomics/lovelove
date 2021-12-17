@@ -16,7 +16,7 @@ module.exports = env => {
 			// disableHostCheck: true,
 		},
 		resolve: {
-			extensions: [".ts", ".tsx", ".js", ".json", ".sass", ".scss"]
+			extensions: [".tsx", ".ts", ".json", ".js", ".sass", ".scss"]
 		},
 		module: {
 			rules: [
@@ -51,20 +51,12 @@ module.exports = env => {
 					],
 				},
 				{
-					test: /\.(mp3)$/i,
-					use: [
-						{
-							loader: "file-loader",
-						},
-					],
+					test: /\.(svg)$/,
+					type: "asset/inline"
 				},
 				{
-					test: /\.(png|jp(e*)g|svg)$/,
-					use: [
-						{
-							loader: "url-loader",
-						}
-					]
+					test: /\.(ttf)$/,
+					type: "asset/resource"
 				},
 			]
 		},

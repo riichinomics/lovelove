@@ -27,10 +27,9 @@ const styles = stylesheet`
 		background-color: #333;
 		min-width: 80px;
 		text-align: center;
-		font-weight: bold;
-		padding: 10px 12px;
+		font-weight: 800;
+		padding: 6px 12px 8px;
 		font-size: 24px;
-		line-height: 24px;
 
 		&.oya {
 			min-width: auto;
