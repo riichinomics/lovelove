@@ -144,24 +144,19 @@ func GetConnectionMeta(context context.Context) *connectionMeta {
 	return value
 }
 
-func (context *gameContext) BroadcastUpdates(gameUpdates map[lovelove.PlayerPosition][]*lovelove.GameStateUpdatePart) {
-	for playerId, listeners := range context.listeners {
-		playerState, playerInGame := context.GameState.playerState[playerId]
-		if !playerInGame {
-			continue
-		}
+func (context *gameContext) BroadcastUpdates(gameUpdates map[string][]*lovelove.GameStateUpdatePart) {
+	context.requestQueue <- func() {
+		for playerId, updates := range gameUpdates {
+			listeners, ok := context.listeners[playerId]
+			if !ok {
+				continue
+			}
 
-		updates, updatesExist := gameUpdates[playerState.position]
-		if !updatesExist {
-			continue
-		}
-
-		payload := &lovelove.GameStateUpdate{
-			Updates: updates,
-		}
-
-		for _, listener := range listeners {
-			listener <- payload
+			for _, listener := range listeners {
+				listener <- &lovelove.GameStateUpdate{
+					Updates: updates,
+				}
+			}
 		}
 	}
 }

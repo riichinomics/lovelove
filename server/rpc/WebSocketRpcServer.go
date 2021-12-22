@@ -110,7 +110,6 @@ func (server *webSocketRpcServer) HandleConnection(connection *websocket.Conn) {
 		_, disposeClosedBroadcast := connMeta.Closed.Connect(context.Background())
 		sendChannel := make(chan []byte)
 
-		defer close(connMeta.Messages)
 		defer close(connMeta.closed)
 		defer disposeClosedBroadcast()
 		defer close(sendChannel)
@@ -123,17 +122,27 @@ func (server *webSocketRpcServer) HandleConnection(connection *websocket.Conn) {
 
 		go func(cm *connectionMeta, sendChannel chan []byte) {
 			sequence := int32(0)
-			for message := range cm.Messages {
-				valueData, _ := proto.Marshal(message)
+			closedChan := cm.Closed.Observe()
+			for {
+				select {
+				case message := <-cm.Messages:
+					log.Print(message)
+					valueData, _ := proto.Marshal(message)
 
-				wrapperData, _ := proto.Marshal(&lovelove.Wrapper{
-					Type:        lovelove.MessageType_Broadcast,
-					Sequence:    sequence,
-					ContentType: string(message.ProtoReflect().Descriptor().Name()),
-					Data:        valueData,
-				})
-				sequence = sequence + 1
-				sendChannel <- wrapperData
+					wrapperData, _ := proto.Marshal(&lovelove.Wrapper{
+						Type:        lovelove.MessageType_Broadcast,
+						Sequence:    sequence,
+						ContentType: string(message.ProtoReflect().Descriptor().Name()),
+						Data:        valueData,
+					})
+					sequence = sequence + 1
+					sendChannel <- wrapperData
+				case item, ok := <-closedChan:
+					log.Print(item)
+					if !ok {
+						return
+					}
+				}
 			}
 		}(connMeta, sendChannel)
 

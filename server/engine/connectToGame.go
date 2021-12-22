@@ -117,22 +117,23 @@ func (server loveLoveRpcServer) ConnectToGame(context context.Context, request *
 		gameContext.listeners[playerState.id] = make([]chan protoreflect.ProtoMessage, 0)
 	}
 
-	// TODO: race condition on listeners?
 	gameContext.listeners[playerState.id] = append(gameContext.listeners[playerState.id], rpcConnMeta.Messages)
 	rpcConnMeta.Closed.DoOnCompleted(func() {
-		listeners, ok := gameContext.listeners[playerState.id]
-		if !ok {
-			return
-		}
-
-		if len(listeners) == 1 {
-			delete(gameContext.listeners, playerState.id)
-		}
-
-		for i, listener := range listeners {
-			if listener == rpcConnMeta.Messages {
-				gameContext.listeners[playerState.id] = append(listeners[:i], listeners[i+1:]...)
+		gameContext.requestQueue <- func() {
+			listeners, ok := gameContext.listeners[playerState.id]
+			if !ok {
 				return
+			}
+
+			if len(listeners) == 1 {
+				delete(gameContext.listeners, playerState.id)
+			}
+
+			for i, listener := range listeners {
+				if listener == rpcConnMeta.Messages {
+					gameContext.listeners[playerState.id] = append(listeners[:i], listeners[i+1:]...)
+					return
+				}
 			}
 		}
 	})

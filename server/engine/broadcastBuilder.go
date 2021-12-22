@@ -32,5 +32,13 @@ func (builder *broadcastBuilder) QueueUpdates(updates GameUpdateMap) {
 }
 
 func (builder *broadcastBuilder) Broadcast() {
-	builder.gameContext.BroadcastUpdates(builder.gameUpdates)
+	gameUpdatesByPlayerId := make(map[string][]*lovelove.GameStateUpdatePart)
+	for playerId, player := range builder.gameContext.GameState.playerState {
+		updates, updatesExist := builder.gameUpdates[player.position]
+		if !updatesExist {
+			continue
+		}
+		gameUpdatesByPlayerId[playerId] = updates
+	}
+	go builder.gameContext.BroadcastUpdates(gameUpdatesByPlayerId)
 }
