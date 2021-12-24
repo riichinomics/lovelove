@@ -40,5 +40,5 @@ func (builder *broadcastBuilder) Broadcast() {
 		}
 		gameUpdatesByPlayerId[playerId] = updates
 	}
-	go builder.gameContext.BroadcastUpdates(gameUpdatesByPlayerId)
+	builder.gameContext.BroadcastUpdates(gameUpdatesByPlayerId)
 }

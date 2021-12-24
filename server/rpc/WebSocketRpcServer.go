@@ -126,7 +126,6 @@ func (server *webSocketRpcServer) HandleConnection(connection *websocket.Conn) {
 			for {
 				select {
 				case message := <-cm.Messages:
-					log.Print(message)
 					valueData, _ := proto.Marshal(message)
 
 					wrapperData, _ := proto.Marshal(&lovelove.Wrapper{
@@ -137,8 +136,7 @@ func (server *webSocketRpcServer) HandleConnection(connection *websocket.Conn) {
 					})
 					sequence = sequence + 1
 					sendChannel <- wrapperData
-				case item, ok := <-closedChan:
-					log.Print(item)
+				case _, ok := <-closedChan:
 					if !ok {
 						return
 					}
@@ -179,7 +177,6 @@ func (server *webSocketRpcServer) HandleConnection(connection *websocket.Conn) {
 			}
 
 			if methodInfo, ok := serviceInfo.methods[methodName]; ok {
-
 				value, _ := methodInfo.Handler(
 					serviceInfo.serviceImpl,
 					context.WithValue(context.Background(), connContextKey{
