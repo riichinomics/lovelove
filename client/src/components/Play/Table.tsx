@@ -154,28 +154,23 @@ export const Table = (props: IGameState & IGameModalActions & {
 		teyakuResolved,
 		roundEndView,
 		gameState: {
-			collection = [],
+			redPlayer,
+			whitePlayer,
 			deck = 0,
 			deckFlipCard,
-			hand = [],
-			opponentCollection = [],
-			opponentHand = 0,
 			table = [],
 			active,
 			oya,
 			tablePlayOptions,
-			yakuInformation,
-			opponentYakuInformation,
 			shoubuOpportunity,
-			score,
-			opponentScore,
-			koikoi,
-			opponentKoikoi,
 			month,
 			monthHana,
 			teyaku,
 		} = {}
 	} = props;
+
+	const player = position == lovelove.PlayerPosition.Red ? redPlayer : whitePlayer;
+	const opponent = position == lovelove.PlayerPosition.Red ? whitePlayer : redPlayer;
 
 	const opponentPosition = oppositePosition(position);
 	const [previewCard, setPreviewCard] = React.useState<lovelove.ICard>();
@@ -193,25 +188,25 @@ export const Table = (props: IGameState & IGameModalActions & {
 				roundEndView={roundEndView}
 				shoubuOpportunity={shoubuOpportunity}
 				teyaku={teyaku}
-				collection={collection}
-				opponentCollection={opponentCollection}
-				yakuInformation={yakuInformation}
-				opponentYakuInformation={opponentYakuInformation}
-				hand={hand}
+				collection={player?.collection}
+				opponentCollection={opponent?.collection}
+				yakuInformation={player?.yakuInformation}
+				opponentYakuInformation={opponent?.yakuInformation}
+				hand={player?.hand?.cards}
 				position={position}
 				teyakuResolved={teyakuResolved}
 			/>
 		</div>
 		<div className={styles.opponentHand}>
-			<OpponentHand cards={opponentHand} />
+			<OpponentHand cards={opponent?.hand?.numberOfCards} />
 		</div>
 		<div className={clsx(styles.nameTag, styles.opponentNameTag)}>
 			<PlayerNameTag active={opponentPosition === active}>
 				<PlayerMetadataZone
 					opponent
 					oya={opponentPosition === oya}
-					score={opponentScore}
-					koikoi={opponentKoikoi}
+					score={opponent?.score}
+					koikoi={opponent?.koikoi}
 				/>
 			</PlayerNameTag>
 		</div>
@@ -219,8 +214,8 @@ export const Table = (props: IGameState & IGameModalActions & {
 			<div className={styles.popup}>
 				<div className={styles.collectionWrapper}>
 					<Collection
-						cards={opponentCollection}
-						yakuInformation={opponentYakuInformation}
+						cards={opponent?.collection}
+						yakuInformation={opponent?.yakuInformation}
 						stackUpwards
 					/>
 				</div>
@@ -242,7 +237,7 @@ export const Table = (props: IGameState & IGameModalActions & {
 		<div className={clsx(styles.collection, styles.playerCollection)}>
 			<div className={styles.popup}>
 				<div className={styles.collectionWrapper}>
-					<Collection cards={collection} yakuInformation={yakuInformation} />
+					<Collection cards={player?.collection} yakuInformation={player?.yakuInformation} />
 				</div>
 			</div>
 		</div>
@@ -250,16 +245,16 @@ export const Table = (props: IGameState & IGameModalActions & {
 			<PlayerNameTag active={position === active}>
 				<PlayerMetadataZone
 					oya={position === oya}
-					score={score}
-					koikoi={koikoi}
+					score={player?.score}
+					koikoi={player?.koikoi}
 				/>
 			</PlayerNameTag>
 		</div>
 		<div className={styles.playerArea}>
 			<PlayerHand
-				cards={hand}
+				cards={player?.hand?.cards}
 				onPreviewCardChanged={setPreviewCard}
-				canPlay={tablePlayOptions?.acceptedOriginZones?.indexOf(lovelove.PlayerCentricZone.Hand) >= 0}
+				canPlay={tablePlayOptions?.acceptedOriginZones?.indexOf(lovelove.CardZone.Hand) >= 0}
 			/>
 		</div>
 	</div>;

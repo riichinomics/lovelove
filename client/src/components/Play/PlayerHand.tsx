@@ -57,7 +57,7 @@ export const PlayerHand = (props: {
 	const onNoCardSelected = React.useCallback(() => props.onPreviewCardChanged?.(null), [props.onPreviewCardChanged]);
 	const { move } = React.useContext(CardMoveContext);
 	const moveOrigin = move?.from?.zone === CardZone.Hand ? move.from : null;
-	const cards = [null, ...props.cards];
+	const cards = [null, ...(props.cards ?? [])];
 	return <div className={clsx(styles.playerHand, props.canPlay && styles.active)} onMouseLeave={onNoCardSelected}>
 		{cards.map((card, index) => <div className={clsx(props.canPlay && styles.handCard)} key={cardKey(card, index)}>
 			<CardStack

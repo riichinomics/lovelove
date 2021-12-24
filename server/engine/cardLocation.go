@@ -14,37 +14,40 @@ const (
 	CardLocation_Drawn
 )
 
-func (location CardLocation) ToPlayerCentricZone(playerPosition lovelove.PlayerPosition) lovelove.PlayerCentricZone {
+func (location CardLocation) ToCardZone() lovelove.CardZone {
 	switch location {
 	case CardLocation_Deck:
-		return lovelove.PlayerCentricZone_Deck
+		return lovelove.CardZone_Deck
 	case CardLocation_Table:
-		return lovelove.PlayerCentricZone_Table
+		return lovelove.CardZone_Table
 	case CardLocation_RedHand:
-		if playerPosition == lovelove.PlayerPosition_Red {
-			return lovelove.PlayerCentricZone_Hand
-		}
-		return lovelove.PlayerCentricZone_OpponentHand
+		return lovelove.CardZone_Hand
 	case CardLocation_WhiteHand:
-		if playerPosition == lovelove.PlayerPosition_White {
-			return lovelove.PlayerCentricZone_Hand
-		}
-		return lovelove.PlayerCentricZone_OpponentHand
+		return lovelove.CardZone_Hand
 	case CardLocation_RedCollection:
-		if playerPosition == lovelove.PlayerPosition_Red {
-			return lovelove.PlayerCentricZone_Collection
-		}
-		return lovelove.PlayerCentricZone_OpponentCollection
+		return lovelove.CardZone_Collection
 	case CardLocation_WhiteCollection:
-		if playerPosition == lovelove.PlayerPosition_White {
-			return lovelove.PlayerCentricZone_Collection
-		}
-		return lovelove.PlayerCentricZone_OpponentCollection
+		return lovelove.CardZone_Collection
 	case CardLocation_Drawn:
-		return lovelove.PlayerCentricZone_Drawn
+		return lovelove.CardZone_Drawn
 	}
 
-	return lovelove.PlayerCentricZone_UnknownZone
+	return lovelove.CardZone_UnknownZone
+}
+
+func (location CardLocation) ToPlayerPosition() lovelove.PlayerPosition {
+	switch location {
+	case CardLocation_RedHand:
+		return lovelove.PlayerPosition_Red
+	case CardLocation_WhiteHand:
+		return lovelove.PlayerPosition_White
+	case CardLocation_RedCollection:
+		return lovelove.PlayerPosition_Red
+	case CardLocation_WhiteCollection:
+		return lovelove.PlayerPosition_White
+	}
+
+	return lovelove.PlayerPosition_UnknownPosition
 }
 
 func GetHandLocation(playerPosition lovelove.PlayerPosition) CardLocation {

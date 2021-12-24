@@ -58,12 +58,14 @@ func (gameMutationContext *gameMutationContext) applyCardMoves(cardMoves []*card
 			cardMove := &lovelove.CardMoveUpdate{
 				MovedCard: movingCard.card,
 				OriginSlot: &lovelove.CardSlot{
-					Zone:  movingCard.location.ToPlayerCentricZone(position),
-					Index: int32(movingCard.order),
+					Zone:   movingCard.location.ToCardZone(),
+					Index:  int32(movingCard.order),
+					Player: movingCard.location.ToPlayerPosition(),
 				},
 				DestinationSlot: &lovelove.CardSlot{
-					Zone:  move.destination.ToPlayerCentricZone(position),
-					Index: int32(move.order),
+					Zone:   move.destination.ToCardZone(),
+					Index:  int32(move.order),
+					Player: move.destination.ToPlayerPosition(),
 				},
 			}
 

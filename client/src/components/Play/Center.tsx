@@ -105,9 +105,6 @@ const CenterCardStack = (props: {
 	/>;
 };
 
-
-
-
 export const Center = (props: {
 	deck: number;
 	drawnCard?: lovelove.ICard;
@@ -156,7 +153,7 @@ export const Center = (props: {
 				cards={[props.drawnCard]}
 				zone={CardZone.Drawn}
 				onCardSelected={props.onPreviewCardChanged}
-				canDrag={props.playOptions?.acceptedOriginZones?.indexOf(lovelove.PlayerCentricZone.Drawn) >= 0}
+				canDrag={props.playOptions?.acceptedOriginZones?.indexOf(lovelove.CardZone.Drawn) >= 0}
 				onMouseLeave={() => props.onPreviewCardChanged(null)}
 			/>
 		</div>

@@ -52,15 +52,13 @@ enum PlayerPosition {
 	White = 2;
 }
 
-enum PlayerCentricZone {
+enum CardZone {
 	UnknownZone = 0;
-	Table = 1;
-	Hand = 2;
-	OpponentHand = 3;
-	Deck = 4;
+	Deck = 1;
+	Drawn = 2;
+	Table = 3;
+	Hand = 4;
 	Collection = 5;
-	OpponentCollection = 6;
-	Drawn = 7;
 }
 
 enum YakuId {
@@ -128,7 +126,7 @@ message PlayOptions {
 }
 
 message ZonePlayOptions {
-	repeated PlayerCentricZone acceptedOriginZones = 1;
+	repeated CardZone acceptedOriginZones = 1;
 	PlayOptions noTargetPlayOptions = 2;
 	map<int32, PlayOptions> playOptions = 3;
 }
@@ -147,31 +145,39 @@ message ShoubuOpportunity {
 	int32 value = 1;
 }
 
-message CompleteGameState {
-	int32 deck = 1;
-	Card deckFlipCard = 2;
-	repeated CardMaybe table = 3;
-	repeated Card hand = 4;
+message HandInformation {
+	int32 numberOfCards = 1;
+	repeated Card cards = 2;
+}
+
+message PlayerState {
+	int32 score = 1;
+	bool koikoi = 2;
+	bool diconnected = 3;
+	HandInformation hand = 4;
 	repeated Card collection = 5;
-	int32 opponentHand = 6;
-	repeated Card opponentCollection = 7;
-	PlayerPosition oya = 8;
-	PlayerPosition active = 9;
-	Hana monthHana = 10;
-	ZonePlayOptions tablePlayOptions = 11;
-	repeated YakuData yakuInformation = 12;
-	repeated YakuData opponentYakuInformation = 13;
-	ShoubuOpportunity shoubuOpportunity = 14;
-	int32 score = 15;
-	int32 opponentScore = 16;
-	bool koikoi = 17;
-	bool opponentKoikoi = 18;
-	Month month = 19;
-	TeyakuId teyaku = 20;
+	repeated YakuData yakuInformation = 6;
+}
+
+message CompleteGameState {
+	Month month = 1;
+	Hana monthHana = 2;
+	PlayerPosition oya = 3;
+	PlayerPosition active = 4;
+
+	int32 deck = 5;
+	Card deckFlipCard = 6;
+	repeated CardMaybe table = 7;
+
+	PlayerState redPlayer = 8;
+	PlayerState whitePlayer = 9;
+
+	ZonePlayOptions tablePlayOptions = 10;
+	ShoubuOpportunity shoubuOpportunity = 11;
+	TeyakuId teyaku = 12;
 }
 
 // Requests
-
 message AuthenticateRequest {
 	string userId = 1;
 }
@@ -228,10 +234,10 @@ message ResolveShoubuOpportunityResponse {
 }
 
 // Updates
-
 message CardSlot {
-	PlayerCentricZone zone = 1;
+	CardZone zone = 1;
 	int32 index = 2;
+	PlayerPosition player = 3;
 }
 
 message CardMoveUpdate {
@@ -272,7 +278,7 @@ message PlayOption {
 }
 
 message PlayOptionsZoneUpdate {
-	repeated PlayerCentricZone zones = 1;
+	repeated CardZone zones = 1;
 }
 
 message PlayOptionsUpdate {

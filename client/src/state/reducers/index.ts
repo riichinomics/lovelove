@@ -67,79 +67,93 @@ function mainReducer(state: IState, action: Action): IState {
 		} case ActionType.GameUpdateReceived: {
 			return produce(state, state => {
 				const gameState = state.gameState;
+				const player = state.gamePosition == lovelove.PlayerPosition.Red ? gameState.redPlayer : gameState.whitePlayer;
+				const opponent = state.gamePosition == lovelove.PlayerPosition.Red ? gameState.whitePlayer : gameState.redPlayer;
 				for (const update of action.update.updates) {
 					if (update.cardMoveUpdates) {
 						for (const cardMove of update.cardMoveUpdates) {
-							switch(cardMove.originSlot.zone) {
-								case lovelove.PlayerCentricZone.UnknownZone: {
-									break;
-								}
-								case lovelove.PlayerCentricZone.Table: {
-									if (gameState.table[cardMove.originSlot.index ?? 0]?.card) {
-										gameState.table[cardMove.originSlot.index ?? 0].card = null;
+							if (cardMove.originSlot.player == lovelove.PlayerPosition.UnknownPosition) {
+								switch(cardMove.originSlot.zone) {
+									case lovelove.CardZone.Table: {
+										if (gameState.table[cardMove.originSlot.index ?? 0]?.card) {
+											gameState.table[cardMove.originSlot.index ?? 0].card = null;
+										}
+										break;
 									}
-									break;
+									case lovelove.CardZone.Deck: {
+										gameState.deck--;
+										break;
+									}
+									case lovelove.CardZone.Drawn: {
+										gameState.deckFlipCard = null;
+										break;
+									}
 								}
-								case lovelove.PlayerCentricZone.Hand: {
-									gameState.hand = removeCard(gameState.hand, cardMove.movedCard.id);
-									break;
+							} else if (cardMove.originSlot.player == state.gamePosition) {
+								switch(cardMove.originSlot.zone) {
+									case lovelove.CardZone.Hand: {
+										player.hand.numberOfCards--;
+										player.hand.cards = removeCard(player.hand.cards, cardMove.movedCard.id);
+										break;
+									}
+									case lovelove.CardZone.Collection: {
+										player.collection = removeCard(player.collection, cardMove.movedCard.id);
+										break;
+									}
 								}
-								case lovelove.PlayerCentricZone.OpponentHand: {
-									gameState.opponentHand--;
-									break;
-								}
-								case lovelove.PlayerCentricZone.Deck: {
-									gameState.deck--;
-									break;
-								}
-								case lovelove.PlayerCentricZone.Collection: {
-									gameState.collection = removeCard(gameState.collection, cardMove.movedCard.id);
-									break;
-								}
-								case lovelove.PlayerCentricZone.OpponentCollection: {
-									gameState.opponentCollection = removeCard(gameState.opponentCollection, cardMove.movedCard.id);
-									break;
-								}
-								case lovelove.PlayerCentricZone.Drawn: {
-									gameState.deckFlipCard = null;
-									break;
+							} else {
+								switch(cardMove.originSlot.zone) {
+									case lovelove.CardZone.Hand: {
+										opponent.hand.numberOfCards--;
+										break;
+									}
+									case lovelove.CardZone.Collection: {
+										opponent.collection = removeCard(opponent.collection, cardMove.movedCard.id);
+										break;
+									}
 								}
 							}
 
-							switch(cardMove.destinationSlot.zone) {
-								case lovelove.PlayerCentricZone.UnknownZone: {
-									break;
+							if (cardMove.destinationSlot.player == lovelove.PlayerPosition.UnknownPosition) {
+								switch(cardMove.destinationSlot.zone) {
+									case lovelove.CardZone.Table: {
+										// TODO: Animation Float
+										gameState.table[cardMove.destinationSlot.index ?? 0] = {
+											card: cardMove.movedCard
+										};
+										break;
+									}
+									case lovelove.CardZone.Deck: {
+										gameState.deck++;
+										break;
+									}
+									case lovelove.CardZone.Drawn: {
+										gameState.deckFlipCard = cardMove.movedCard;
+										break;
+									}
 								}
-								case lovelove.PlayerCentricZone.Table: {
-									// TODO: Animation Float
-									gameState.table[cardMove.destinationSlot.index ?? 0] = {
-										card: cardMove.movedCard
-									};
-									break;
+							} else if (cardMove.destinationSlot.player == state.gamePosition) {
+								switch(cardMove.destinationSlot.zone) {
+									case lovelove.CardZone.Hand: {
+										player.hand.numberOfCards++;
+										player.hand.cards = [...player.hand.cards, cardMove.movedCard];
+										break;
+									}
+									case lovelove.CardZone.Collection: {
+										player.collection = [...player.collection, cardMove.movedCard];
+										break;
+									}
 								}
-								case lovelove.PlayerCentricZone.Hand: {
-									gameState.hand = [...gameState.hand ?? [], cardMove.movedCard];
-									break;
-								}
-								case lovelove.PlayerCentricZone.OpponentHand: {
-									gameState.opponentHand++;
-									break;
-								}
-								case lovelove.PlayerCentricZone.Deck: {
-									gameState.deck++;
-									break;
-								}
-								case lovelove.PlayerCentricZone.Collection: {
-									gameState.collection = [...gameState.collection ?? [], cardMove.movedCard];
-									break;
-								}
-								case lovelove.PlayerCentricZone.OpponentCollection: {
-									gameState.opponentCollection = [...gameState.opponentCollection ?? [], cardMove.movedCard];
-									break;
-								}
-								case lovelove.PlayerCentricZone.Drawn: {
-									gameState.deckFlipCard = cardMove.movedCard;
-									break;
+							} else {
+								switch(cardMove.destinationSlot.zone) {
+									case lovelove.CardZone.Hand: {
+										opponent.hand.numberOfCards++;
+										break;
+									}
+									case lovelove.CardZone.Collection: {
+										opponent.collection = [...opponent.collection, cardMove.movedCard];
+										break;
+									}
 								}
 							}
 						}
@@ -189,11 +203,11 @@ function mainReducer(state: IState, action: Action): IState {
 					}
 
 					if (update.yakuUpdate) {
-						applyYakuUpdate(gameState.yakuInformation, update.yakuUpdate);
+						applyYakuUpdate(player.yakuInformation, update.yakuUpdate);
 					}
 
 					if (update.opponentYakuUpdate) {
-						applyYakuUpdate(gameState.opponentYakuInformation, update.opponentYakuUpdate);
+						applyYakuUpdate(opponent.yakuInformation, update.opponentYakuUpdate);
 					}
 
 					if (update.shoubuOpportunityUpdate) {
@@ -212,11 +226,11 @@ function mainReducer(state: IState, action: Action): IState {
 
 					if (update.koikoiUpdate) {
 						if (update.koikoiUpdate.self) {
-							gameState.koikoi = true;
+							player.koikoi = true;
 						}
 
 						if (update.koikoiUpdate.opponent) {
-							gameState.opponentKoikoi = true;
+							opponent.koikoi = true;
 						}
 					}
 

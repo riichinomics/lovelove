@@ -118,7 +118,7 @@ const styles = stylesheet`
 `;
 
 export const Collection = (props: {
-	cards: lovelove.ICard[];
+	cards?: lovelove.ICard[];
 	stackUpwards?: boolean;
 	yakuInformation?: lovelove.IYakuData[]
 }) => {
@@ -128,6 +128,10 @@ export const Collection = (props: {
 	const yakuCards = props.yakuInformation?.find(yaku => yaku.id === yakuId)?.cards;
 	const groups = React.useMemo(
 		() => {
+			if (!props.cards) {
+				return [];
+			}
+
 			const groups = Object.values(props.cards.reduce(
 				(total, next) => {
 					const type = getCardType(next);

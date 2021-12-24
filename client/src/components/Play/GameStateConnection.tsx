@@ -71,12 +71,12 @@ export const GameStateConnection = () => {
 				type: ActionType.InitialGameStateReceived,
 				position: Math.random() * 2 | 0,
 				gameState: {
-					collection: [...Array(8 * 4)].map(() => createRandomCard()),
+					// collection: [...Array(8 * 4)].map(() => createRandomCard()),
 					//: drawnCard={createRandomCard()},
 					deck: Math.random() * 4 | 0,
-					hand: [...Array(Math.random() * 8 | 0)].map(() => createRandomCard()),
-					opponentCollection: [...Array(8 * 4)].map(() => createRandomCard()),
-					opponentHand: Math.random() * 8 | 0,
+					// hand: [...Array(Math.random() * 8 | 0)].map(() => createRandomCard()),
+					// opponentCollection: [...Array(8 * 4)].map(() => createRandomCard()),
+					// opponentHand: Math.random() * 8 | 0,
 					table: [...Array(12 + Math.random() * 6 | 0)].map(() => ({
 						card: createRandomCard()
 					})),

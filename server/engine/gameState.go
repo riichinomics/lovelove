@@ -80,7 +80,20 @@ func (game *gameState) Table() []*cardState {
 	return table
 }
 
-func (gameState *gameState) ToCompleteGameState(playerPosition lovelove.PlayerPosition) *lovelove.CompleteGameState {
+func (gameState *gameState) ToCompleteGameState(playerPosition lovelove.PlayerPosition) (completeGameState *lovelove.CompleteGameState) {
+	completeGameState = &lovelove.CompleteGameState{
+		Active:    gameState.activePlayer,
+		Oya:       gameState.oya,
+		MonthHana: getHana(gameState.month),
+		Month:     gameState.month,
+		RedPlayer: &lovelove.PlayerState{
+			Hand: &lovelove.HandInformation{},
+		},
+		WhitePlayer: &lovelove.PlayerState{
+			Hand: &lovelove.HandInformation{},
+		},
+	}
+
 	zones := make(map[CardLocation][]*cardState)
 
 	for _, card := range gameState.cards {
@@ -91,15 +104,7 @@ func (gameState *gameState) ToCompleteGameState(playerPosition lovelove.PlayerPo
 		zones[card.location] = append(zone, card)
 	}
 
-	completeGameState := &lovelove.CompleteGameState{
-		Deck:         0,
-		OpponentHand: 0,
-		Active:       gameState.activePlayer,
-		Oya:          gameState.oya,
-		MonthHana:    getHana(gameState.month),
-		Month:        gameState.month,
-		Teyaku:       GetTeyaku(gameState.Hand(playerPosition)),
-	}
+	completeGameState.Teyaku = GetTeyaku(gameState.Hand(playerPosition))
 
 	for zoneType, zone := range zones {
 		sort.SliceStable(zone, func(i, j int) bool {
@@ -122,28 +127,18 @@ func (gameState *gameState) ToCompleteGameState(playerPosition lovelove.PlayerPo
 				}
 			}
 		case CardLocation_RedCollection:
-			if playerPosition == lovelove.PlayerPosition_Red {
-				completeGameState.Collection = cards
-			} else {
-				completeGameState.OpponentCollection = cards
-			}
+			completeGameState.RedPlayer.Collection = cards
 		case CardLocation_WhiteCollection:
-			if playerPosition == lovelove.PlayerPosition_Red {
-				completeGameState.OpponentCollection = cards
-			} else {
-				completeGameState.Collection = cards
-			}
+			completeGameState.WhitePlayer.Collection = cards
 		case CardLocation_RedHand:
+			completeGameState.RedPlayer.Hand.NumberOfCards = int32(len(zone))
 			if playerPosition == lovelove.PlayerPosition_Red {
-				completeGameState.Hand = cards
-			} else {
-				completeGameState.OpponentHand = int32(len(zone))
+				completeGameState.RedPlayer.Hand.Cards = cards
 			}
 		case CardLocation_WhiteHand:
-			if playerPosition == lovelove.PlayerPosition_Red {
-				completeGameState.OpponentHand = int32(len(zone))
-			} else {
-				completeGameState.Hand = cards
+			completeGameState.WhitePlayer.Hand.NumberOfCards = int32(len(zone))
+			if playerPosition == lovelove.PlayerPosition_White {
+				completeGameState.WhitePlayer.Hand.Cards = cards
 			}
 		case CardLocation_Drawn:
 			completeGameState.DeckFlipCard = cards[0]
@@ -152,29 +147,47 @@ func (gameState *gameState) ToCompleteGameState(playerPosition lovelove.PlayerPo
 
 	completeGameState.TablePlayOptions = gameState.GetTablePlayOptions(playerPosition)
 
-	opponentPosition := getOpponentPosition(playerPosition)
-
-	completeGameState.YakuInformation = gameState.GetYakuData(playerPosition)
-	completeGameState.OpponentYakuInformation = gameState.GetYakuData(opponentPosition)
+	completeGameState.RedPlayer.YakuInformation = gameState.GetYakuData(lovelove.PlayerPosition_Red)
+	completeGameState.WhitePlayer.YakuInformation = gameState.GetYakuData(lovelove.PlayerPosition_White)
 
 	for _, playerState := range gameState.playerState {
+		var player *lovelove.PlayerState
+
 		switch playerState.position {
-		case playerPosition:
-			completeGameState.Score = playerState.score
-			completeGameState.Koikoi = playerState.koikoi
-		case opponentPosition:
-			completeGameState.OpponentScore = playerState.score
-			completeGameState.OpponentKoikoi = playerState.koikoi
+		case lovelove.PlayerPosition_Red:
+			player = completeGameState.RedPlayer
+		case lovelove.PlayerPosition_White:
+			player = completeGameState.WhitePlayer
 		}
+
+		if player == nil {
+			continue
+		}
+
+		player.Score = playerState.score
+		player.Koikoi = playerState.koikoi
 	}
 
-	if gameState.state == GameState_ShoubuOpportunity && playerPosition == gameState.activePlayer {
+	if gameState.state == GameState_ShoubuOpportunity && playerPosition == gameState.activePlayer && playerPosition != lovelove.PlayerPosition_UnknownPosition {
+		var player *lovelove.PlayerState
+
+		switch playerPosition {
+		case lovelove.PlayerPosition_Red:
+			player = completeGameState.RedPlayer
+		case lovelove.PlayerPosition_White:
+			player = completeGameState.WhitePlayer
+		}
+
+		if player == nil {
+			return
+		}
+
 		completeGameState.ShoubuOpportunity = &lovelove.ShoubuOpportunity{
-			Value: gameState.GetShoubuValue(completeGameState.YakuInformation, playerPosition),
+			Value: gameState.GetShoubuValue(player.YakuInformation, playerPosition),
 		}
 	}
 
-	return completeGameState
+	return
 }
 
 func (gameState *gameState) GetYakuData(playerPosition lovelove.PlayerPosition) []*lovelove.YakuData {
@@ -233,16 +246,16 @@ func (gameState *gameState) GetYakuData(playerPosition lovelove.PlayerPosition) 
 	return yakuData
 }
 
-func (gameState *gameState) GetPlayOptionsAcceptedOriginZones(playerPosition lovelove.PlayerPosition) (originZones []lovelove.PlayerCentricZone) {
-	originZones = make([]lovelove.PlayerCentricZone, 0)
+func (gameState *gameState) GetPlayOptionsAcceptedOriginZones(playerPosition lovelove.PlayerPosition) (originZones []lovelove.CardZone) {
+	originZones = make([]lovelove.CardZone, 0)
 	switch gameState.state {
 	case GameState_HandCardPlay:
 		if gameState.activePlayer != playerPosition {
 			return
 		}
 
-		return []lovelove.PlayerCentricZone{
-			GetHandLocation(playerPosition).ToPlayerCentricZone(playerPosition),
+		return []lovelove.CardZone{
+			GetHandLocation(playerPosition).ToCardZone(),
 		}
 
 	case GameState_DeckCardPlay:
@@ -250,8 +263,8 @@ func (gameState *gameState) GetPlayOptionsAcceptedOriginZones(playerPosition lov
 			return
 		}
 
-		return []lovelove.PlayerCentricZone{
-			lovelove.PlayerCentricZone_Drawn,
+		return []lovelove.CardZone{
+			lovelove.CardZone_Drawn,
 		}
 	}
 
