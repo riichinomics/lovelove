@@ -4,5 +4,6 @@ import { lovelove } from "../../rpc/proto/lovelove";
 
 export interface InitialGameStateReceivedAction extends Action<ActionType.InitialGameStateReceived> {
 	position?: lovelove.PlayerPosition;
+	opponentDisconnected?: boolean;
 	gameState?: lovelove.ICompleteGameState;
 }

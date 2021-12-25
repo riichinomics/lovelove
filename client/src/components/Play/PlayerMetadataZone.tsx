@@ -25,20 +25,23 @@ const styles = stylesheet`
 	.metadataBubble {
 		border-radius: 3px;
 		background-color: #333;
-		min-width: 80px;
+		min-width: 49px;
+		box-sizing: border-box;
 		text-align: center;
 		font-weight: 800;
 		padding: 6px 12px 8px;
 		font-size: 24px;
 
 		&.oya {
-			min-width: auto;
 			background-color: #6060bf;
 		}
 
 		&.koikoi {
-			min-width: auto;
 			background-color: #d81e1e;
+		}
+
+		&.disconnected {
+			background-color: #ff8db6;
 		}
 	}
 `;
@@ -49,10 +52,12 @@ export const PlayerMetadataZone = (props: {
 	score: number,
 	oya?: boolean,
 	koikoi?: boolean,
+	disconnected?: boolean,
 }) => {
 	return <div className={clsx(styles.metadataZone, props.opponent && styles.opponent)}>
 		<div className={styles.metadataBubble}>{props.score ?? 0}</div>
 		{props.oya && <div className={clsx(styles.metadataBubble, styles.oya)}>親</div>}
 		{props.koikoi && <div className={clsx(styles.metadataBubble, styles.koikoi)}>こいこい</div>}
+		{props.disconnected && <div className={clsx(styles.metadataBubble, styles.disconnected)}>接続遮断</div>}
 	</div>;
 };

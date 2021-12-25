@@ -5,17 +5,20 @@ import (
 	"errors"
 	"log"
 	"math/rand"
+	"time"
 
 	"google.golang.org/protobuf/reflect/protoreflect"
 	lovelove "hanafuda.moe/lovelove/proto"
 	"hanafuda.moe/lovelove/rpc"
 )
 
-func (server loveLoveRpcServer) ConnectToGame(context context.Context, request *lovelove.ConnectToGameRequest) (*lovelove.ConnectToGameResponse, error) {
+func (server loveLoveRpcServer) ConnectToGame(rpcContext context.Context, request *lovelove.ConnectToGameRequest) (response *lovelove.ConnectToGameResponse, rpcError error) {
+	rpcError = nil
+
 	log.Print(request.RoomId)
 
-	rpcConnMeta := rpc.GetConnectionMeta(context)
-	connMeta := GetConnectionMeta(context)
+	rpcConnMeta := rpc.GetConnectionMeta(rpcContext)
+	connMeta := GetConnectionMeta(rpcContext)
 
 	if len(connMeta.userId) == 0 {
 		//TODO: report no user error
@@ -23,7 +26,7 @@ func (server loveLoveRpcServer) ConnectToGame(context context.Context, request *
 		return &lovelove.ConnectToGameResponse{}, nil
 	}
 
-	gameContext := GetGameContext(context)
+	gameContext := GetGameContext(rpcContext)
 
 	if gameContext == nil {
 		//TODO: report no user error
@@ -113,34 +116,74 @@ func (server loveLoveRpcServer) ConnectToGame(context context.Context, request *
 	}
 
 	playerState := game.playerState[connMeta.userId]
-	if _, ok := gameContext.listeners[playerState.id]; !ok {
-		gameContext.listeners[playerState.id] = make([]chan protoreflect.ProtoMessage, 0)
+	player, playerExisted := gameContext.players[playerState.id]
+	if !playerExisted {
+		player = &playerMeta{
+			position:    playerState.position,
+			connections: make([]chan protoreflect.ProtoMessage, 0),
+			id:          connMeta.userId,
+		}
+		gameContext.players[playerState.id] = player
 	}
 
-	gameContext.listeners[playerState.id] = append(gameContext.listeners[playerState.id], rpcConnMeta.Messages)
+	player.connections = append(player.connections, rpcConnMeta.Messages)
+
 	rpcConnMeta.Closed.DoOnCompleted(func() {
 		gameContext.requestQueue <- func() {
-			listeners, ok := gameContext.listeners[playerState.id]
-			if !ok {
+			for i, listener := range player.connections {
+				if listener == rpcConnMeta.Messages {
+					player.connections = append(player.connections[:i], player.connections[i+1:]...)
+					break
+				}
+			}
+
+			if len(player.connections) != 0 {
 				return
 			}
 
-			if len(listeners) == 1 {
-				delete(gameContext.listeners, playerState.id)
-			}
-
-			for i, listener := range listeners {
-				if listener == rpcConnMeta.Messages {
-					gameContext.listeners[playerState.id] = append(listeners[:i], listeners[i+1:]...)
+			disconnectedContext, cancel := context.WithCancel(context.Background())
+			player.cancelDisconnect = cancel
+			go func() {
+				select {
+				case <-disconnectedContext.Done():
 					return
+				case <-time.After(5 * time.Second):
+					gameContext.requestQueue <- func() {
+						if len(player.connections) != 0 {
+							return
+						}
+						gameContext.ChangeConnectionStatus(connMeta.userId, false)
+					}
 				}
-			}
+			}()
 		}
 	})
 
-	playerPosition := playerState.position
-	return &lovelove.ConnectToGameResponse{
-		Position:  playerPosition,
-		GameState: game.ToCompleteGameState(playerPosition),
-	}, nil
+	opponentDisconnected := false
+	if player.position != lovelove.PlayerPosition_UnknownPosition {
+		opponentPosition := getOpponentPosition(player.position)
+		for _, player := range gameContext.players {
+			if player.position == opponentPosition {
+				opponentDisconnected = len(player.connections) == 0
+				break
+			}
+		}
+	}
+
+	response = &lovelove.ConnectToGameResponse{
+		Position:             playerState.position,
+		GameState:            game.ToCompleteGameState(playerState.position),
+		OpponentDisconnected: opponentDisconnected,
+	}
+
+	if playerState.position == lovelove.PlayerPosition_UnknownPosition || !playerExisted || len(player.connections) != 1 {
+		return
+	}
+
+	if player.cancelDisconnect != nil {
+		player.cancelDisconnect()
+	}
+	gameContext.ChangeConnectionStatus(connMeta.userId, true)
+
+	return
 }

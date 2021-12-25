@@ -34,10 +34,17 @@ type loveloveRpcServerContextKey struct {
 	key string
 }
 
+type playerMeta struct {
+	connections      []chan proto.Message
+	id               string
+	position         lovelove.PlayerPosition
+	cancelDisconnect func()
+}
+
 type gameContext struct {
 	id           string
 	GameState    *gameState
-	listeners    map[string][]chan proto.Message
+	players      map[string]*playerMeta
 	requestQueue chan func()
 }
 
@@ -80,7 +87,7 @@ func (interceptor *loveLoveRpcInterceptor) Interceptor(context context.Context, 
 			game = &gameContext{
 				id:           roomId,
 				requestQueue: make(chan func()),
-				listeners:    make(map[string][]chan proto.Message),
+				players:      make(map[string]*playerMeta),
 			}
 
 			interceptor.games[roomId] = game
@@ -146,15 +153,40 @@ func GetConnectionMeta(context context.Context) *connectionMeta {
 
 func (context *gameContext) BroadcastUpdates(gameUpdates map[string][]*lovelove.GameStateUpdatePart) {
 	for playerId, updates := range gameUpdates {
-		listeners, ok := context.listeners[playerId]
+		player, ok := context.players[playerId]
 		if !ok {
 			continue
 		}
 
-		for _, listener := range listeners {
+		for _, listener := range player.connections {
 			listener <- &lovelove.GameStateUpdate{
 				Updates: updates,
 			}
 		}
 	}
+}
+
+func (gameContext *gameContext) ChangeConnectionStatus(userId string, connected bool) {
+	player, playerExists := gameContext.players[userId]
+	if !playerExists {
+		return
+	}
+
+	connectionStatusUpdates := make(map[string][]*lovelove.GameStateUpdatePart)
+	for id, _ := range gameContext.players {
+		if id == userId {
+			continue
+		}
+
+		connectionStatusUpdates[id] = []*lovelove.GameStateUpdatePart{
+			{
+				ConnectionStatusUpdate: &lovelove.ConnectionStatusUpdate{
+					Player:    player.position,
+					Connected: connected,
+				},
+			},
+		}
+	}
+
+	gameContext.BroadcastUpdates(connectionStatusUpdates)
 }

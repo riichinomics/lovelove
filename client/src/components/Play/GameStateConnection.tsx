@@ -24,6 +24,7 @@ export const GameStateConnection = () => {
 	const apiState = useSelector<IState>((state) => state.apiState);
 
 	const position = useSelector((state: IState) => state.gamePosition);
+	const opponentDisconnected = useSelector((state: IState) => state.opponentDisconnected);
 	const gameState = useSelector((state: IState) => state.gameState);
 	const roundEndView = useSelector((state: IState) => state.roundEndView);
 	const [move, setMove] = React.useState<CardMove>();
@@ -101,7 +102,8 @@ export const GameStateConnection = () => {
 			dispatch({
 				type: ActionType.InitialGameStateReceived,
 				position: response.position,
-				gameState: response.gameState
+				gameState: response.gameState,
+				opponentDisconnected: response.opponentDisconnected,
 			});
 		});
 	}, [dispatch, api, apiState, roomId]);
@@ -182,6 +184,7 @@ export const GameStateConnection = () => {
 
 	return <CardMoveContext.Provider value={{move}}>
 		<Table
+			opponentDisconnected={opponentDisconnected}
 			gameState={roundEndView?.gameState ?? gameState}
 			position={position}
 			onCardDropped={onCardDropped}

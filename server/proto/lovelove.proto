@@ -153,7 +153,6 @@ message HandInformation {
 message PlayerState {
 	int32 score = 1;
 	bool koikoi = 2;
-	bool diconnected = 3;
 	HandInformation hand = 4;
 	repeated Card collection = 5;
 	repeated YakuData yakuInformation = 6;
@@ -193,6 +192,7 @@ message ConnectToGameRequest {
 message ConnectToGameResponse {
 	PlayerPosition position = 1;
 	CompleteGameState gameState = 2;
+	bool opponentDisconnected = 3;
 }
 
 message ResolveTeyakuRequest {
@@ -266,6 +266,7 @@ message GameStateUpdatePart {
 	ShoubuOpportunityUpdate shoubuOpportunityUpdate = 6;
 	RoundEndResult roundEndResult = 7;
 	KoikoiUpdate koikoiUpdate = 8;
+	ConnectionStatusUpdate connectionStatusUpdate = 9;
 }
 
 message ActivePlayerUpdate {
@@ -299,6 +300,11 @@ message ShoubuOpportunityUpdate {
 message KoikoiUpdate {
 	bool self = 1;
 	bool opponent = 2;
+}
+
+message ConnectionStatusUpdate {
+	PlayerPosition player = 1;
+	bool connected = 2;
 }
 
 message RoundEndResultTeyakuInformation {

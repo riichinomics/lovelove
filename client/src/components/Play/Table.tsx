@@ -141,11 +141,13 @@ type IGameState = lovelove.ICompleteGameState & {
 }
 
 export const Table = (props: IGameState & IGameModalActions & {
+	opponentDisconnected: boolean,
 	gameState: lovelove.ICompleteGameState,
 	onCardDropped: CardDroppedHandler,
 	roundEndView?: RoundEndInformation,
 }) => {
 	const {
+		opponentDisconnected,
 		position,
 		onCardDropped,
 		onKoikoiChosen,
@@ -207,6 +209,7 @@ export const Table = (props: IGameState & IGameModalActions & {
 					oya={opponentPosition === oya}
 					score={opponent?.score}
 					koikoi={opponent?.koikoi}
+					disconnected={opponentDisconnected}
 				/>
 			</PlayerNameTag>
 		</div>

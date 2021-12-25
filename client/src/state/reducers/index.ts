@@ -62,7 +62,8 @@ function mainReducer(state: IState, action: Action): IState {
 			return {
 				...state,
 				gamePosition: action.position,
-				gameState: immerate(action.gameState)
+				gameState: immerate(action.gameState),
+				opponentDisconnected: action.opponentDisconnected,
 			};
 		} case ActionType.GameUpdateReceived: {
 			return produce(state, state => {
@@ -244,6 +245,12 @@ function mainReducer(state: IState, action: Action): IState {
 
 						state.gameState = immerate(update.roundEndResult.nextRound);
 
+					}
+
+					if (update.connectionStatusUpdate) {
+						if (update.connectionStatusUpdate.player != state.gamePosition) {
+							state.opponentDisconnected = !update.connectionStatusUpdate.connected;
+						}
 					}
 				}
 			});
