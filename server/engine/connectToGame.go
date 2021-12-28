@@ -5,8 +5,8 @@ import (
 	"errors"
 	"log"
 	"math/rand"
-	"time"
 
+	"github.com/reactivex/rxgo/v2"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	lovelove "hanafuda.moe/lovelove/proto"
 	"hanafuda.moe/lovelove/rpc"
@@ -33,9 +33,6 @@ func (server loveLoveRpcServer) ConnectToGame(rpcContext context.Context, reques
 		log.Print("No GameContext! ", connMeta)
 		return nil, errors.New("No GameContext!")
 	}
-
-	// TODO: room change stop listening to other room
-	connMeta.roomId = request.RoomId
 
 	game := gameContext.GameState
 	if game == nil {
@@ -127,37 +124,22 @@ func (server loveLoveRpcServer) ConnectToGame(rpcContext context.Context, reques
 	}
 
 	player.connections = append(player.connections, rpcConnMeta.Messages)
+	gameContext.PlayerConnected()
+
+	if connMeta.roomChangedNotify != nil {
+		connMeta.roomChangedNotify()
+	}
+
+	connMeta.roomId = request.RoomId
+
+	roomChangedContext, roomChangedContextNotify := context.WithCancel(context.Background())
+	connMeta.roomChangedNotify = roomChangedContextNotify
 
 	rpcConnMeta.Closed.DoOnCompleted(func() {
 		gameContext.requestQueue <- func() {
-			for i, listener := range player.connections {
-				if listener == rpcConnMeta.Messages {
-					player.connections = append(player.connections[:i], player.connections[i+1:]...)
-					break
-				}
-			}
-
-			if len(player.connections) != 0 {
-				return
-			}
-
-			disconnectedContext, cancel := context.WithCancel(context.Background())
-			player.cancelDisconnect = cancel
-			go func() {
-				select {
-				case <-disconnectedContext.Done():
-					return
-				case <-time.After(5 * time.Second):
-					gameContext.requestQueue <- func() {
-						if len(player.connections) != 0 {
-							return
-						}
-						gameContext.ChangeConnectionStatus(connMeta.userId, false)
-					}
-				}
-			}()
+			gameContext.PlayerLeftRoom(player, rpcConnMeta.Messages)
 		}
-	})
+	}, rxgo.WithContext(roomChangedContext))
 
 	opponentDisconnected := false
 	if player.position != lovelove.PlayerPosition_UnknownPosition {

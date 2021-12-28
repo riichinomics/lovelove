@@ -2,18 +2,19 @@ package engine
 
 import (
 	"context"
+	"errors"
 	"log"
 	"sync"
 
 	"google.golang.org/grpc"
-	"google.golang.org/protobuf/proto"
 	lovelove "hanafuda.moe/lovelove/proto"
 	"hanafuda.moe/lovelove/rpc"
 )
 
 type connectionMeta struct {
-	userId string
-	roomId string
+	userId            string
+	roomId            string
+	roomChangedNotify func()
 }
 
 type loveLoveRpcInterceptor struct {
@@ -34,27 +35,13 @@ type loveloveRpcServerContextKey struct {
 	key string
 }
 
-type playerMeta struct {
-	connections      []chan proto.Message
-	id               string
-	position         lovelove.PlayerPosition
-	cancelDisconnect func()
-}
-
-type gameContext struct {
-	id           string
-	GameState    *gameState
-	players      map[string]*playerMeta
-	requestQueue chan func()
-}
-
 type handlerResponse struct {
 	value interface{}
 	err   error
 }
 
-func (interceptor *loveLoveRpcInterceptor) Interceptor(context context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp interface{}, err error) {
-	rpcConnectionMeta := rpc.GetConnectionMeta(context)
+func (interceptor *loveLoveRpcInterceptor) Interceptor(rpcContext context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp interface{}, err error) {
+	rpcConnectionMeta := rpc.GetConnectionMeta(rpcContext)
 
 	connMeta, hasConnMeta := interceptor.connectionMeta[rpcConnectionMeta.ConnId]
 	if !hasConnMeta {
@@ -65,13 +52,14 @@ func (interceptor *loveLoveRpcInterceptor) Interceptor(context context.Context, 
 		})
 	}
 
-	context = withConnectionMeta(context, connMeta)
+	rpcContext = withConnectionMeta(rpcContext, connMeta)
 
 	var roomId string
 
-	if request, ok := req.(*lovelove.ConnectToGameRequest); ok {
-		log.Print("room request", request.RoomId)
-		roomId = request.RoomId
+	connectToGameRequest, isConnectToGameRequest := req.(*lovelove.ConnectToGameRequest)
+	if isConnectToGameRequest {
+		log.Print("room request", connectToGameRequest.RoomId)
+		roomId = connectToGameRequest.RoomId
 	}
 
 	//TODO: leave old room
@@ -85,26 +73,55 @@ func (interceptor *loveLoveRpcInterceptor) Interceptor(context context.Context, 
 		game, gameExists := interceptor.games[roomId]
 		if !gameExists {
 			game = &gameContext{
-				id:           roomId,
-				requestQueue: make(chan func()),
-				players:      make(map[string]*playerMeta),
+				id:               roomId,
+				players:          make(map[string]*playerMeta),
+				requestQueue:     make(chan func()),
+				cleanupRequested: make(chan context.Context),
 			}
 
 			interceptor.games[roomId] = game
 
 			go func(game *gameContext) {
-				for request := range game.requestQueue {
-					request()
+				for {
+					select {
+					case request := <-game.requestQueue:
+						request()
+					case cleanupContext := <-game.cleanupRequested:
+						log.Print("Game cleaned up: ", game.id)
+						interceptor.gamesMutex.Lock()
+						game.activityState.mutex.Lock()
+
+						if !errors.Is(cleanupContext.Err(), context.Canceled) {
+							delete(interceptor.games, game.id)
+							game.activityState.cancelCleanup()
+							game.activityState.mutex.Unlock()
+							interceptor.gamesMutex.Unlock()
+							close(game.requestQueue)
+							return
+						}
+
+						game.activityState.cleanupCancelation = nil
+						game.activityState.mutex.Unlock()
+						interceptor.gamesMutex.Unlock()
+					}
 				}
 			}(game)
 		}
+
+		if isConnectToGameRequest {
+			game.StartRequest()
+		}
+
 		interceptor.gamesMutex.Unlock()
 
-		context = withGameContext(context, game)
+		rpcContext = withGameContext(rpcContext, game)
 
 		responseChan := make(chan *handlerResponse)
 		game.requestQueue <- func() {
-			value, err := handler(context, req)
+			value, err := handler(rpcContext, req)
+			if isConnectToGameRequest {
+				game.EndRequest()
+			}
 			responseChan <- &handlerResponse{
 				value,
 				err,
@@ -114,7 +131,7 @@ func (interceptor *loveLoveRpcInterceptor) Interceptor(context context.Context, 
 		return response.value, response.err
 	}
 
-	return handler(context, req)
+	return handler(rpcContext, req)
 }
 
 func withGameContext(ctx context.Context, gameContext *gameContext) context.Context {
@@ -149,44 +166,4 @@ func GetConnectionMeta(context context.Context) *connectionMeta {
 		return nil
 	}
 	return value
-}
-
-func (context *gameContext) BroadcastUpdates(gameUpdates map[string][]*lovelove.GameStateUpdatePart) {
-	for playerId, updates := range gameUpdates {
-		player, ok := context.players[playerId]
-		if !ok {
-			continue
-		}
-
-		for _, listener := range player.connections {
-			listener <- &lovelove.GameStateUpdate{
-				Updates: updates,
-			}
-		}
-	}
-}
-
-func (gameContext *gameContext) ChangeConnectionStatus(userId string, connected bool) {
-	player, playerExists := gameContext.players[userId]
-	if !playerExists {
-		return
-	}
-
-	connectionStatusUpdates := make(map[string][]*lovelove.GameStateUpdatePart)
-	for id, _ := range gameContext.players {
-		if id == userId {
-			continue
-		}
-
-		connectionStatusUpdates[id] = []*lovelove.GameStateUpdatePart{
-			{
-				ConnectionStatusUpdate: &lovelove.ConnectionStatusUpdate{
-					Player:    player.position,
-					Connected: connected,
-				},
-			},
-		}
-	}
-
-	gameContext.BroadcastUpdates(connectionStatusUpdates)
 }
