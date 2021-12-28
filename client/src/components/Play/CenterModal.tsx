@@ -41,7 +41,7 @@ const styles = stylesheet`
 				min-width: 160px;
 				cursor: pointer;
 
-				background-color: gray;
+				background-color: #50b271;
 
 				&:not(:first-child) {
 					margin-left: 50px;

@@ -5,19 +5,20 @@ import { IState } from "../../state/IState";
 import { Table } from "./Table";
 import { ApiState } from "../../rpc/ApiState";
 import { useLocation, useNavigate } from "react-router";
-import { CardMove, CardZone, createRandomCard } from "../../utils";
+import { CardMove, CardZone } from "../../utils";
 import { CardMoveContext } from "../../rpc/CardMoveContext";
 import { lovelove } from "../../rpc/proto/lovelove";
-import { InitialGameStateReceivedAction } from "../../state/actions/InitialGameStateReceivedAction";
+import { GameCreatedOnServerAction } from "../../state/actions/GameCreatedOnServerAction";
 import { ActionType } from "../../state/actions/ActionType";
 import { GameUpdateReceivedAction } from "../../state/actions/GameUpdateReceivedAction";
 import { RoundEndClearedAction } from "../../state/actions/RoundEndClearedAction";
+import { WaitingCurtain } from "./WaitingCurtain";
 
 
 export const GameStateConnection = () => {
 	const { api } = React.useContext(ApiContext);
 
-	const dispatch = useDispatch<React.Dispatch<InitialGameStateReceivedAction | GameUpdateReceivedAction | RoundEndClearedAction>>();
+	const dispatch = useDispatch<React.Dispatch<GameCreatedOnServerAction | GameUpdateReceivedAction | RoundEndClearedAction>>();
 
 	const roomId = useLocation().hash?.slice(1);
 	const navigate = useNavigate();
@@ -30,11 +31,18 @@ export const GameStateConnection = () => {
 	const [move, setMove] = React.useState<CardMove>();
 	const [teyakuResolved, setTeyakuResolved] = React.useState(false);
 
+	const [roomFull, setRoomFull] = React.useState(false);
+
 	React.useEffect(() => {
 		if (roomId == null || roomId === "") {
-			navigate({
-				hash: Math.random().toString(16).substr(2, 5).toUpperCase()
-			});
+			navigate(
+				{
+					hash: Math.random().toString(16).substr(2, 5).toUpperCase()
+				},
+				{
+					replace: true,
+				}
+			);
 		}
 	}, [roomId]);
 
@@ -67,44 +75,30 @@ export const GameStateConnection = () => {
 	}, [api, apiState]);
 
 	React.useEffect(() => {
-		if (roomId === "test") {
-			dispatch({
-				type: ActionType.InitialGameStateReceived,
-				position: Math.random() * 2 | 0,
-				gameState: {
-					// collection: [...Array(8 * 4)].map(() => createRandomCard()),
-					//: drawnCard={createRandomCard()},
-					deck: Math.random() * 4 | 0,
-					// hand: [...Array(Math.random() * 8 | 0)].map(() => createRandomCard()),
-					// opponentCollection: [...Array(8 * 4)].map(() => createRandomCard()),
-					// opponentHand: Math.random() * 8 | 0,
-					table: [...Array(12 + Math.random() * 6 | 0)].map(() => ({
-						card: createRandomCard()
-					})),
-					oya: Math.random() * 2 | 0,
-					active: Math.random() * 2 | 0,
-				}
-			});
-			return;
-		}
-
 		if (apiState !== ApiState.Connected) {
 			return;
 		}
 
 		console.log("requesting GameState");
+		setRoomFull(false);
 
 		api.lovelove.connectToGame({
 			roomId
 		}).then(response => {
 			console.log("GameStateConnection", response);
+			if (response.status === lovelove.ConnectToGameResponseCode.ConnectToGameWaiting) {
+				dispatch({
+					type: ActionType.GameCreatedOnServer
+				});
+				return;
+			}
 
-			dispatch({
-				type: ActionType.InitialGameStateReceived,
-				position: response.position,
-				gameState: response.gameState,
-				opponentDisconnected: response.opponentDisconnected,
-			});
+			if (response.status === lovelove.ConnectToGameResponseCode.ConnectToGameFull) {
+				dispatch({
+					type: ActionType.GameCreatedOnServer
+				});
+				setRoomFull(true);
+			}
 		});
 	}, [dispatch, api, apiState, roomId]);
 
@@ -181,6 +175,10 @@ export const GameStateConnection = () => {
 			type: ActionType.RoundEndCleared,
 		});
 	}, [dispatch]);
+
+	if (!gameState) {
+		return <WaitingCurtain roomFull={roomFull} />;
+	}
 
 	return <CardMoveContext.Provider value={{move}}>
 		<Table

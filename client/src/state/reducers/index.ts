@@ -58,18 +58,11 @@ function mainReducer(state: IState, action: Action): IState {
 				...state,
 				apiState: action.apiState
 			};
-		} case ActionType.InitialGameStateReceived: {
-			return {
-				...state,
-				gamePosition: action.position,
-				gameState: immerate(action.gameState),
-				opponentDisconnected: action.opponentDisconnected,
-			};
 		} case ActionType.GameUpdateReceived: {
 			return produce(state, state => {
 				const gameState = state.gameState;
-				const player = state.gamePosition == lovelove.PlayerPosition.Red ? gameState.redPlayer : gameState.whitePlayer;
-				const opponent = state.gamePosition == lovelove.PlayerPosition.Red ? gameState.whitePlayer : gameState.redPlayer;
+				const player = state.gamePosition == lovelove.PlayerPosition.Red ? gameState?.redPlayer : gameState?.whitePlayer;
+				const opponent = state.gamePosition == lovelove.PlayerPosition.Red ? gameState?.whitePlayer : gameState?.redPlayer;
 				for (const update of action.update.updates) {
 					if (update.cardMoveUpdates) {
 						for (const cardMove of update.cardMoveUpdates) {
@@ -252,6 +245,12 @@ function mainReducer(state: IState, action: Action): IState {
 							state.opponentDisconnected = !update.connectionStatusUpdate.connected;
 						}
 					}
+
+					if (update.gameConnectionData) {
+						state.gameState = immerate(update.gameConnectionData.gameState);
+						state.gamePosition = update.gameConnectionData.position;
+						state.opponentDisconnected = update.gameConnectionData.opponentDisconnected;
+					}
 				}
 			});
 		} case ActionType.PreviewCardChanged: {
@@ -262,6 +261,13 @@ function mainReducer(state: IState, action: Action): IState {
 			return {
 				...state,
 				roundEndView: null,
+			};
+		} case ActionType.GameCreatedOnServer: {
+			return {
+				...state,
+				gamePosition: null,
+				gameState: null,
+				opponentDisconnected: null,
 			};
 		}
 	}

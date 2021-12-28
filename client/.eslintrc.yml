@@ -36,9 +36,6 @@ rules:
   react/prefer-read-only-props: error
   react/self-closing-comp: error
   react/jsx-no-useless-fragment: error
-  react/jsx-one-expression-per-line:
-    - error
-    - allow: single-child
   react/jsx-boolean-value: error
   # react/jsx-closing-bracket-location:
   #   - error

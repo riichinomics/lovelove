@@ -46,6 +46,13 @@ enum GenericResponseCode {
 	Ok = 1;
 }
 
+enum ConnectToGameResponseCode {
+	ConnectToGameError = 0;
+	ConnectToGameOk = 1;
+	ConnectToGameFull = 2;
+	ConnectToGameWaiting = 3;
+}
+
 enum PlayerPosition {
 	UnknownPosition = 0;
 	Red = 1;
@@ -190,6 +197,10 @@ message ConnectToGameRequest {
 }
 
 message ConnectToGameResponse {
+	ConnectToGameResponseCode status = 1;
+}
+
+message GameConnectionData {
 	PlayerPosition position = 1;
 	CompleteGameState gameState = 2;
 	bool opponentDisconnected = 3;
@@ -267,6 +278,8 @@ message GameStateUpdatePart {
 	RoundEndResult roundEndResult = 7;
 	KoikoiUpdate koikoiUpdate = 8;
 	ConnectionStatusUpdate connectionStatusUpdate = 9;
+	GameConnectionData gameConnectionData = 10;
+
 }
 
 message ActivePlayerUpdate {

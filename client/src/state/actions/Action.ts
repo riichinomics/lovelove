@@ -1,12 +1,12 @@
 import { ApiStateChangedAction } from "./ApiStateChangedAction";
 import { GameUpdateReceivedAction } from "./GameUpdateReceivedAction";
-import { InitialGameStateReceivedAction } from "./InitialGameStateReceivedAction";
+import { GameCreatedOnServerAction } from "./GameCreatedOnServerAction";
 import { PreviewCardChangedAction } from "./PreviewCardChangedAction";
 import { RoundEndClearedAction } from "./RoundEndClearedAction";
 
 export type Action =
 	ApiStateChangedAction
-	| InitialGameStateReceivedAction
+	| GameCreatedOnServerAction
 	| GameUpdateReceivedAction
 	| PreviewCardChangedAction
 	| RoundEndClearedAction;

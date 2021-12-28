@@ -14,6 +14,9 @@ import (
 
 func (server loveLoveRpcServer) ConnectToGame(rpcContext context.Context, request *lovelove.ConnectToGameRequest) (response *lovelove.ConnectToGameResponse, rpcError error) {
 	rpcError = nil
+	response = &lovelove.ConnectToGameResponse{
+		Status: lovelove.ConnectToGameResponseCode_ConnectToGameError,
+	}
 
 	log.Print(request.RoomId)
 
@@ -36,6 +39,10 @@ func (server loveLoveRpcServer) ConnectToGame(rpcContext context.Context, reques
 
 	game := gameContext.GameState
 	if game == nil {
+		response = &lovelove.ConnectToGameResponse{
+			Status: lovelove.ConnectToGameResponseCode_ConnectToGameWaiting,
+		}
+
 		cards := make(map[int32]*cardState)
 		for hana := range lovelove.Hana_name {
 			if hana == 0 {
@@ -84,10 +91,20 @@ func (server loveLoveRpcServer) ConnectToGame(rpcContext context.Context, reques
 		if len(game.GetTeyaku()) > 0 {
 			game.state = GameState_Teyaku
 		}
-
 	} else {
-		_, playerExists := game.playerState[connMeta.userId]
+		existingPlayer, playerExists := game.playerState[connMeta.userId]
 		if !playerExists {
+			if len(game.playerState) >= 2 {
+				response = &lovelove.ConnectToGameResponse{
+					Status: lovelove.ConnectToGameResponseCode_ConnectToGameFull,
+				}
+				return
+			}
+
+			response = &lovelove.ConnectToGameResponse{
+				Status: lovelove.ConnectToGameResponseCode_ConnectToGameOk,
+			}
+
 			newPlayer := &playerState{
 				id: connMeta.userId,
 			}
@@ -108,6 +125,19 @@ func (server loveLoveRpcServer) ConnectToGame(rpcContext context.Context, reques
 
 				newPlayer.position = position
 				break
+			}
+
+			defer gameContext.BroadcastGameStart(lovelove.PlayerPosition_UnknownPosition)
+		} else {
+			if len(game.playerState) < 2 {
+				response = &lovelove.ConnectToGameResponse{
+					Status: lovelove.ConnectToGameResponseCode_ConnectToGameWaiting,
+				}
+			} else {
+				response = &lovelove.ConnectToGameResponse{
+					Status: lovelove.ConnectToGameResponseCode_ConnectToGameOk,
+				}
+				defer gameContext.BroadcastGameStart(existingPlayer.position)
 			}
 		}
 	}
@@ -140,23 +170,6 @@ func (server loveLoveRpcServer) ConnectToGame(rpcContext context.Context, reques
 			gameContext.PlayerLeftRoom(player, rpcConnMeta.Messages)
 		}
 	}, rxgo.WithContext(roomChangedContext))
-
-	opponentDisconnected := false
-	if player.position != lovelove.PlayerPosition_UnknownPosition {
-		opponentPosition := getOpponentPosition(player.position)
-		for _, player := range gameContext.players {
-			if player.position == opponentPosition {
-				opponentDisconnected = len(player.connections) == 0
-				break
-			}
-		}
-	}
-
-	response = &lovelove.ConnectToGameResponse{
-		Position:             playerState.position,
-		GameState:            game.ToCompleteGameState(playerState.position),
-		OpponentDisconnected: opponentDisconnected,
-	}
 
 	if playerState.position == lovelove.PlayerPosition_UnknownPosition || !playerExisted || len(player.connections) != 1 {
 		return

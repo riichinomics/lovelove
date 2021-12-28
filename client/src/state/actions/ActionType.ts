@@ -1,6 +1,6 @@
 export enum ActionType {
 	ApiStateChanged = "ApiStateChanged",
-	InitialGameStateReceived = "InitialGameStateReceived",
+	GameCreatedOnServer = "GameCreatedOnServer",
 	GameUpdateReceived = "GameUpdateReceived",
 	PreviewCardChanged = "PreviewCardChanged",
 	RoundEndCleared = "RoundEndCleared",
