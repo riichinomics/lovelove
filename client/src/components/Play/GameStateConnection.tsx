@@ -13,6 +13,7 @@ import { ActionType } from "../../state/actions/ActionType";
 import { GameUpdateReceivedAction } from "../../state/actions/GameUpdateReceivedAction";
 import { RoundEndClearedAction } from "../../state/actions/RoundEndClearedAction";
 import { WaitingCurtain } from "./WaitingCurtain";
+import { EndGameCurtain } from "./EndGameCurtain";
 
 
 export const GameStateConnection = () => {
@@ -175,6 +176,13 @@ export const GameStateConnection = () => {
 			type: ActionType.RoundEndCleared,
 		});
 	}, [dispatch]);
+
+	if (gameState?.gameEnd) {
+		return <EndGameCurtain
+			position={position}
+			gameState={gameState}
+		/>;
+	}
 
 	if (!gameState) {
 		return <WaitingCurtain roomFull={roomFull} />;

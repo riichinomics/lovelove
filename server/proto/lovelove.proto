@@ -160,9 +160,15 @@ message HandInformation {
 message PlayerState {
 	int32 score = 1;
 	bool koikoi = 2;
+	bool conceded = 3;
 	HandInformation hand = 4;
 	repeated Card collection = 5;
 	repeated YakuData yakuInformation = 6;
+	bool rematchAccepted = 7;
+}
+
+message GameEnd {
+	PlayerPosition gameWinner = 5;
 }
 
 message CompleteGameState {
@@ -181,6 +187,8 @@ message CompleteGameState {
 	ZonePlayOptions tablePlayOptions = 10;
 	ShoubuOpportunity shoubuOpportunity = 11;
 	TeyakuId teyaku = 12;
+
+	GameEnd gameEnd = 13;
 }
 
 // Requests
@@ -279,7 +287,7 @@ message GameStateUpdatePart {
 	KoikoiUpdate koikoiUpdate = 8;
 	ConnectionStatusUpdate connectionStatusUpdate = 9;
 	GameConnectionData gameConnectionData = 10;
-
+	RematchUpdate rematchUpdate = 11;
 }
 
 message ActivePlayerUpdate {
@@ -318,6 +326,10 @@ message KoikoiUpdate {
 message ConnectionStatusUpdate {
 	PlayerPosition player = 1;
 	bool connected = 2;
+}
+
+message RematchUpdate {
+	PlayerPosition player = 1;
 }
 
 message RoundEndResultTeyakuInformation {

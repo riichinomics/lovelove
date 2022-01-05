@@ -7,10 +7,12 @@ import (
 type GameState int64
 
 const (
-	GameState_Teyaku GameState = iota
+	GameState_Waiting GameState = iota
+	GameState_Teyaku
 	GameState_HandCardPlay
 	GameState_DeckCardPlay
 	GameState_ShoubuOpportunity
+	GameState_End
 )
 
 type YakuCategory int64

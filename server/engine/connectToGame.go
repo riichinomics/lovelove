@@ -71,7 +71,6 @@ func (server loveLoveRpcServer) ConnectToGame(rpcContext context.Context, reques
 		oya := lovelove.PlayerPosition(rand.Intn(2) + 1)
 
 		game = &gameState{
-			state:        GameState_HandCardPlay,
 			activePlayer: oya,
 			cards:        cards,
 			playerState:  make(map[string]*playerState),
@@ -100,6 +99,8 @@ func (server loveLoveRpcServer) ConnectToGame(rpcContext context.Context, reques
 				}
 				return
 			}
+
+			game.state = GameState_HandCardPlay
 
 			response = &lovelove.ConnectToGameResponse{
 				Status: lovelove.ConnectToGameResponseCode_ConnectToGameOk,

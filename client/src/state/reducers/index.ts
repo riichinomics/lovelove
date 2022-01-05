@@ -237,7 +237,6 @@ function mainReducer(state: IState, action: Action): IState {
 						};
 
 						state.gameState = immerate(update.roundEndResult.nextRound);
-
 					}
 
 					if (update.connectionStatusUpdate) {

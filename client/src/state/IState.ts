@@ -11,6 +11,7 @@ export interface RoundEndInformation {
 export interface IState {
 	userId: string;
 	apiState: ApiState;
+
 	gamePosition: lovelove.PlayerPosition;
 	opponentDisconnected?: boolean;
 	gameState?: lovelove.ICompleteGameState;

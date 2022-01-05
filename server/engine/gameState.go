@@ -168,6 +168,39 @@ func (gameState *gameState) ToCompleteGameState(playerPosition lovelove.PlayerPo
 		player.Koikoi = playerState.koikoi
 	}
 
+	if gameState.state == GameState_End {
+		var gameWinner *playerState
+		for _, player := range gameState.playerState {
+			if player.position == lovelove.PlayerPosition_UnknownPosition {
+				continue
+			}
+
+			if gameWinner == nil {
+				gameWinner = player
+				continue
+			}
+
+			if gameWinner.score == player.score {
+				gameWinner = nil
+				break
+			}
+
+			if gameWinner.score < player.score {
+				gameWinner = player
+			}
+		}
+
+		winningPosition := lovelove.PlayerPosition_UnknownPosition
+		if gameWinner != nil {
+			winningPosition = gameWinner.position
+		}
+
+		completeGameState.GameEnd = &lovelove.GameEnd{
+			GameWinner: winningPosition,
+		}
+		return
+	}
+
 	if gameState.state == GameState_ShoubuOpportunity && playerPosition == gameState.activePlayer && playerPosition != lovelove.PlayerPosition_UnknownPosition {
 		var player *lovelove.PlayerState
 

@@ -38,6 +38,24 @@ func EndRound(
 
 	gameState.month = lovelove.Month(int(gameState.month+1) % len(lovelove.Month_name))
 
+	if gameState.month == lovelove.Month_February {
+		gameState.state = GameState_End
+
+		for p := range lovelove.PlayerPosition_name {
+			position := lovelove.PlayerPosition(p)
+			roundEndUpdates[position] = []*lovelove.GameStateUpdatePart{
+				{
+					RoundEndResult: &lovelove.RoundEndResult{
+						Winner:    roundEndChange.winner,
+						Winnings:  shoubuValue,
+						NextRound: gameState.ToCompleteGameState(position),
+					},
+				},
+			}
+		}
+		return
+	}
+
 	gameState.activePlayer = gameState.oya
 	gameState.state = GameState_HandCardPlay
 
@@ -62,7 +80,7 @@ func EndRound(
 		}
 	}
 
-	for p, _ := range lovelove.PlayerPosition_name {
+	for p := range lovelove.PlayerPosition_name {
 		position := lovelove.PlayerPosition(p)
 		roundEndUpdates[position] = []*lovelove.GameStateUpdatePart{
 			{

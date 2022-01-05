@@ -1,6 +1,7 @@
 import { stylesheet } from "astroturf";
 import clsx from "clsx";
 import * as React from "react";
+import { MetadataBubble } from "./MetadataBubble";
 
 const styles = stylesheet`
 	.metadataZone {
@@ -21,31 +22,18 @@ const styles = stylesheet`
 		}
 	}
 
+	.oya {
+		background-color: #6060bf;
+	}
 
-	.metadataBubble {
-		border-radius: 3px;
-		background-color: #333;
-		min-width: 49px;
-		box-sizing: border-box;
-		text-align: center;
-		font-weight: 800;
-		padding: 6px 12px 8px;
-		font-size: 24px;
+	.koikoi {
+		background-color: #d81e1e;
+	}
 
-		&.oya {
-			background-color: #6060bf;
-		}
-
-		&.koikoi {
-			background-color: #d81e1e;
-		}
-
-		&.disconnected {
-			background-color: #ff8db6;
-		}
+	.disconnected {
+		background-color: #ff8db6;
 	}
 `;
-
 
 export const PlayerMetadataZone = (props: {
 	opponent?: boolean,
@@ -55,9 +43,9 @@ export const PlayerMetadataZone = (props: {
 	disconnected?: boolean,
 }) => {
 	return <div className={clsx(styles.metadataZone, props.opponent && styles.opponent)}>
-		<div className={styles.metadataBubble}>{props.score ?? 0}</div>
-		{props.oya && <div className={clsx(styles.metadataBubble, styles.oya)}>親</div>}
-		{props.koikoi && <div className={clsx(styles.metadataBubble, styles.koikoi)}>こいこい</div>}
-		{props.disconnected && <div className={clsx(styles.metadataBubble, styles.disconnected)}>接続遮断</div>}
+		<MetadataBubble>{props.score ?? 0}</MetadataBubble>
+		{props.oya && <MetadataBubble className={styles.oya}>親</MetadataBubble>}
+		{props.koikoi && <MetadataBubble className={styles.koikoi}>こいこい</MetadataBubble>}
+		{props.disconnected && <MetadataBubble className={styles.disconnected}>接続遮断</MetadataBubble>}
 	</div>;
 };
