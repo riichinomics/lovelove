@@ -17,8 +17,12 @@ const styles = stylesheet`
 
 export const MetadataBubble: React.FC<{
 	className?: string;
+	onClick?: () => void
 }> = (props) => {
-	return <div className={clsx(styles.metadataBubble, props.className)}>
+	return <div
+		className={clsx(styles.metadataBubble, props.className)}
+		onClick={props.onClick}
+	>
 		{props.children}
 	</div>;
 };

@@ -177,6 +177,11 @@ export const GameStateConnection = () => {
 		});
 	}, [dispatch]);
 
+
+	const onGameConceded = React.useCallback(() => {
+		api.lovelove.concedeGame({});
+	}, [api]);
+
 	if (gameState?.gameEnd) {
 		return <EndGameCurtain
 			position={position}
@@ -199,6 +204,7 @@ export const GameStateConnection = () => {
 			roundEndView={roundEndView}
 			onContinueChosen={onContinueChosen}
 			teyakuResolved={teyakuResolved}
+			onGameConceded={onGameConceded}
 		/>
 	</CardMoveContext.Provider>;
 };

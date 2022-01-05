@@ -11,10 +11,27 @@ const styles = stylesheet`
 		margin: 48px 0px;
 	}
 
-	.playerArea {
+	.endGameCurtainContent {
 		display: flex;
-		justify-content: center;
+		flex-direction: column;
+		align-items: center;
+	}
+
+	.playerArea {
+		position: relative;
+
+		.concedeContainer {
+			position: absolute;
+			right: 100%;
+			padding: 0px 20px;
+			.concede {
+				word-break: keep-all;
+				background-color: #0005;
+			}
+		}
+
 		.score {
+			display: inline-block;
 			background-color: #0005;
 		}
 	}
@@ -31,22 +48,39 @@ export const EndGameCurtain = (props: {
 		? props.gameState.whitePlayer
 		: props.gameState.redPlayer;
 	return <FullScreenCurtain>
-		<div className={styles.playerArea}>
-			<MetadataBubble className={styles.score}>
-				{opponent.score}
-			</MetadataBubble>
-		</div>
-		<div className={styles.status}>
-			{props.gameState.gameEnd.gameWinner === lovelove.PlayerPosition.UnknownPosition
-				? "引き分け"
-				: props.position === props.gameState.gameEnd.gameWinner
-					? "勝利"
-					: "負け"}
-		</div>
-		<div className={styles.playerArea}>
-			<MetadataBubble className={styles.score}>
-				{player.score}
-			</MetadataBubble>
+		<div className={styles.endGameCurtainContent}>
+			<div className={styles.playerArea}>
+				{opponent.conceded &&
+					<div className={styles.concedeContainer}>
+						<MetadataBubble className={styles.concede}>
+							諦めた
+						</MetadataBubble>
+					</div>
+				}
+				<MetadataBubble className={styles.score}>
+					{opponent.score}
+				</MetadataBubble>
+			</div>
+			<div className={styles.status}>
+				{props.gameState.gameEnd.gameWinner === lovelove.PlayerPosition.UnknownPosition
+					? "引き分け"
+					: props.position === props.gameState.gameEnd.gameWinner
+						? "勝利"
+						: "負け"}
+			</div>
+			<div className={styles.playerArea}>
+				{player.conceded &&
+					<div className={styles.concedeContainer}>
+						<MetadataBubble className={styles.concede}>
+							諦めた
+						</MetadataBubble>
+					</div>
+				}
+				<MetadataBubble className={styles.score}>
+					{player.score}
+				</MetadataBubble>
+			</div>
 		</div>
 	</FullScreenCurtain>;
 };
+

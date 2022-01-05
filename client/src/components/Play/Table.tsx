@@ -12,6 +12,8 @@ import { CardMoveContext } from "../../rpc/CardMoveContext";
 import { PlayerMetadataZone } from "./PlayerMetadataZone";
 import { RoundEndInformation } from "../../state/IState";
 import { GameActionModal, IGameModalActions } from "./GameActionModal/GameActionModal";
+import { MetadataBubble } from "./MetadataBubble";
+import { CenterModal, CenterModalActionPanel } from "./CenterModal";
 
 const styles = stylesheet`
 	$collection-peek: 100px;
@@ -30,6 +32,21 @@ const styles = stylesheet`
 			flex-basis: auto;
 			&.opponentNameTag {
 				border-bottom: $border-weight solid black;
+
+				.concedeContainer {
+					position: absolute;
+					padding: 10px;
+					top: 100%;
+					right: 0;
+				}
+
+				.concede {
+					cursor: pointer;
+					transition: background-color 0.3s ease-in-out;
+					&:hover {
+						background-color: #666;
+					}
+				}
 			}
 
 			&.playerNameTag {
@@ -45,6 +62,10 @@ const styles = stylesheet`
 			bottom: 0;
 			left: 0;
 			z-index: 999;
+
+			.cancelConcede {
+				background-color: #d81e1e;
+			}
 		}
 
 		.collection {
@@ -145,6 +166,7 @@ export const Table = (props: IGameState & IGameModalActions & {
 	gameState: lovelove.ICompleteGameState,
 	onCardDropped: CardDroppedHandler,
 	roundEndView?: RoundEndInformation,
+	onGameConceded: () => void,
 }) => {
 	const {
 		opponentDisconnected,
@@ -155,6 +177,7 @@ export const Table = (props: IGameState & IGameModalActions & {
 		onContinueChosen,
 		teyakuResolved,
 		roundEndView,
+		onGameConceded,
 		gameState: {
 			redPlayer,
 			whitePlayer,
@@ -176,6 +199,7 @@ export const Table = (props: IGameState & IGameModalActions & {
 
 	const opponentPosition = oppositePosition(position);
 	const [previewCard, setPreviewCard] = React.useState<lovelove.ICard>();
+	const [concessionRequested, setConcessionRequested] = React.useState(false);
 	const { move } = React.useContext(CardMoveContext);
 	React.useEffect(() => {
 		setPreviewCard(null);
@@ -183,6 +207,18 @@ export const Table = (props: IGameState & IGameModalActions & {
 
 	return <div className={styles.table}>
 		<div className={styles.modalArea}>
+			{ concessionRequested &&
+				<CenterModal>
+					<div>
+						Are you sure you want to concede?
+					</div>
+					<CenterModalActionPanel>
+						<div className={styles.cancelConcede} onClick={() => setConcessionRequested(false)}>いいえ</div>
+						<div onClick={onGameConceded}>はい</div>
+					</CenterModalActionPanel>
+				</CenterModal>
+			}
+
 			<GameActionModal
 				onKoikoiChosen={onKoikoiChosen}
 				onShoubuChosen={onShoubuChosen}
@@ -211,6 +247,14 @@ export const Table = (props: IGameState & IGameModalActions & {
 					koikoi={opponent?.koikoi}
 					disconnected={opponentDisconnected}
 				/>
+				<div className={styles.concedeContainer}>
+					<MetadataBubble
+						onClick={() => setConcessionRequested(true)}
+						className={styles.concede}
+					>
+						諦める
+					</MetadataBubble>
+				</div>
 			</PlayerNameTag>
 		</div>
 		<div className={clsx(styles.collection, styles.opponentCollection)}>

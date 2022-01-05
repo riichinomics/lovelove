@@ -229,12 +229,14 @@ function mainReducer(state: IState, action: Action): IState {
 					}
 
 					if (update.roundEndResult) {
-						state.roundEndView = {
-							gameState: gameState,
-							winner: update.roundEndResult.winner,
-							winnings: update.roundEndResult.winnings,
-							teyaku: update.roundEndResult.teyakuInformation,
-						};
+						if (!update.roundEndResult.nextRound.redPlayer.conceded && !update.roundEndResult.nextRound.whitePlayer.conceded) {
+							state.roundEndView = {
+								gameState: gameState,
+								winner: update.roundEndResult.winner,
+								winnings: update.roundEndResult.winnings,
+								teyaku: update.roundEndResult.teyakuInformation,
+							};
+						}
 
 						state.gameState = immerate(update.roundEndResult.nextRound);
 					}

@@ -12,6 +12,7 @@ type playerState struct {
 	id              string
 	score           int32
 	koikoi          bool
+	conceded        bool
 	position        lovelove.PlayerPosition
 	confirmedTeyaku bool
 }
@@ -166,12 +167,17 @@ func (gameState *gameState) ToCompleteGameState(playerPosition lovelove.PlayerPo
 
 		player.Score = playerState.score
 		player.Koikoi = playerState.koikoi
+		player.Conceded = playerState.conceded
 	}
 
 	if gameState.state == GameState_End {
 		var gameWinner *playerState
 		for _, player := range gameState.playerState {
 			if player.position == lovelove.PlayerPosition_UnknownPosition {
+				continue
+			}
+
+			if player.conceded {
 				continue
 			}
 

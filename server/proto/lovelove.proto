@@ -113,6 +113,10 @@ service LoveLove {
 	rpc PlayDrawnCard (PlayDrawnCardRequest) returns (PlayDrawnCardResponse) {}
 
 	rpc ResolveShoubuOpportunity (ResolveShoubuOpportunityRequest) returns (ResolveShoubuOpportunityResponse) {}
+
+	rpc RequestRematch (RequestRematchRequest) returns (RequestRematchResponse) {}
+
+	rpc ConcedeGame (ConcedeGameRequest) returns (ConcedeGameResponse) {}
 }
 
 message Wrapper {
@@ -249,6 +253,18 @@ message ResolveShoubuOpportunityRequest {
 }
 
 message ResolveShoubuOpportunityResponse {
+	GenericResponseCode status = 1;
+}
+
+message RequestRematchRequest {}
+
+message RequestRematchResponse {
+	GenericResponseCode status = 1;
+}
+
+message ConcedeGameRequest {}
+
+message ConcedeGameResponse {
 	GenericResponseCode status = 1;
 }
 
