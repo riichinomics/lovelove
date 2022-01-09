@@ -82,7 +82,7 @@ func (server loveLoveRpcServer) ConnectToGame(rpcContext context.Context, reques
 
 		game.playerState[connMeta.userId] = &playerState{
 			id:       connMeta.userId,
-			position: lovelove.PlayerPosition(rand.Intn(2) + 1),
+			position: lovelove.PlayerPosition_Red,
 		}
 
 		game.Deal()
@@ -106,26 +106,9 @@ func (server loveLoveRpcServer) ConnectToGame(rpcContext context.Context, reques
 				Status: lovelove.ConnectToGameResponseCode_ConnectToGameOk,
 			}
 
-			newPlayer := &playerState{
-				id: connMeta.userId,
-			}
-			game.playerState[connMeta.userId] = newPlayer
-
-		POSITION:
-			for p := range lovelove.PlayerPosition_name {
-				position := lovelove.PlayerPosition(p)
-				if position == lovelove.PlayerPosition_UnknownPosition {
-					continue
-				}
-
-				for _, playerState := range game.playerState {
-					if playerState.position == position {
-						continue POSITION
-					}
-				}
-
-				newPlayer.position = position
-				break
+			game.playerState[connMeta.userId] = &playerState{
+				id:       connMeta.userId,
+				position: lovelove.PlayerPosition_White,
 			}
 
 			defer gameContext.BroadcastGameStart(lovelove.PlayerPosition_UnknownPosition)
@@ -144,6 +127,8 @@ func (server loveLoveRpcServer) ConnectToGame(rpcContext context.Context, reques
 	}
 
 	playerState := game.playerState[connMeta.userId]
+	response.PlayerPosition = playerState.position
+	response.OpponentDisconnected = gameContext.GetOpponentConnectionStatus(playerState.position)
 	player, playerExisted := gameContext.players[playerState.id]
 	if !playerExisted {
 		player = &playerMeta{

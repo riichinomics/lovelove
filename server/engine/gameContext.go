@@ -172,31 +172,37 @@ func (gameContext *gameContext) ScheduleGameCleanup(delay int) func() {
 	return cancelCleanup
 }
 
+func (gameContext *gameContext) GetOpponentConnectionStatus(playerPosition lovelove.PlayerPosition) bool {
+	if playerPosition == lovelove.PlayerPosition_UnknownPosition {
+		return false
+	}
+
+	opponentPosition := getOpponentPosition(playerPosition)
+	for _, player := range gameContext.players {
+		if player.position != opponentPosition {
+			continue
+		}
+
+		if len(player.connections) == 0 {
+			return true
+		}
+	}
+
+	return false
+}
+
 func (gameContext *gameContext) BroadcastGameStart(playerPosition lovelove.PlayerPosition) {
-	updatesMap := make(map[string][]*lovelove.GameStateUpdatePart, 0)
+	updatesMap := make(map[string][]*lovelove.GameStateUpdatePart)
 
 	for _, player := range gameContext.players {
 		if playerPosition != lovelove.PlayerPosition_UnknownPosition && playerPosition != player.position {
 			continue
 		}
 
-		opponentDisconnected := false
-		if player.position != lovelove.PlayerPosition_UnknownPosition {
-			opponentPosition := getOpponentPosition(player.position)
-			for _, player := range gameContext.players {
-				if player.position == opponentPosition {
-					opponentDisconnected = len(player.connections) == 0
-					break
-				}
-			}
-		}
-
 		updatesMap[player.id] = []*lovelove.GameStateUpdatePart{
 			{
-				GameConnectionData: &lovelove.GameConnectionData{
-					Position:             player.position,
-					GameState:            gameContext.GameState.ToCompleteGameState(player.position),
-					OpponentDisconnected: opponentDisconnected,
+				NewGameUpdate: &lovelove.NewGameUpdate{
+					GameState: gameContext.GameState.ToCompleteGameState(player.position),
 				},
 			},
 		}

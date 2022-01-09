@@ -1,4 +1,4 @@
-import {produce, immerable} from "immer";
+import {produce, immerable, original, current} from "immer";
 import { lovelove } from "../../rpc/proto/lovelove";
 import { Action } from "../actions/Action";
 import { ActionType } from "../actions/ActionType";
@@ -48,6 +48,14 @@ function applyYakuUpdate(yakuInformation: lovelove.IYakuData[], yakuUpdate: love
 function immerate<T>(object: T): T{
 	(object as any)[immerable] = true;
 	return object;
+}
+
+function immerateGame(game: lovelove.ICompleteGameState): lovelove.ICompleteGameState{
+	immerate(game);
+	immerate(game.redPlayer);
+	immerate(game.whitePlayer);
+
+	return game;
 }
 
 function mainReducer(state: IState, action: Action): IState {
@@ -238,7 +246,7 @@ function mainReducer(state: IState, action: Action): IState {
 							};
 						}
 
-						state.gameState = immerate(update.roundEndResult.nextRound);
+						state.gameState = immerateGame(update.roundEndResult.nextRound);
 					}
 
 					if (update.connectionStatusUpdate) {
@@ -247,10 +255,20 @@ function mainReducer(state: IState, action: Action): IState {
 						}
 					}
 
-					if (update.gameConnectionData) {
-						state.gameState = immerate(update.gameConnectionData.gameState);
-						state.gamePosition = update.gameConnectionData.position;
-						state.opponentDisconnected = update.gameConnectionData.opponentDisconnected;
+					if (update.newGameUpdate) {
+						state.gameState = immerateGame(update.newGameUpdate.gameState);
+					}
+
+					if (update.rematchUpdate) {
+						switch(update.rematchUpdate.player){
+							case lovelove.PlayerPosition.Red: {
+								gameState.redPlayer.rematchRequested = true;
+								break;
+							} case lovelove.PlayerPosition.White: {
+								gameState.whitePlayer.rematchRequested = true;
+								break;
+							}
+						}
 					}
 				}
 			});
@@ -263,12 +281,19 @@ function mainReducer(state: IState, action: Action): IState {
 				...state,
 				roundEndView: null,
 			};
-		} case ActionType.GameCreatedOnServer: {
+		} case ActionType.EnteredNewRoom: {
 			return {
 				...state,
 				gamePosition: null,
 				gameState: null,
+				roundEndView: null,
 				opponentDisconnected: null,
+			};
+		} case ActionType.ConnectedToGame: {
+			return {
+				...state,
+				gamePosition: action.position,
+				opponentDisconnected: action.opponentDisconnected,
 			};
 		}
 	}

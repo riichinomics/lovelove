@@ -9,12 +9,13 @@ import (
 )
 
 type playerState struct {
-	id              string
-	score           int32
-	koikoi          bool
-	conceded        bool
-	position        lovelove.PlayerPosition
-	confirmedTeyaku bool
+	id               string
+	score            int32
+	koikoi           bool
+	conceded         bool
+	position         lovelove.PlayerPosition
+	requestedRematch bool
+	confirmedTeyaku  bool
 }
 
 type gameState struct {
@@ -168,6 +169,7 @@ func (gameState *gameState) ToCompleteGameState(playerPosition lovelove.PlayerPo
 		player.Score = playerState.score
 		player.Koikoi = playerState.koikoi
 		player.Conceded = playerState.conceded
+		player.RematchRequested = playerState.requestedRematch
 	}
 
 	if gameState.state == GameState_End {

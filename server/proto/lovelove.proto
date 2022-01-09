@@ -168,7 +168,7 @@ message PlayerState {
 	HandInformation hand = 4;
 	repeated Card collection = 5;
 	repeated YakuData yakuInformation = 6;
-	bool rematchAccepted = 7;
+	bool rematchRequested = 7;
 }
 
 message GameEnd {
@@ -210,12 +210,12 @@ message ConnectToGameRequest {
 
 message ConnectToGameResponse {
 	ConnectToGameResponseCode status = 1;
+	PlayerPosition playerPosition = 2;
+	bool OpponentDisconnected = 3;
 }
 
-message GameConnectionData {
-	PlayerPosition position = 1;
+message NewGameUpdate {
 	CompleteGameState gameState = 2;
-	bool opponentDisconnected = 3;
 }
 
 message ResolveTeyakuRequest {
@@ -302,7 +302,7 @@ message GameStateUpdatePart {
 	RoundEndResult roundEndResult = 7;
 	KoikoiUpdate koikoiUpdate = 8;
 	ConnectionStatusUpdate connectionStatusUpdate = 9;
-	GameConnectionData gameConnectionData = 10;
+	NewGameUpdate newGameUpdate = 10;
 	RematchUpdate rematchUpdate = 11;
 }
 

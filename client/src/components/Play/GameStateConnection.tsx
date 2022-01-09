@@ -8,18 +8,19 @@ import { useLocation, useNavigate } from "react-router";
 import { CardMove, CardZone } from "../../utils";
 import { CardMoveContext } from "../../rpc/CardMoveContext";
 import { lovelove } from "../../rpc/proto/lovelove";
-import { GameCreatedOnServerAction } from "../../state/actions/GameCreatedOnServerAction";
+import { GameCreatedOnServerAction } from "../../state/actions/ConnectedToGameAction";
 import { ActionType } from "../../state/actions/ActionType";
 import { GameUpdateReceivedAction } from "../../state/actions/GameUpdateReceivedAction";
 import { RoundEndClearedAction } from "../../state/actions/RoundEndClearedAction";
 import { WaitingCurtain } from "./WaitingCurtain";
 import { EndGameCurtain } from "./EndGameCurtain";
+import { EnteredNewRoomAction } from "../../state/actions/EnteredNewRoomAction";
 
 
 export const GameStateConnection = () => {
 	const { api } = React.useContext(ApiContext);
 
-	const dispatch = useDispatch<React.Dispatch<GameCreatedOnServerAction | GameUpdateReceivedAction | RoundEndClearedAction>>();
+	const dispatch = useDispatch<React.Dispatch<GameCreatedOnServerAction | GameUpdateReceivedAction | RoundEndClearedAction | EnteredNewRoomAction>>();
 
 	const roomId = useLocation().hash?.slice(1);
 	const navigate = useNavigate();
@@ -82,24 +83,29 @@ export const GameStateConnection = () => {
 
 		console.log("requesting GameState");
 		setRoomFull(false);
+		dispatch({
+			type: ActionType.EnteredNewRoom
+		});
 
 		api.lovelove.connectToGame({
 			roomId
 		}).then(response => {
 			console.log("GameStateConnection", response);
-			if (response.status === lovelove.ConnectToGameResponseCode.ConnectToGameWaiting) {
+			if (response.status === lovelove.ConnectToGameResponseCode.ConnectToGameFull) {
 				dispatch({
-					type: ActionType.GameCreatedOnServer
+					type: ActionType.ConnectedToGame,
+					position: lovelove.PlayerPosition.UnknownPosition,
+					opponentDisconnected: false,
 				});
+				setRoomFull(true);
 				return;
 			}
 
-			if (response.status === lovelove.ConnectToGameResponseCode.ConnectToGameFull) {
-				dispatch({
-					type: ActionType.GameCreatedOnServer
-				});
-				setRoomFull(true);
-			}
+			dispatch({
+				type: ActionType.ConnectedToGame,
+				position: response.playerPosition,
+				opponentDisconnected: response.OpponentDisconnected,
+			});
 		});
 	}, [dispatch, api, apiState, roomId]);
 
@@ -182,10 +188,15 @@ export const GameStateConnection = () => {
 		api.lovelove.concedeGame({});
 	}, [api]);
 
+	const onRematchRequested = React.useCallback(() => {
+		api.lovelove.requestRematch({});
+	}, [api]);
+
 	if (gameState?.gameEnd) {
 		return <EndGameCurtain
 			position={position}
 			gameState={gameState}
+			onRematchRequested={onRematchRequested}
 		/>;
 	}
 

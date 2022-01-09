@@ -38,7 +38,7 @@ func EndRound(
 
 	gameState.month = lovelove.Month(int(gameState.month+1) % len(lovelove.Month_name))
 
-	if gameState.month == lovelove.Month_February {
+	if gameState.month == lovelove.Month_UnknownMonth {
 		gameState.state = GameState_End
 
 		for p := range lovelove.PlayerPosition_name {
