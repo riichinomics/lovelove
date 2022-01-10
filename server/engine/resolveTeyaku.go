@@ -27,7 +27,7 @@ func (server loveLoveRpcServer) ResolveTeyaku(context context.Context, request *
 	}
 
 	if gameContext.GameState.state != GameState_Teyaku {
-		log.Print("Game in wrong state")
+		log.Print("Game in wrong state", gameContext.GameState.state)
 		return
 	}
 
@@ -63,7 +63,7 @@ func (server loveLoveRpcServer) ResolveTeyaku(context context.Context, request *
 	}
 
 	winner := playerState.position
-	if opponentTeyakuInfo.confirmed {
+	if opponentHasTeyaku && opponentTeyakuInfo.confirmed {
 		winner = lovelove.PlayerPosition_UnknownPosition
 	}
 

@@ -1,7 +1,6 @@
 package engine
 
 import (
-	"log"
 	"math"
 	"math/rand"
 	"sort"
@@ -72,6 +71,10 @@ func (game *gameState) Table() []*cardState {
 				maxOrder = card.order
 			}
 		}
+	}
+
+	if len(tableCards) == 0 {
+		return make([]*cardState, 0)
 	}
 
 	table := make([]*cardState, maxOrder+1)
@@ -474,7 +477,6 @@ func (gameState *gameState) moveTestCards(cards []testGameCard, zone CardLocatio
 }
 
 func (gameState *gameState) SetupTestGame(testGame testGame) {
-	log.Print(testGame)
 	for {
 		for _, card := range gameState.cards {
 			card.location = CardLocation_Unknown

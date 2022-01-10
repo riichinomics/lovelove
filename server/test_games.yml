@@ -24,3 +24,56 @@ drawn_card_yaku_attained_test:
       hana: susuki
     - variation: 4
       hana: sakura
+teyaku:
+  redHand:
+    - variation: 3
+      hana: susuki
+    - variation: 4
+      hana: susuki
+    - variation: 2
+      hana: botan
+    - variation: 3
+      hana: botan
+    - variation: 1
+      hana: sakura
+    - variation: 4
+      hana: sakura
+    - variation: 1
+      hana: yanagi
+    - variation: 4
+      hana: yanagi
+double_teyaku:
+  redHand:
+    - variation: 3
+      hana: susuki
+    - variation: 4
+      hana: susuki
+    - variation: 2
+      hana: botan
+    - variation: 3
+      hana: botan
+    - variation: 1
+      hana: sakura
+    - variation: 4
+      hana: sakura
+    - variation: 1
+      hana: yanagi
+    - variation: 4
+      hana: yanagi
+  whiteHand:
+    - variation: 1
+      hana: ayame
+    - variation: 2
+      hana: ayame
+    - variation: 3
+      hana: ayame
+    - variation: 4
+      hana: ayame
+    - variation: 1
+      hana: kiku
+    - variation: 2
+      hana: kiku
+    - variation: 3
+      hana: kiku
+    - variation: 4
+      hana: kiku

@@ -96,10 +96,6 @@ func (server loveLoveRpcServer) ConnectToGame(rpcContext context.Context, reques
 		} else {
 			game.Deal()
 		}
-
-		if len(game.GetTeyaku()) > 0 {
-			game.state = GameState_Teyaku
-		}
 	} else {
 		existingPlayer, playerExists := game.playerState[connMeta.userId]
 		if !playerExists {
@@ -111,6 +107,10 @@ func (server loveLoveRpcServer) ConnectToGame(rpcContext context.Context, reques
 			}
 
 			game.state = GameState_HandCardPlay
+
+			if len(game.GetTeyaku()) > 0 {
+				game.state = GameState_Teyaku
+			}
 
 			response = &lovelove.ConnectToGameResponse{
 				Status: lovelove.ConnectToGameResponseCode_ConnectToGameOk,

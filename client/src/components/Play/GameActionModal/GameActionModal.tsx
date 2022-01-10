@@ -42,12 +42,14 @@ export const GameActionModal = (props: {
 
 	const yakuTarget = props.roundEndView
 		? props.roundEndView.winner
-		: props.shoubuOpportunity && props.position;
+		: props.shoubuOpportunity
+			? props.position
+			: null;
 	const collection = yakuTarget == props.position ? props.collection : props.opponentCollection;
 	const yakuInformation = yakuTarget == props.position ? props.yakuInformation : props.opponentYakuInformation;
 
 	const yakuSummaries = React.useMemo<IYakuSummary[]>(() => {
-		if (!yakuTarget) {
+		if (!yakuTarget || props.roundEndView?.teyaku) {
 			return null;
 		}
 
@@ -84,6 +86,8 @@ export const GameActionModal = (props: {
 
 		return null;
 	}, [props.roundEndView, props.teyaku]);
+
+	console.log("modal", yakuTarget, yakuSummaries, teyakuSummaries);
 
 	const summaries = yakuSummaries ?? teyakuSummaries;
 
