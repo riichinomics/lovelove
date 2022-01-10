@@ -1,0 +1,26 @@
+drawn_card_yaku_attained_test:
+  table:
+    - variation: 3
+      hana: susuki
+    - variation: 4
+      hana: kiku
+    - variation: 2
+      hana: botan
+    - variation: 3
+      hana: botan
+    - variation: 3
+      hana: sakura
+  deck:
+    - variation: 1
+      hana: momiji
+    - variation: 1
+      hana: ayame
+    - variation: 1
+      hana: botan
+  redHand:
+    - variation: 3
+      hana: kiku
+    - variation: 4
+      hana: susuki
+    - variation: 4
+      hana: sakura

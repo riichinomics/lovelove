@@ -1,6 +1,8 @@
 package engine
 
 import (
+	"strings"
+
 	lovelove "hanafuda.moe/lovelove/proto"
 )
 
@@ -46,8 +48,54 @@ var monthToHanaMap = map[lovelove.Month]lovelove.Hana{
 	lovelove.Month_December:     lovelove.Hana_Kiri,
 }
 
-func getHana(month lovelove.Month) lovelove.Hana {
+func monthToHana(month lovelove.Month) lovelove.Hana {
 	return monthToHanaMap[month]
+}
+
+var monthNameMap = map[string]lovelove.Month{
+	"january":   lovelove.Month_January,
+	"february":  lovelove.Month_February,
+	"march":     lovelove.Month_March,
+	"april":     lovelove.Month_April,
+	"may":       lovelove.Month_May,
+	"june":      lovelove.Month_June,
+	"july":      lovelove.Month_July,
+	"august":    lovelove.Month_August,
+	"september": lovelove.Month_September,
+	"october":   lovelove.Month_October,
+	"november":  lovelove.Month_November,
+	"december":  lovelove.Month_December,
+}
+
+func stringToMonth(monthName string) lovelove.Month {
+	month, monthFound := monthNameMap[strings.ToLower(monthName)]
+	if monthFound {
+		return month
+	}
+	return lovelove.Month_UnknownMonth
+}
+
+var hanaNameMap = map[string]lovelove.Hana{
+	"matsu":  lovelove.Hana_Matsu,
+	"ume,":   lovelove.Hana_Ume,
+	"sakura": lovelove.Hana_Sakura,
+	"fuji":   lovelove.Hana_Fuji,
+	"ayame":  lovelove.Hana_Ayame,
+	"botan":  lovelove.Hana_Botan,
+	"hagi":   lovelove.Hana_Hagi,
+	"susuki": lovelove.Hana_Susuki,
+	"kiku":   lovelove.Hana_Kiku,
+	"momiji": lovelove.Hana_Momiji,
+	"yanagi": lovelove.Hana_Yanagi,
+	"kiri":   lovelove.Hana_Kiri,
+}
+
+func stringToHana(hanaName string) lovelove.Hana {
+	hana, hanaFound := hanaNameMap[strings.ToLower(hanaName)]
+	if hanaFound {
+		return hana
+	}
+	return lovelove.Hana_UnknownSeason
 }
 
 func getOpponentPosition(playerPosition lovelove.PlayerPosition) lovelove.PlayerPosition {

@@ -1,6 +1,7 @@
 package engine
 
 import (
+	"log"
 	"math"
 	"math/rand"
 	"sort"
@@ -86,7 +87,7 @@ func (gameState *gameState) ToCompleteGameState(playerPosition lovelove.PlayerPo
 	completeGameState = &lovelove.CompleteGameState{
 		Active:    gameState.activePlayer,
 		Oya:       gameState.oya,
-		MonthHana: getHana(gameState.month),
+		MonthHana: monthToHana(gameState.month),
 		Month:     gameState.month,
 		RedPlayer: &lovelove.PlayerState{
 			Hand: &lovelove.HandInformation{},
@@ -431,6 +432,86 @@ func (gameState *gameState) Deal() {
 
 		gameState.DrawCards(8, CardLocation_RedHand)
 		gameState.DrawCards(8, CardLocation_WhiteHand)
+		break
+	}
+}
+
+func (card testGameCard) ProperHana() lovelove.Hana {
+	month := stringToMonth(card.Month)
+	if month == lovelove.Month_UnknownMonth {
+		return stringToHana(card.Hana)
+	}
+
+	return monthToHana(month)
+}
+
+func (gameState *gameState) moveTestCards(cards []testGameCard, zone CardLocation) {
+	for order, testCard := range cards {
+		if testCard.Variation < 1 || testCard.Variation > 4 {
+			continue
+		}
+
+		properHana := testCard.ProperHana()
+		if properHana == lovelove.Hana_UnknownSeason {
+			continue
+		}
+
+		card, cardExists := gameState.cards[cardIdFromCardDetails(int32(properHana), int32(testCard.Variation))]
+		if !cardExists {
+			continue
+		}
+		card.location = zone
+		card.order = order
+	}
+}
+
+func (gameState *gameState) SetupTestGame(testGame testGame) {
+	log.Print(testGame)
+	for {
+		for _, card := range gameState.cards {
+			card.location = CardLocation_Unknown
+			card.order = 0
+		}
+
+		gameState.moveTestCards(testGame.Deck, CardLocation_Deck)
+		gameState.moveTestCards(testGame.Table, CardLocation_Table)
+		gameState.moveTestCards(testGame.RedHand, CardLocation_RedHand)
+		gameState.moveTestCards(testGame.WhiteHand, CardLocation_WhiteHand)
+
+		cards := gameState.getZoneOrdered(CardLocation_Unknown)
+		rand.Shuffle(len(cards), func(i, j int) {
+			cards[i], cards[j] = cards[j], cards[i]
+		})
+
+		deckSize := len(testGame.Deck)
+
+		for order, card := range cards {
+			card.location = CardLocation_Deck
+			card.order = deckSize + order
+		}
+
+		for order, card := range gameState.getZoneOrdered(CardLocation_Unknown) {
+			card.location = CardLocation_Deck
+			card.order = deckSize + order
+		}
+
+		gameState.getZoneOrdered(CardLocation_Deck)
+
+		gameState.DrawCards(8-len(gameState.Table()), CardLocation_Table)
+		if GetTeyaku(gameState.Table()) != lovelove.TeyakuId_UnknownTeyaku {
+			continue
+		}
+
+		gameState.DrawCards(8-len(gameState.Hand(lovelove.PlayerPosition_Red)), CardLocation_RedHand)
+		gameState.DrawCards(8-len(gameState.Hand(lovelove.PlayerPosition_White)), CardLocation_WhiteHand)
+
+		deck := gameState.Deck()
+
+		for i, j := 0, len(deck)-1; i < j; i, j = i+1, j-1 {
+			deck[i].order = j
+			deck[j].order = i
+		}
+
 		break
 	}
 }

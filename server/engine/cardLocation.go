@@ -5,7 +5,8 @@ import lovelove "hanafuda.moe/lovelove/proto"
 type CardLocation int64
 
 const (
-	CardLocation_Deck CardLocation = iota
+	CardLocation_Unknown CardLocation = iota
+	CardLocation_Deck
 	CardLocation_Table
 	CardLocation_RedHand
 	CardLocation_WhiteHand

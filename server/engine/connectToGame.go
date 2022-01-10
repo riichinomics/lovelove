@@ -68,7 +68,12 @@ func (server loveLoveRpcServer) ConnectToGame(rpcContext context.Context, reques
 			}
 		}
 
-		oya := lovelove.PlayerPosition(rand.Intn(2) + 1)
+		testGame, testGameExists := server.testGames[gameContext.id]
+
+		oya := lovelove.PlayerPosition_Red
+		if !testGameExists {
+			oya = lovelove.PlayerPosition(rand.Intn(2) + 1)
+		}
 
 		game = &gameState{
 			activePlayer: oya,
@@ -85,7 +90,12 @@ func (server loveLoveRpcServer) ConnectToGame(rpcContext context.Context, reques
 			position: lovelove.PlayerPosition_Red,
 		}
 
-		game.Deal()
+		if testGameExists {
+			log.Print("seting up test game ", gameContext.id)
+			game.SetupTestGame(testGame)
+		} else {
+			game.Deal()
+		}
 
 		if len(game.GetTeyaku()) > 0 {
 			game.state = GameState_Teyaku
