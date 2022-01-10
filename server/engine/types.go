@@ -12,6 +12,7 @@ const (
 	GameState_Waiting GameState = iota
 	GameState_Teyaku
 	GameState_HandCardPlay
+	GameState_DeckCardPlayYakuAttained
 	GameState_DeckCardPlay
 	GameState_ShoubuOpportunity
 	GameState_End

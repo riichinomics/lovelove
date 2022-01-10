@@ -407,7 +407,7 @@ func (context *gameMutationContext) BuildPlayOptions() (updatesMap GameUpdateMap
 	updatesMap = make(GameUpdateMap)
 	playOptionsUpdateMap := context.buildPlayOptionsUpdate()
 
-	for p, _ := range lovelove.PlayerPosition_name {
+	for p := range lovelove.PlayerPosition_name {
 		position := lovelove.PlayerPosition(p)
 		updatePart := &lovelove.GameStateUpdatePart{
 			PlayOptionsUpdate: playOptionsUpdateMap[position],

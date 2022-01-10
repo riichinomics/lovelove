@@ -38,7 +38,7 @@ type gameStateMutation struct {
 	roundEndChange  *roundEndChange
 }
 
-func PlayDrawnCardMutation(game *gameState, playerPosition lovelove.PlayerPosition) ([]*gameStateMutation, error) {
+func PlayDrawnCardMutation(game *gameState, playerPosition lovelove.PlayerPosition, yakuUpdate *yakuUpdate) ([]*gameStateMutation, error) {
 	drawnCard := game.DrawnCard()
 	if drawnCard == nil {
 		return nil, errors.New("No drawn card")
@@ -62,10 +62,17 @@ func PlayDrawnCardMutation(game *gameState, playerPosition lovelove.PlayerPositi
 		return MoveToPlayOptionMutation(game, drawnCard.card.Id, CardLocation_Drawn, targetCard.card.Id, playerCollectionLocation)
 	}
 
+	newState := GameState_DeckCardPlay
+
+	yaku, yakuUpdateExists := yakuUpdate.yakuUpdatesMap[playerPosition]
+	if yakuUpdateExists && yaku.NewOrUpdatedYaku != nil && len(yaku.NewOrUpdatedYaku) > 0 {
+		newState = GameState_DeckCardPlayYakuAttained
+	}
+
 	return []*gameStateMutation{
 		{
 			gameStateChange: &gameStateChange{
-				newState: GameState_DeckCardPlay,
+				newState: newState,
 			},
 		},
 	}, nil
@@ -235,7 +242,7 @@ func SelectDrawnCardPlayOptionMutation(
 		return nil, errors.New("No target card")
 	}
 
-	if game.state != GameState_DeckCardPlay {
+	if game.state != GameState_DeckCardPlay && game.state != GameState_DeckCardPlayYakuAttained {
 		return nil, errors.New("Game is in wrong state")
 	}
 
@@ -293,7 +300,7 @@ func TurnEndMutation(
 
 func CheckForYakuMutation(yakuUpdates *yakuUpdate, playerState *playerState, gameState *gameState) ([]*gameStateMutation, error) {
 	_, hasYakuUpdate := yakuUpdates.yakuUpdatesMap[playerState.position]
-	if !hasYakuUpdate {
+	if gameState.state != GameState_DeckCardPlayYakuAttained && !hasYakuUpdate {
 		return TurnEndMutation(gameState)
 	}
 

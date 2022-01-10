@@ -308,6 +308,14 @@ func (gameState *gameState) GetPlayOptionsAcceptedOriginZones(playerPosition lov
 		return []lovelove.CardZone{
 			lovelove.CardZone_Drawn,
 		}
+	case GameState_DeckCardPlayYakuAttained:
+		if gameState.activePlayer != playerPosition {
+			return
+		}
+
+		return []lovelove.CardZone{
+			lovelove.CardZone_Drawn,
+		}
 	}
 
 	return

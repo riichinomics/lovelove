@@ -54,10 +54,11 @@ func (server loveLoveRpcServer) PlayHandCard(context context.Context, request *l
 	defer broadcastBuilder.Broadcast()
 
 	gameMutationContext := NewGameMutationContext(gameContext.GameState)
-
 	yakuTracker := NewYakuTracker(gameContext.GameState)
 
 	broadcastBuilder.QueueUpdates(gameMutationContext.Apply(mutation))
+
+	yakuUpdate := yakuTracker.BuildYakuUpdate(gameMutationContext.MovedCards())
 
 	mutation, err = DrawCardMutation(gameContext.GameState)
 
@@ -68,7 +69,7 @@ func (server loveLoveRpcServer) PlayHandCard(context context.Context, request *l
 
 	broadcastBuilder.QueueUpdates(gameMutationContext.Apply(mutation))
 
-	mutation, err = PlayDrawnCardMutation(gameContext.GameState, playerState.position)
+	mutation, err = PlayDrawnCardMutation(gameContext.GameState, playerState.position, yakuUpdate)
 
 	if err != nil {
 		return
@@ -78,12 +79,11 @@ func (server loveLoveRpcServer) PlayHandCard(context context.Context, request *l
 	broadcastBuilder.QueueUpdates(gameMutationContext.BuildPlayOptions())
 
 	if mutation[0].gameStateChange != nil {
+		broadcastBuilder.QueueUpdates(yakuUpdate.gameUpdate)
 		return
 	}
 
-	yakuUpdate := yakuTracker.BuildYakuUpdate(gameMutationContext.MovedCards())
-	broadcastBuilder.QueueUpdates(yakuUpdate.gameUpdate)
-
+	yakuUpdate = yakuTracker.BuildYakuUpdate(gameMutationContext.MovedCards())
 	mutation, err = CheckForYakuMutation(yakuUpdate, playerState, gameContext.GameState)
 
 	if err != nil {
