@@ -1,4 +1,5 @@
 import { stylesheet } from "astroturf";
+import clsx from "clsx";
 import * as React from "react";
 
 const styles = stylesheet`
@@ -13,10 +14,26 @@ const styles = stylesheet`
 		border: solid 5px #592116;
 		box-sizing: border-box;
 
-		.top {
+		> * {
+			transition: min-height 0.3s ease-in-out, border-width 0.3s ease-in-out;
 			min-height: 27%;
+		}
+
+		&.collapsed {
+			> * {
+				min-height: 0;
+			}
+
+			.core {
+				border-top-width: 0px;
+				border-bottom-width: 0px;
+			}
+		}
+
+		.top {
 			background-color: #6060bf;
 		}
+
 		.core {
 			border-top: solid 5px #592116;
 			border-bottom: solid 5px #592116;
@@ -31,15 +48,15 @@ const styles = stylesheet`
 				text-align: center;
 			}
 		}
+
 		.bottom {
-			min-height: 27%;
 			background-color: #50b271;
 		}
 	}
 `;
 
-export const FullScreenCurtain: React.FC = ({children}) => {
-	return <div className={styles.waitingCurtain}>
+export const FullScreenCurtain: React.FC<{centerOnly?: boolean}> = ({children, centerOnly}) => {
+	return <div className={clsx(styles.waitingCurtain, centerOnly && styles.collapsed)}>
 		<div className={styles.top} />
 		<div className={styles.core}>
 			<div className={styles.content}>

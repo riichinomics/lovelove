@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 	"strings"
+	"time"
 
 	"google.golang.org/protobuf/proto"
 
@@ -144,6 +145,35 @@ func (server *webSocketRpcServer) HandleConnection(connection *websocket.Conn) {
 			}
 		}(connMeta, sendChannel)
 
+		go func() {
+			pongChan := make(chan interface{})
+			conn.SetPongHandler(func(message string) error {
+				pongChan <- nil
+				return nil
+			})
+
+			for {
+				err := conn.WriteMessage(websocket.PingMessage, make([]byte, 0))
+				if err != nil {
+					return
+				}
+
+				pongTimeout := make(chan bool, 1)
+				go func() {
+					time.Sleep(3 * time.Second)
+					pongTimeout <- true
+				}()
+
+				select {
+				case <-pongChan:
+				case <-pongTimeout:
+					conn.Close()
+				}
+
+				time.Sleep(15 * time.Second)
+			}
+		}()
+
 		for {
 			messageType, data, err := conn.ReadMessage()
 			if err != nil {
@@ -152,6 +182,11 @@ func (server *webSocketRpcServer) HandleConnection(connection *websocket.Conn) {
 			}
 			log.Print(messageType)
 			log.Print(data)
+
+			if messageType != websocket.BinaryMessage {
+				continue
+			}
+
 			wrapper := new(lovelove.Wrapper)
 			proto.Unmarshal(data, wrapper)
 			log.Print(wrapper.Type, wrapper.Sequence, wrapper.ContentType, wrapper.Data)

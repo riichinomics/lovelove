@@ -16,7 +16,6 @@ import { WaitingCurtain } from "./WaitingCurtain";
 import { EndGameCurtain } from "./EndGameCurtain";
 import { EnteredNewRoomAction } from "../../state/actions/EnteredNewRoomAction";
 
-
 export const GameStateConnection = () => {
 	const { api } = React.useContext(ApiContext);
 
@@ -192,16 +191,16 @@ export const GameStateConnection = () => {
 		api.lovelove.requestRematch({});
 	}, [api]);
 
+	if (!gameState || apiState !== ApiState.Connected) {
+		return <WaitingCurtain roomFull={roomFull} connected={apiState === ApiState.Connected} />;
+	}
+
 	if (gameState?.gameEnd) {
 		return <EndGameCurtain
 			position={position}
 			gameState={gameState}
 			onRematchRequested={onRematchRequested}
 		/>;
-	}
-
-	if (!gameState) {
-		return <WaitingCurtain roomFull={roomFull} />;
 	}
 
 	return <CardMoveContext.Provider value={{move}}>
