@@ -1,17 +1,14 @@
 import * as React from "react";
 import * as ReactDOM from "react-dom";
 import { compose, createStore } from "redux";
-import { ActionType } from "./state/actions/ActionType";
 import { Api } from "./rpc/Api";
 import { ApiContext } from "./rpc/ApiContext";
-import { ApiStateChangedAction } from "./state/actions/ApiStateChangedAction";
 import { GameStateConnection } from "./components/Play/GameStateConnection";
 import { IState } from "./state/IState";
 import { Provider } from "react-redux";
 import { ThemeContext } from "./themes/ThemeContext";
 import mainReducer from "./state/reducers";
 import mantia from "./themes/mantia";
-import { ApiState } from "./rpc/ApiState";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import * as uuid from "uuid";
 
@@ -33,40 +30,47 @@ const store = createStore(
 	mainReducer,
 	{
 		userId,
-		apiState: ApiState.Connecting
 	} as IState,
 	composeEnhancers()
 );
 
 const api = new Api({url: window.location.hostname + ":6482"});
-api.init().then(() => {
-	api.lovelove.authenticate({
-		userId,
-	}).then((response) => {
-		console.log("authentication response", response);
-		store.dispatch<ApiStateChangedAction>({
-			type: ActionType.ApiStateChanged,
-			apiState: ApiState.Connected
+const ApiInitialiser: React.FC = ({children}) => {
+	const {api} = React.useContext(ApiContext);
+	const [initialised, setInitialised] = React.useState(false);
+	React.useEffect(() => {
+		setInitialised(false);
+		api.init().then(() => {
+			setInitialised(true);
 		});
-	});
-});
+	}, [api]);
+
+	if (!initialised) {
+		return null;
+	}
+
+	// eslint-disable-next-line react/jsx-no-useless-fragment
+	return <>{children}</>;
+};
 
 ReactDOM.render(
 	<Provider store={store}>
 		<ApiContext.Provider value={{api}}>
-			<ThemeContext.Provider value={{
-				theme: mantia
-			}}
-			>
-				<DndProvider backend={HTML5Backend}>
-					<BrowserRouter>
-						<Routes>
-							<Route path="/" element={<GameStateConnection />} />
+			<ApiInitialiser>
+				<ThemeContext.Provider value={{
+					theme: mantia
+				}}
+				>
+					<DndProvider backend={HTML5Backend}>
+						<BrowserRouter>
+							<Routes>
+								<Route path="/" element={<GameStateConnection />} />
 
-						</Routes>
-					</BrowserRouter>
-				</DndProvider>
-			</ThemeContext.Provider>
+							</Routes>
+						</BrowserRouter>
+					</DndProvider>
+				</ThemeContext.Provider>
+			</ApiInitialiser>
 		</ApiContext.Provider>
 	</Provider>,
 	document.getElementsByTagName("body")[0]

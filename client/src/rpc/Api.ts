@@ -1,20 +1,23 @@
-import { Root, load } from "protobufjs";
+import { Root, load, Message } from "protobufjs";
 import { Connection } from "./Connection";
 import { RpcImplementation } from "./RpcImplementation";
 import { lovelove } from "./proto/lovelove";
-import { map } from "rxjs";
+import { first, firstValueFrom, map, Observable, share, takeUntil } from "rxjs";
 
 export interface ApiOptions {
 	url: string;
 }
 
-export class Api {
-	// private readonly notifications: Observable<any>;
+export interface ApiConnection {
+	lovelove: lovelove.LoveLove;
+	broadcastMessages: Observable<Message>;
+	closed: Promise<{
+		reconnect(): Promise<ApiConnection>
+	}>;
+}
 
-	private connection: Connection;
-	public lovelove: lovelove.LoveLove;
+export class Api {
 	private protobufRoot: Root;
-	private rpc: RpcImplementation;
 
 	constructor(private readonly options: ApiOptions) {
 		Root.prototype.fetch = function (filename, callback) {
@@ -28,25 +31,45 @@ export class Api {
 					error => callback(error)
 				);
 		};
-		// this.notifications = this.connection.messages.pipe(filter(message => message.index !== 0), map(message => this.codec.decode(message.data)));
-	}
-
-	public get broadcastMessages() {
-		return this.rpc.broadcastMessages.pipe(
-			map(wrapper => this.protobufRoot.lookupType(wrapper.contentType).decode(wrapper.data))
-		);
 	}
 
 	public async init(): Promise<void> {
 		this.protobufRoot = await load("/proto/lovelove.proto");
-		const Wrapper = this.protobufRoot.lookupType("Wrapper") as unknown as typeof lovelove.Wrapper;
-		this.connection = new Connection(`ws://${this.options.url}/echo`, Wrapper);
-		this.rpc = new RpcImplementation(this.connection, this.protobufRoot);
-		this.lovelove = this.rpc.createService<lovelove.LoveLove>("lovelove.LoveLove");
-		await this.connection.init();
 	}
 
-	public dispose() {
-		this.connection.close();
+	public async connect(): Promise<ApiConnection> {
+		const Wrapper = this.protobufRoot.lookupType("Wrapper") as unknown as typeof lovelove.Wrapper;
+		const connection = new Connection(`ws://${this.options.url}/echo`, Wrapper);
+		const rpc = new RpcImplementation(connection, this.protobufRoot);
+		const loveloveService = rpc.createService<lovelove.LoveLove>("lovelove.LoveLove");
+
+		return this.reconnect(connection, rpc, loveloveService);
+	}
+
+	private async reconnect(
+		connection: Connection,
+		rpc: RpcImplementation,
+		loveloveService: lovelove.LoveLove,
+	): Promise<ApiConnection> {
+		while (await Promise.race([
+			connection.reconnect(),
+			new Promise((resolve) => setTimeout(() => resolve(true), 5000))
+		]) === true) {
+			// eslint-disable-next-line no-empty
+		}
+
+		const disconnectObservable = connection.disconnect.pipe(first(), share());
+		const disconnectPromise = firstValueFrom(disconnectObservable).then(() => ({
+			reconnect: () => this.reconnect(connection, rpc, loveloveService)
+		}));
+
+		return {
+			broadcastMessages: rpc.broadcastMessages.pipe(
+				map(wrapper => this.protobufRoot.lookupType(wrapper.contentType).decode(wrapper.data)),
+				takeUntil(disconnectObservable)
+			),
+			lovelove: loveloveService,
+			closed: disconnectPromise
+		};
 	}
 }

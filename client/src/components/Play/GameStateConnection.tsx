@@ -3,7 +3,6 @@ import { useDispatch, useSelector } from "react-redux";
 import { ApiContext } from "../../rpc/ApiContext";
 import { IState } from "../../state/IState";
 import { Table } from "./Table";
-import { ApiState } from "../../rpc/ApiState";
 import { useLocation, useNavigate } from "react-router";
 import { CardMove, CardZone } from "../../utils";
 import { CardMoveContext } from "../../rpc/CardMoveContext";
@@ -15,6 +14,7 @@ import { RoundEndClearedAction } from "../../state/actions/RoundEndClearedAction
 import { WaitingCurtain } from "./WaitingCurtain";
 import { EndGameCurtain } from "./EndGameCurtain";
 import { EnteredNewRoomAction } from "../../state/actions/EnteredNewRoomAction";
+import { ApiConnection } from "../../rpc/Api";
 
 export const GameStateConnection = () => {
 	const { api } = React.useContext(ApiContext);
@@ -23,7 +23,8 @@ export const GameStateConnection = () => {
 
 	const roomId = useLocation().hash?.slice(1);
 	const navigate = useNavigate();
-	const apiState = useSelector<IState>((state) => state.apiState);
+	const userId = useSelector<IState, string>((state) => state.userId);
+	const [apiConnection, setApiConnection] = React.useState<ApiConnection>(null);
 
 	const position = useSelector((state: IState) => state.gamePosition);
 	const opponentDisconnected = useSelector((state: IState) => state.opponentDisconnected);
@@ -33,6 +34,10 @@ export const GameStateConnection = () => {
 	const [teyakuResolved, setTeyakuResolved] = React.useState(false);
 
 	const [roomFull, setRoomFull] = React.useState(false);
+
+	React.useEffect(() => {
+		api.connect().then(setApiConnection);
+	}, [api]);
 
 	React.useEffect(() => {
 		if (roomId == null || roomId === "") {
@@ -48,11 +53,22 @@ export const GameStateConnection = () => {
 	}, [roomId]);
 
 	React.useEffect(() => {
-		if (apiState !== ApiState.Connected) {
+		if (!apiConnection) {
 			return;
 		}
 
-		const messageSub = api.broadcastMessages.subscribe(message => {
+		apiConnection.closed.then(({reconnect}) => {
+			setApiConnection(null);
+			reconnect().then(setApiConnection);
+		});
+
+		apiConnection.lovelove.authenticate({
+			userId,
+		}).then((response) => {
+			console.log("authentication response", response);
+		});
+
+		const messageSub = apiConnection.broadcastMessages.subscribe(message => {
 			console.log(message);
 
 			switch (message.$type.name) {
@@ -73,10 +89,10 @@ export const GameStateConnection = () => {
 		return () => {
 			messageSub.unsubscribe();
 		};
-	}, [api, apiState]);
+	}, [apiConnection]);
 
 	React.useEffect(() => {
-		if (apiState !== ApiState.Connected) {
+		if (!apiConnection) {
 			return;
 		}
 
@@ -86,7 +102,7 @@ export const GameStateConnection = () => {
 			type: ActionType.EnteredNewRoom
 		});
 
-		api.lovelove.connectToGame({
+		apiConnection.lovelove.connectToGame({
 			roomId
 		}).then(response => {
 			console.log("GameStateConnection", response);
@@ -106,9 +122,13 @@ export const GameStateConnection = () => {
 				opponentDisconnected: response.OpponentDisconnected,
 			});
 		});
-	}, [dispatch, api, apiState, roomId]);
+	}, [dispatch, apiConnection, roomId]);
 
 	React.useEffect(() => {
+		if (!apiConnection) {
+			return;
+		}
+
 		if (!move) {
 			return;
 		}
@@ -126,7 +146,7 @@ export const GameStateConnection = () => {
 				};
 			}
 
-			api.lovelove.playHandCard(request).then(response => {
+			apiConnection.lovelove.playHandCard(request).then(response => {
 				if (response.status === lovelove.GenericResponseCode.Error) {
 					setMove(null);
 				}
@@ -142,7 +162,7 @@ export const GameStateConnection = () => {
 				}
 			};
 
-			api.lovelove.playDrawnCard(request).then(response => {
+			apiConnection.lovelove.playDrawnCard(request).then(response => {
 				if (response.status === lovelove.GenericResponseCode.Error) {
 					setMove(null);
 				}
@@ -152,7 +172,7 @@ export const GameStateConnection = () => {
 		}
 
 
-	}, [move, setMove]);
+	}, [move, setMove, apiConnection]);
 
 	const onCardDropped = React.useCallback((move: CardMove) => {
 		console.log(move);
@@ -161,20 +181,24 @@ export const GameStateConnection = () => {
 
 
 	const onKoikoiChosen = React.useCallback(() => {
-		api.lovelove.resolveShoubuOpportunity({});
-	}, [api]);
+		apiConnection?.lovelove?.resolveShoubuOpportunity({});
+	}, [apiConnection]);
 
 	const onShoubuChosen = React.useCallback((teyaku: boolean) => {
+		if (!apiConnection) {
+			return;
+		}
+
 		if (teyaku) {
-			api.lovelove.resolveTeyaku({}).then((response) => {
+			apiConnection.lovelove.resolveTeyaku({}).then((response) => {
 				if (response.status != lovelove.GenericResponseCode.Error) {
 					setTeyakuResolved(true);
 				}
 			});
 			return;
 		}
-		api.lovelove.resolveShoubuOpportunity({shoubu: true});
-	}, [api]);
+		apiConnection.lovelove.resolveShoubuOpportunity({shoubu: true});
+	}, [apiConnection]);
 
 	const onContinueChosen = React.useCallback(() => {
 		dispatch({
@@ -184,15 +208,15 @@ export const GameStateConnection = () => {
 
 
 	const onGameConceded = React.useCallback(() => {
-		api.lovelove.concedeGame({});
-	}, [api]);
+		apiConnection?.lovelove?.concedeGame({});
+	}, [apiConnection]);
 
 	const onRematchRequested = React.useCallback(() => {
-		api.lovelove.requestRematch({});
-	}, [api]);
+		apiConnection?.lovelove?.requestRematch({});
+	}, [apiConnection]);
 
-	if (!gameState || apiState !== ApiState.Connected) {
-		return <WaitingCurtain roomFull={roomFull} connected={apiState === ApiState.Connected} />;
+	if (!gameState || !apiConnection) {
+		return <WaitingCurtain roomFull={roomFull} connected={!!apiConnection} />;
 	}
 
 	if (gameState?.gameEnd) {

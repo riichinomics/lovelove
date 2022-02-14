@@ -61,12 +61,7 @@ function immerateGame(game: lovelove.ICompleteGameState): lovelove.ICompleteGame
 function mainReducer(state: IState, action: Action): IState {
 	// eslint-disable-next-line no-empty
 	switch (action.type) {
-		case ActionType.ApiStateChanged: {
-			return {
-				...state,
-				apiState: action.apiState
-			};
-		} case ActionType.GameUpdateReceived: {
+		case ActionType.GameUpdateReceived: {
 			return produce(state, state => {
 				const gameState = state.gameState;
 				const player = state.gamePosition == lovelove.PlayerPosition.Red ? gameState?.redPlayer : gameState?.whitePlayer;

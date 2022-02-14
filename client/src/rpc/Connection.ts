@@ -3,6 +3,7 @@ import { lovelove } from "./proto/lovelove";
 
 export class Connection {
 	private readonly messagesSubject = new Subject<lovelove.Wrapper>();
+	private readonly disconnectSubject = new Subject<any>();
 	private socket: WebSocket;
 
 	constructor(
@@ -14,11 +15,11 @@ export class Connection {
 		return this.messagesSubject;
 	}
 
-	public init(): Promise<void> {
-		return this.reconnect();
+	public get disconnect(): Observable<any> {
+		return this.disconnectSubject;
 	}
 
-	private reconnect(): Promise<void> {
+	public reconnect(): Promise<void> {
 		if (this.socket) {
 			this.socket.close();
 		}
@@ -37,9 +38,11 @@ export class Connection {
 
 			this.socket.onerror = (event: any) => {
 				console.log("websocker onerror", event);
+				this.disconnectSubject.next(event);
 			};
 			this.socket.onclose = (event: any) => {
 				console.log("websocker onclose", event);
+				this.disconnectSubject.next(event);
 			};
 			this.socket.onopen = () => resolve();
 		});
