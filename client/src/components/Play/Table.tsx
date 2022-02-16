@@ -20,10 +20,8 @@ const styles = stylesheet`
 	$border-weight: 2px;
 
 	.table {
-		overflow: hidden;
 		display: inline-flex;
 		flex-direction: column;
-		min-height: 800px;
 		height: 100vh;
 		width: 100%;
 

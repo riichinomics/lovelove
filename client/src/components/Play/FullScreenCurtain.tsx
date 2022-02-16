@@ -6,7 +6,6 @@ const styles = stylesheet`
 	.waitingCurtain {
 		background-color: red;
 		overflow: hidden;
-		min-height: 800px;
 		height: 100vh;
 		width: 100%;
 		display: flex;

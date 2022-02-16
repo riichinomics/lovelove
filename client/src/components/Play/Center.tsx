@@ -46,8 +46,8 @@ const styles = stylesheet`
 		}
 
 		.cards {
-			padding-top: 64px;
-			padding-bottom: 64px;
+			// padding-top: 64px;
+			// padding-bottom: 64px;
 			padding-left: 20px;
 			display: flex;
 			flex: 1;
