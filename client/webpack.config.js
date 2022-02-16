@@ -68,7 +68,8 @@ module.exports = env => {
 		plugins: [
 			new HtmlWebpackPlugin({
 				base: "/",
-				title: "Hanafuda"
+				title: "Hanafuda",
+				favicon: "./assets/favicon.svg",
 			})
 		]
 	};
