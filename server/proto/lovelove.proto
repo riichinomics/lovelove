@@ -1,5 +1,6 @@
 syntax = "proto3";
 package lovelove;
+option go_package = "hanafuda.moe/lovelove";
 
 enum Month {
 	UnknownMonth = 0;
