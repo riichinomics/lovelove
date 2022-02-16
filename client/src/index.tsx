@@ -14,6 +14,7 @@ import * as uuid from "uuid";
 
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
+import { InfoLinksWrapper } from "./components/InfoLinksWrapper";
 
 const USER_ID_LOCAL_STORAGE_KEY = "lovelove_user_id";
 const storedUserId = localStorage.getItem(USER_ID_LOCAL_STORAGE_KEY);
@@ -53,6 +54,7 @@ const ApiInitialiser: React.FC = ({children}) => {
 	return <>{children}</>;
 };
 
+
 ReactDOM.render(
 	<Provider store={store}>
 		<ApiContext.Provider value={{api}}>
@@ -64,8 +66,7 @@ ReactDOM.render(
 					<DndProvider backend={HTML5Backend}>
 						<BrowserRouter>
 							<Routes>
-								<Route path="/" element={<GameStateConnection />} />
-
+								<Route path="/" element={<InfoLinksWrapper><GameStateConnection /></InfoLinksWrapper>} />
 							</Routes>
 						</BrowserRouter>
 					</DndProvider>
