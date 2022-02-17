@@ -22,7 +22,7 @@ export class Api {
 
 	constructor(private readonly options: ApiOptions) {
 		Root.prototype.fetch = function (filename, callback) {
-			fetch(`${options.production ? "https" : "http"}://${options.url}${filename}`)
+			fetch(`${options.production ? "https" : "http"}://${options.url}${this.options.production ? "" : ":6482"}${filename}`)
 				.then(
 					response => response.text()
 						.then(data => {
@@ -41,7 +41,7 @@ export class Api {
 	public async connect(): Promise<ApiConnection> {
 		const Wrapper = this.protobufRoot.lookupType("Wrapper") as unknown as typeof lovelove.Wrapper;
 
-		const connection = new Connection(`${this.options.production ? "wss" : "ws"}://${this.options.url}/socket`, Wrapper);
+		const connection = new Connection(`${this.options.production ? "wss" : "ws"}://${this.options.url}${this.options.production ? "" : ":6482"}/socket`, Wrapper);
 		const rpc = new RpcImplementation(connection, this.protobufRoot);
 		const loveloveService = rpc.createService<lovelove.LoveLove>("lovelove.LoveLove");
 

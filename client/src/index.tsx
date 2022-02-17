@@ -37,7 +37,7 @@ const store = createStore(
 
 const api = new Api({
 	production: location.protocol === "https:",
-	url: window.location.hostname + ":6482",
+	url: window.location.hostname,
 });
 const ApiInitialiser: React.FC = ({children}) => {
 	const {api} = React.useContext(ApiContext);
