@@ -45,11 +45,11 @@ export const GameActionModal = (props: {
 		: props.shoubuOpportunity
 			? props.position
 			: null;
-	const collection = yakuTarget == props.position ? props.collection : props.opponentCollection;
-	const yakuInformation = yakuTarget == props.position ? props.yakuInformation : props.opponentYakuInformation;
+	const collection = yakuTarget === props.position ? props.collection : props.opponentCollection;
+	const yakuInformation = yakuTarget === props.position ? props.yakuInformation : props.opponentYakuInformation;
 
 	const yakuSummaries = React.useMemo<IYakuSummary[]>(() => {
-		if (!yakuTarget || props.roundEndView?.teyaku) {
+		if (!yakuTarget || props.roundEndView?.teyaku?.length > 0) {
 			return null;
 		}
 
