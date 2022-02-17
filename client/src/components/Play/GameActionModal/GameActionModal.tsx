@@ -87,8 +87,6 @@ export const GameActionModal = (props: {
 		return null;
 	}, [props.roundEndView, props.teyaku]);
 
-	console.log("modal", yakuTarget, yakuSummaries, teyakuSummaries);
-
 	const summaries = yakuSummaries ?? teyakuSummaries;
 
 	const shoubuTotal = props.roundEndView

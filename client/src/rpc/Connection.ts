@@ -29,7 +29,6 @@ export class Connection {
 		return new Promise((resolve) => {
 			this.socket = new WebSocket(this.server);
 			this.socket.onmessage = (event: MessageEvent) => {
-				console.log("onmessage: ", event);
 				event.data.arrayBuffer().then((data: Uint8Array) => {
 					const array = new Uint8Array(data);
 					const wrapper = this.Wrapper.decode(array);

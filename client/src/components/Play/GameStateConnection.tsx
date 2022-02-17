@@ -17,7 +17,6 @@ import { EnteredNewRoomAction } from "../../state/actions/EnteredNewRoomAction";
 import { ApiConnection } from "../../rpc/Api";
 
 export const GameStateConnection = () => {
-	console.log("redraw");
 	const { api } = React.useContext(ApiContext);
 
 	const dispatch = useDispatch<React.Dispatch<GameCreatedOnServerAction | GameUpdateReceivedAction | RoundEndClearedAction | EnteredNewRoomAction>>();
@@ -177,7 +176,6 @@ export const GameStateConnection = () => {
 	}, [move, setMove, apiConnection]);
 
 	const onCardDropped = React.useCallback((move: CardMove) => {
-		console.log(move);
 		setMove(move);
 	}, [setMove]);
 
