@@ -3,21 +3,17 @@ version: '3.8'
 services:
   ingress:
     networks:
-      # - ingress_link
+      - ingress_link
       - default
     build:
       context: .
     image: lovelove-client
-    ports:
-      - "80:80"
 
   server:
     build:
       context: ./server
     image: lovelove-server
-    ports:
-      - "6482:6482"
 
-# networks:
-#   ingress_link:
-#     external: true
+networks:
+  ingress_link:
+    external: true
