@@ -41,7 +41,7 @@ export class Api {
 	public async connect(): Promise<ApiConnection> {
 		const Wrapper = this.protobufRoot.lookupType("Wrapper") as unknown as typeof lovelove.Wrapper;
 
-		const connection = new Connection(`${this.options.production ? "wss" : "ws"}://${this.options.url}${this.options.production ? "" : ":6482"}/socket`, Wrapper);
+		const connection = new Connection(`${this.options.production ? "wss" : "ws"}://${this.options.url}${this.options.production ? "" : ":6482"}/ws`, Wrapper);
 		const rpc = new RpcImplementation(connection, this.protobufRoot);
 		const loveloveService = rpc.createService<lovelove.LoveLove>("lovelove.LoveLove");
 
