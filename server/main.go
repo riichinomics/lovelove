@@ -36,7 +36,7 @@ func main() {
 		},
 	}
 
-	http.HandleFunc("/socket", func(w http.ResponseWriter, r *http.Request) {
+	http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
 		c, err := upgrader.Upgrade(w, r, nil)
 		if err != nil {
 			log.Print("upgrade:", err)
@@ -46,9 +46,9 @@ func main() {
 		websocketRpcServer.HandleConnection(c)
 	})
 
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+	http.HandleFunc("/proto", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Access-Control-Allow-Origin", "*")
-		http.ServeFile(w, r, r.URL.Path[1:])
+		http.ServeFile(w, r, "proto/lovelove.proto")
 	})
 
 	log.Print("starting")
