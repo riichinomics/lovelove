@@ -1,13 +1,19 @@
 version: '3.8'
 
 services:
-  client:
+  ingress:
+    networks:
+      - ingress_link
+      - default
     build:
       context: .
-      target: client
     image: lovelove-client
 
   server:
     build:
       context: ./server
     image: lovelove-server
+
+networks:
+  ingress_link:
+    external: true
