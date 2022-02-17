@@ -22,7 +22,7 @@ export class Api {
 
 	constructor(private readonly options: ApiOptions) {
 		Root.prototype.fetch = function (filename, callback) {
-			fetch(`${options.production ? "https" : "http"}://${options.url}${this.options.production ? "" : ":6482"}${filename}`)
+			fetch(`${options.production ? "https" : "http"}://${options.url}${options.production ? "" : ":6482"}${filename}`)
 				.then(
 					response => response.text()
 						.then(data => {
