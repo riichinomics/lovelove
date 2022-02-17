@@ -46,9 +46,9 @@ func main() {
 		websocketRpcServer.HandleConnection(c)
 	})
 
-	http.HandleFunc("/proto", func(w http.ResponseWriter, r *http.Request) {
+	http.HandleFunc("/proto/lovelove.proto", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Access-Control-Allow-Origin", "*")
-		http.ServeFile(w, r, "proto/lovelove.proto")
+		http.ServeFile(w, r, "./proto/lovelove.proto")
 	})
 
 	log.Print("starting")

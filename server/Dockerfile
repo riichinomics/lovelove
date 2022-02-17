@@ -15,4 +15,5 @@ RUN make
 
 FROM debian:bullseye
 COPY --from=server-build /build/lovelove ./
+COPY --from=server-build /build/proto/lovelove.proto ./proto/
 ENTRYPOINT /lovelove
