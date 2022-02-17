@@ -39,10 +39,10 @@ func main() {
 	http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
 		c, err := upgrader.Upgrade(w, r, nil)
 		if err != nil {
-			log.Print("upgrade:", err)
+			log.Print("upgrade error:", err)
 			return
 		}
-		log.Print("Connected")
+		log.Print("New Websocket connection from ", r.RemoteAddr)
 		websocketRpcServer.HandleConnection(c)
 	})
 

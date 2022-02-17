@@ -3,11 +3,10 @@ version: '3.8'
 services:
   ingress:
     networks:
-      - ingress_link
       - default
     build:
       context: .
-    image: lovelove-client
+    image: lovelove-ingress
 
   server:
     build:

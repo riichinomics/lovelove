@@ -62,11 +62,15 @@ function mainReducer(state: IState, action: Action): IState {
 	// eslint-disable-next-line no-empty
 	switch (action.type) {
 		case ActionType.GameUpdateReceived: {
+			console.log("ActionType.GameUpdateReceived", action);
 			return produce(state, state => {
+				console.log("produce", action);
 				const gameState = state.gameState;
 				const player = state.gamePosition == lovelove.PlayerPosition.Red ? gameState?.redPlayer : gameState?.whitePlayer;
 				const opponent = state.gamePosition == lovelove.PlayerPosition.Red ? gameState?.whitePlayer : gameState?.redPlayer;
+				console.log("produce", gameState,				player,				opponent);
 				for (const update of action.update.updates) {
+					console.log("processing update", update);
 					if (update.cardMoveUpdates) {
 						for (const cardMove of update.cardMoveUpdates) {
 							if (cardMove.originSlot.player == lovelove.PlayerPosition.UnknownPosition) {
@@ -252,6 +256,7 @@ function mainReducer(state: IState, action: Action): IState {
 
 					if (update.newGameUpdate) {
 						state.gameState = immerateGame(update.newGameUpdate.gameState);
+						console.log("new Game update", state.gameState);
 					}
 
 					if (update.rematchUpdate) {

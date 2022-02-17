@@ -17,6 +17,7 @@ import { EnteredNewRoomAction } from "../../state/actions/EnteredNewRoomAction";
 import { ApiConnection } from "../../rpc/Api";
 
 export const GameStateConnection = () => {
+	console.log("redraw");
 	const { api } = React.useContext(ApiContext);
 
 	const dispatch = useDispatch<React.Dispatch<GameCreatedOnServerAction | GameUpdateReceivedAction | RoundEndClearedAction | EnteredNewRoomAction>>();
@@ -68,22 +69,23 @@ export const GameStateConnection = () => {
 			console.log("authentication response", response);
 		});
 
+		console.log(apiConnection);
+
 		const messageSub = apiConnection.broadcastMessages.subscribe(message => {
 			console.log(message);
 
-			switch (message.$type.name) {
-				case lovelove.GameStateUpdate.name: {
-					setMove(null);
-					setTeyakuResolved(false);
-
-					const gameStateUpdate = message as any as lovelove.GameStateUpdate;
-					dispatch({
-						type: ActionType.GameUpdateReceived,
-						update: gameStateUpdate
-					});
-					break;
-				}
+			if (message.constructor.name !== "GameStateUpdate") {
+				return;
 			}
+
+			setMove(null);
+			setTeyakuResolved(false);
+
+			const gameStateUpdate = message as any as lovelove.GameStateUpdate;
+			dispatch({
+				type: ActionType.GameUpdateReceived,
+				update: gameStateUpdate
+			});
 		});
 
 		return () => {

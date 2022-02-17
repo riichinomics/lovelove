@@ -58,7 +58,7 @@ func (interceptor *loveLoveRpcInterceptor) Interceptor(rpcContext context.Contex
 
 	connectToGameRequest, isConnectToGameRequest := req.(*lovelove.ConnectToGameRequest)
 	if isConnectToGameRequest {
-		log.Print("room request", connectToGameRequest.RoomId)
+		log.Print("Room Request ", connectToGameRequest.RoomId)
 		roomId = connectToGameRequest.RoomId
 	}
 

@@ -18,7 +18,7 @@ func (server loveLoveRpcServer) ConnectToGame(rpcContext context.Context, reques
 		Status: lovelove.ConnectToGameResponseCode_ConnectToGameError,
 	}
 
-	log.Print(request.RoomId)
+	log.Print("Connecting to room: ", request.RoomId)
 
 	rpcConnMeta := rpc.GetConnectionMeta(rpcContext)
 	connMeta := GetConnectionMeta(rpcContext)
@@ -94,17 +94,22 @@ func (server loveLoveRpcServer) ConnectToGame(rpcContext context.Context, reques
 			log.Print("seting up test game ", gameContext.id)
 			game.SetupTestGame(testGame)
 		} else {
+			log.Print("Making New Game")
 			game.Deal()
 		}
 	} else {
+		log.Print("Connecting to existing game")
 		existingPlayer, playerExists := game.playerState[connMeta.userId]
 		if !playerExists {
 			if len(game.playerState) >= 2 {
+				log.Print("Game full")
 				response = &lovelove.ConnectToGameResponse{
 					Status: lovelove.ConnectToGameResponseCode_ConnectToGameFull,
 				}
 				return
 			}
+
+			log.Print("Join Waiting Game")
 
 			game.state = GameState_HandCardPlay
 
@@ -124,10 +129,12 @@ func (server loveLoveRpcServer) ConnectToGame(rpcContext context.Context, reques
 			defer gameContext.BroadcastGameStart(lovelove.PlayerPosition_UnknownPosition)
 		} else {
 			if len(game.playerState) < 2 {
+				log.Print("First Player Reconnect")
 				response = &lovelove.ConnectToGameResponse{
 					Status: lovelove.ConnectToGameResponseCode_ConnectToGameWaiting,
 				}
 			} else {
+				log.Print("Reconnect to game")
 				response = &lovelove.ConnectToGameResponse{
 					Status: lovelove.ConnectToGameResponseCode_ConnectToGameOk,
 				}
